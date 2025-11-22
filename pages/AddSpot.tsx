@@ -1,0 +1,283 @@
+
+import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useApp } from '../context/AppContext';
+import { Shop, Vibe, ShopImage } from '../types';
+import { ALL_VIBES } from '../constants';
+import { generateShopDescription } from '../services/geminiService';
+import Button from '../components/Button';
+import TagChip from '../components/TagChip';
+import LocationPicker from '../components/LocationPicker';
+import { useToast } from '../context/ToastContext';
+
+const AddSpot: React.FC = () => {
+  const { addShop, user } = useApp();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isGenerating, setIsGenerating] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    city: '',
+    state: '',
+    address: '',
+    description: '',
+  });
+  
+  const [location, setLocation] = useState<{lat: number; lng: number} | null>(null);
+  const [selectedVibes, setSelectedVibes] = useState<Vibe[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  if (!user) {
+    navigate('/auth');
+    return null;
+  }
+
+  const handleVibeToggle = (vibe: Vibe) => {
+    setSelectedVibes(prev => 
+        prev.includes(vibe) ? prev.filter(v => v !== vibe) : [...prev, vibe]
+    );
+  };
+
+  const handleAiGenerate = async () => {
+    if (!formData.name || !formData.city) return;
+    
+    setIsGenerating(true);
+    try {
+        const description = await generateShopDescription(formData.name, selectedVibes.map(String), formData.city);
+        setFormData(prev => ({ ...prev, description }));
+        toast.success("Description generated!");
+    } catch (e) {
+        console.error(e);
+        toast.error("Failed to generate description");
+    } finally {
+        setIsGenerating(false);
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            setUploadedImages(prev => [...prev, event.target!.result as string]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+      toast.success(`${files.length} photos added`);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setUploadedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!location) {
+        toast.error("Please pin the location on the map.");
+        return;
+    }
+
+    if (uploadedImages.length === 0) {
+        toast.error("Please upload at least one photo.");
+        return;
+    }
+
+    // Convert string urls to ShopImage objects
+    const galleryImages: ShopImage[] = uploadedImages.map(url => ({
+        url,
+        type: 'owner' // Defaulting to owner since user created it, though logic could vary
+    }));
+
+    const newShop: Shop = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: formData.name,
+      description: formData.description,
+      location: {
+        lat: location.lat,
+        lng: location.lng,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state
+      },
+      gallery: galleryImages,
+      vibes: selectedVibes,
+      cheekyVibes: [],
+      rating: 0,
+      reviewCount: 0,
+      reviews: [],
+      isClaimed: true, // Creator claims it by default for MVP logic? Or false? Let's say false unless verified.
+      claimedBy: undefined,
+      stampCount: 0
+    };
+    
+    addShop(newShop);
+    toast.success("Spot added successfully!");
+    navigate('/');
+  };
+
+  return (
+    <div className="min-h-screen bg-coffee-50 pt-24 pb-10 px-4">
+      <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-xl p-6 md:p-10 border border-coffee-100">
+        <div className="mb-8 text-center md:text-left">
+            <h1 className="text-3xl font-serif font-bold text-coffee-900 mb-2">Add a New Spot</h1>
+            <p className="text-coffee-500">Share a hidden gem with the DripMap community.</p>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Section 1: Basic Info */}
+          <section className="space-y-4">
+             <h2 className="text-sm font-bold text-coffee-400 uppercase tracking-wider border-b border-coffee-100 pb-2">The Basics</h2>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label className="block text-sm font-bold text-coffee-900 mb-2">Shop Name</label>
+                    <input
+                        required
+                        placeholder="e.g. The Daily Grind"
+                        className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                        value={formData.name}
+                        onChange={e => setFormData({...formData, name: e.target.value})}
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-bold text-coffee-900 mb-2">City</label>
+                    <input
+                        required
+                        placeholder="e.g. Sacramento"
+                        className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                        value={formData.city}
+                        onChange={e => setFormData({...formData, city: e.target.value})}
+                    />
+                </div>
+             </div>
+          </section>
+
+          {/* Section 2: Location */}
+          <section className="space-y-4">
+             <h2 className="text-sm font-bold text-coffee-400 uppercase tracking-wider border-b border-coffee-100 pb-2">Location</h2>
+             <div>
+                <label className="block text-sm font-bold text-coffee-900 mb-2">Full Address</label>
+                <input
+                    required
+                    placeholder="123 Bean St, Sacramento, CA"
+                    className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none mb-4"
+                    value={formData.address}
+                    onChange={e => setFormData({...formData, address: e.target.value})}
+                />
+                
+                {/* Map Picker */}
+                <LocationPicker 
+                    searchAddress={`${formData.address} ${formData.city}`}
+                    value={location || undefined}
+                    onLocationSelect={(loc) => {
+                        setLocation({ lat: loc.lat, lng: loc.lng });
+                        // Optional: Update address field if we got a reverse geocode result (not implemented in picker for simplicity)
+                    }}
+                />
+             </div>
+          </section>
+
+          {/* Section 3: Vibes & Description */}
+          <section className="space-y-4">
+            <h2 className="text-sm font-bold text-coffee-400 uppercase tracking-wider border-b border-coffee-100 pb-2">The Vibe</h2>
+            <div>
+                <label className="block text-sm font-bold text-coffee-900 mb-3">Tags (Select all that apply)</label>
+                <div className="flex flex-wrap gap-2">
+                    {ALL_VIBES.map(vibe => (
+                        <TagChip 
+                            key={vibe} 
+                            label={vibe} 
+                            isSelected={selectedVibes.includes(vibe)}
+                            onClick={() => handleVibeToggle(vibe)}
+                            type="button" 
+                        />
+                    ))}
+                </div>
+            </div>
+
+            <div>
+                <div className="flex justify-between items-end mb-2">
+                    <label className="block text-sm font-bold text-coffee-900">Description</label>
+                    <button 
+                        type="button"
+                        onClick={handleAiGenerate}
+                        disabled={!formData.name || !formData.city || isGenerating}
+                        className="text-xs text-volt-500 font-bold hover:underline disabled:opacity-50 flex items-center gap-1"
+                    >
+                        <i className="fas fa-magic"></i>
+                        {isGenerating ? 'Generating...' : 'Generate with AI'}
+                    </button>
+                </div>
+                <textarea
+                    required
+                    rows={4}
+                    className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                    value={formData.description}
+                    onChange={e => setFormData({...formData, description: e.target.value})}
+                    placeholder="Tell us what makes this place special..."
+                />
+            </div>
+          </section>
+
+          {/* Section 4: Photos */}
+          <section className="space-y-4">
+            <h2 className="text-sm font-bold text-coffee-400 uppercase tracking-wider border-b border-coffee-100 pb-2">Photos</h2>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {uploadedImages.map((img, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group">
+                        <img src={img} alt="Upload" className="w-full h-full object-cover" />
+                        <button 
+                            type="button"
+                            onClick={() => removeImage(idx)}
+                            className="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                            <i className="fas fa-times text-xs"></i>
+                        </button>
+                        {idx === 0 && (
+                             <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] font-bold text-center py-1">
+                                HERO IMAGE
+                             </div>
+                        )}
+                    </div>
+                ))}
+                
+                <button 
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="aspect-square rounded-xl border-2 border-dashed border-coffee-300 flex flex-col items-center justify-center text-coffee-400 hover:border-volt-400 hover:text-volt-500 hover:bg-coffee-50 transition-all"
+                >
+                    <i className="fas fa-camera text-2xl mb-2"></i>
+                    <span className="text-xs font-bold">Add Photos</span>
+                </button>
+                <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleImageUpload} 
+                    className="hidden" 
+                    multiple 
+                    accept="image/*"
+                />
+            </div>
+          </section>
+
+          <div className="pt-4">
+            <Button type="submit" className="w-full py-4 text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all">
+                Submit Spot <i className="fas fa-arrow-right ml-2"></i>
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default AddSpot;

@@ -1,0 +1,7 @@
+{
+  "name": "DripMap",
+  "description": "A user-generated, aesthetic discovery app for the world's best coffee and tea shops. Find, rate, and claim authentic spots.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
