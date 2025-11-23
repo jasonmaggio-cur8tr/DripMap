@@ -272,11 +272,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addReview = async (shopId: string, reviewData: Omit<Review, 'id' | 'username' | 'userId' | 'date'>) => {
     if (!user) return;
 
+    console.log('AppContext: Adding review for shop', shopId);
     const result = await db.addReview(shopId, user.id, reviewData.rating, reviewData.comment);
+    
+    console.log('AppContext: Review result:', result);
     
     if (result.success) {
       // Refresh shops to get updated ratings
+      console.log('AppContext: Refreshing shops...');
       await refreshShops();
+      console.log('AppContext: Shops refreshed');
+    } else {
+      console.error('AppContext: Failed to add review:', result.error);
     }
   };
 

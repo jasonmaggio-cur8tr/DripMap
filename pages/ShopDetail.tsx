@@ -395,7 +395,7 @@ const ShopDetail: React.FC = () => {
                 <section className="bg-white p-8 rounded-3xl shadow-sm border border-coffee-100">
                      <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl font-serif font-bold text-coffee-900">Reviews</h2>
-                        <span className="text-coffee-500 text-sm">{shop.reviewCount} reviews</span>
+                        <span className="text-coffee-500 text-sm">{shop.reviews.length} {shop.reviews.length === 1 ? 'review' : 'reviews'}</span>
                      </div>
                      <div className="space-y-6">
                         {shop.reviews.length > 0 ? (
@@ -403,7 +403,7 @@ const ShopDetail: React.FC = () => {
                                 <div key={i} className="border-b border-coffee-100 last:border-0 pb-6 last:pb-0">
                                     <div className="flex items-center gap-3 mb-2">
                                         <Link to={`/profile/${review.userId}`} className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden hover:opacity-80 transition-opacity">
-                                            <img src={`https://ui-avatars.com/api/?name=${review.username}&background=random`} alt="User" />
+                                            <img src={review.avatarUrl} alt={review.username} className="w-full h-full object-cover" />
                                         </Link>
                                         <div>
                                             <Link to={`/profile/${review.userId}`} className="font-bold text-coffee-900 text-sm hover:text-volt-500 transition-colors">

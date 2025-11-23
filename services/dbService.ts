@@ -182,6 +182,7 @@ export const fetchShops = async (): Promise<Shop[]> => {
         id: r.id,
         userId: r.user_id,
         username: r.profiles?.username || 'Anonymous',
+        avatarUrl: r.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${r.profiles?.username || 'User'}&background=random`,
         rating: r.rating,
         comment: r.comment || '',
         date: new Date(r.created_at).toLocaleDateString()
@@ -249,6 +250,8 @@ export const createShop = async (shopData: {
 
 export const addReview = async (shopId: string, userId: string, rating: number, comment: string) => {
   try {
+    console.log('Adding review:', { shopId, userId, rating, comment });
+    
     const { data, error } = await supabase
       .from('reviews')
       .insert({
@@ -260,7 +263,12 @@ export const addReview = async (shopId: string, userId: string, rating: number, 
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error inserting review:', error);
+      throw error;
+    }
+
+    console.log('Review inserted successfully:', data);
 
     // Calculate new average rating
     const { data: allReviews, error: reviewsError } = await supabase
@@ -268,17 +276,32 @@ export const addReview = async (shopId: string, userId: string, rating: number, 
       .select('rating')
       .eq('shop_id', shopId);
 
-    if (!reviewsError && allReviews && allReviews.length > 0) {
+    if (reviewsError) {
+      console.error('Error fetching reviews for rating calculation:', reviewsError);
+      throw reviewsError;
+    }
+
+    console.log('All reviews for shop:', allReviews);
+
+    if (allReviews && allReviews.length > 0) {
       const avgRating = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
+      console.log('Calculated average rating:', avgRating, 'from', allReviews.length, 'reviews');
       
       // Update shop's rating and review count
-      await supabase
+      const { error: updateError } = await supabase
         .from('shops')
         .update({
           rating: avgRating,
           review_count: allReviews.length
         })
         .eq('id', shopId);
+
+      if (updateError) {
+        console.error('Error updating shop rating:', updateError);
+        throw updateError;
+      }
+
+      console.log('Shop rating updated successfully');
     }
 
     return { success: true, review: data };
