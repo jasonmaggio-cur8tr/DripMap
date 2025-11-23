@@ -173,14 +173,30 @@ const Profile: React.FC = () => {
     setIsEditing(false);
   };
 
-  const handleSave = () => {
-    updateUserProfile({
-      username: editData.username,
-      bio: editData.bio,
-      avatarUrl: editData.avatarUrl,
-      socialLinks: editData.socialLinks
-    });
-    setIsEditing(false);
+  const handleSave = async () => {
+    try {
+      await updateUserProfile({
+        username: editData.username,
+        bio: editData.bio,
+        avatarUrl: editData.avatarUrl,
+        socialLinks: editData.socialLinks
+      });
+      
+      // Update local viewedUser state immediately after successful save
+      setViewedUser(prev => prev ? {
+        ...prev,
+        username: editData.username,
+        bio: editData.bio,
+        avatarUrl: editData.avatarUrl,
+        socialLinks: editData.socialLinks
+      } : null);
+      
+      setIsEditing(false);
+      toast.success("Profile updated successfully!");
+    } catch (error) {
+      toast.error("Failed to update profile");
+      console.error('Profile update error:', error);
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
