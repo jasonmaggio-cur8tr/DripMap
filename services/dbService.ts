@@ -117,13 +117,21 @@ export const toggleFollowUser = async (followerId: string, followingId: string, 
 export const updateUserProfile = async (userId: string, updates: {
   username?: string;
   bio?: string;
+  avatarUrl?: string;
   instagram?: string;
   x?: string;
 }) => {
   try {
+    const updateData: any = {};
+    if (updates.username !== undefined) updateData.username = updates.username;
+    if (updates.bio !== undefined) updateData.bio = updates.bio;
+    if (updates.avatarUrl !== undefined) updateData.avatar_url = updates.avatarUrl;
+    if (updates.instagram !== undefined) updateData.instagram = updates.instagram;
+    if (updates.x !== undefined) updateData.x = updates.x;
+    
     const { error } = await supabase
       .from('profiles')
-      .update(updates)
+      .update(updateData)
       .eq('id', userId);
 
     if (error) throw error;

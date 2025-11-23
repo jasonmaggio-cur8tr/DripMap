@@ -5,6 +5,7 @@ import { useApp } from '../context/AppContext';
 import Button from '../components/Button';
 import { Vibe, User, Shop } from '../types';
 import { useToast } from '../context/ToastContext';
+import { uploadImage } from '../services/storageService';
 
 const Profile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +16,7 @@ const Profile: React.FC = () => {
   const [viewedUser, setViewedUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   
   // Edit State
   const [editData, setEditData] = useState({
@@ -26,6 +28,7 @@ const Profile: React.FC = () => {
         x: '',
     }
   });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Determine if we are viewing our own profile
@@ -175,10 +178,25 @@ const Profile: React.FC = () => {
 
   const handleSave = async () => {
     try {
+      setUploadingAvatar(true);
+      let finalAvatarUrl = editData.avatarUrl;
+      
+      // Upload new avatar if a file was selected
+      if (avatarFile) {
+        toast.info("Uploading profile picture...");
+        const uploadResult = await uploadImage(avatarFile, 'avatars');
+        
+        if (uploadResult.success && uploadResult.url) {
+          finalAvatarUrl = uploadResult.url;
+        } else {
+          throw new Error(uploadResult.error || 'Failed to upload avatar');
+        }
+      }
+      
       await updateUserProfile({
         username: editData.username,
         bio: editData.bio,
-        avatarUrl: editData.avatarUrl,
+        avatarUrl: finalAvatarUrl,
         socialLinks: editData.socialLinks
       });
       
@@ -187,27 +205,48 @@ const Profile: React.FC = () => {
         ...prev,
         username: editData.username,
         bio: editData.bio,
-        avatarUrl: editData.avatarUrl,
+        avatarUrl: finalAvatarUrl,
         socialLinks: editData.socialLinks
       } : null);
       
+      setAvatarFile(null);
       setIsEditing(false);
       toast.success("Profile updated successfully!");
-    } catch (error) {
-      toast.error("Failed to update profile");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update profile");
       console.error('Profile update error:', error);
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please upload an image file');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image must be smaller than 5MB');
+        return;
+      }
+      
+      // Store the file for upload on save
+      setAvatarFile(file);
+      
+      // Show preview
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) {
           setEditData(prev => ({ ...prev, avatarUrl: event.target!.result as string }));
         }
       };
-      reader.readAsDataURL(e.target.files[0]);
+      reader.readAsDataURL(file);
     }
   };
 

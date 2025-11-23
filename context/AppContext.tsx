@@ -166,6 +166,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const result = await db.updateUserProfile(user.id, {
         username: updates.username,
         bio: updates.bio,
+        avatarUrl: updates.avatarUrl,
         instagram: updates.socialLinks?.instagram,
         x: updates.socialLinks?.x
       });
