@@ -1,12 +1,14 @@
 {
   "name": "dripmap",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "setup": "echo Please update .env file with your Supabase credentials before running the app",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@google/genai": "^1.30.0",

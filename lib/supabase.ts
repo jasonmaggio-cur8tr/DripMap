@@ -32,7 +32,9 @@ const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY');
 // Check if we have valid configuration (not empty and not the placeholder default)
 const isConfigured = supabaseUrl && 
                      supabaseAnonKey && 
-                     supabaseUrl !== 'https://placeholder.supabase.co';
+                     supabaseUrl !== 'your-supabase-url-here' &&
+                     supabaseAnonKey !== 'your-supabase-anon-key-here' &&
+                     supabaseUrl.startsWith('http');
 
 if (!isConfigured) {
   console.warn('Supabase Environment Variables missing or using placeholders. Using Mock Client for Demo.');
@@ -43,9 +45,22 @@ const mockClient = {
   auth: {
     getSession: async () => ({ data: { session: null }, error: null }),
     onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    signUp: async () => {
+        console.warn("Mock signup: Please configure Supabase credentials in .env");
+        return { 
+          data: { user: null, session: null }, 
+          error: { message: 'Supabase not configured. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env file' } 
+        };
+    },
+    signInWithPassword: async () => {
+        console.warn("Mock login: Please configure Supabase credentials in .env");
+        return { 
+          data: { user: null, session: null }, 
+          error: { message: 'Supabase not configured. Please add credentials to .env file' } 
+        };
+    },
     signInWithOtp: async () => {
         console.log("Mock Login: Check console for 'success'");
-        // Simulate a network delay
         await new Promise(resolve => setTimeout(resolve, 1000));
         return { data: {}, error: null };
     },
@@ -62,7 +77,16 @@ const mockClient = {
     }),
     insert: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }),
     update: () => ({ eq: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }) }),
-  })
+  }),
+  storage: {
+    from: () => ({
+      upload: async () => ({ data: null, error: { message: 'Storage not configured' } }),
+      getPublicUrl: () => ({ data: { publicUrl: '' } }),
+      remove: async () => ({ error: null })
+    }),
+    getBucket: async () => ({ data: null, error: { message: 'not found' } }),
+    createBucket: async () => ({ error: { message: 'Storage not configured' } })
+  }
 };
 
 // Export real client if configured, otherwise export mock cast as any to satisfy types

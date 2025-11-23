@@ -1,10 +1,26 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import Button from '../components/Button';
 
 const AdminDashboard: React.FC = () => {
-  const { claimRequests, approveClaimRequest, shops } = useApp();
+  const { claimRequests, approveClaimRequest, shops, user } = useApp();
+  const navigate = useNavigate();
+
+  // Redirect non-admin users
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+    } else if (!user.isAdmin && !user.isBusinessOwner) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
+  // Don't render anything if not authorized
+  if (!user || (!user.isAdmin && !user.isBusinessOwner)) {
+    return null;
+  }
 
   const pendingRequests = claimRequests.filter(r => r.status === 'pending');
   const approvedRequests = claimRequests.filter(r => r.status === 'approved');

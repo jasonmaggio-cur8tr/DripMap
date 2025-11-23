@@ -1,0 +1,52 @@
+-- =====================================================
+-- USER FOLLOWS TABLE FOR SOCIAL FEATURES
+-- Run this in Supabase SQL Editor
+-- =====================================================
+
+-- Drop existing table if you need to recreate it
+-- DROP TABLE IF EXISTS public.user_follows CASCADE;
+
+-- Create user_follows table in public schema
+CREATE TABLE IF NOT EXISTS public.user_follows (
+  follower_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  following_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  PRIMARY KEY (follower_id, following_id),
+  CHECK (follower_id != following_id)
+);
+
+-- Create indexes for better query performance
+CREATE INDEX IF NOT EXISTS idx_user_follows_follower ON public.user_follows(follower_id);
+CREATE INDEX IF NOT EXISTS idx_user_follows_following ON public.user_follows(following_id);
+
+-- Enable Row Level Security
+ALTER TABLE public.user_follows ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Anyone can view follows" ON public.user_follows;
+DROP POLICY IF EXISTS "Users can follow others" ON public.user_follows;
+DROP POLICY IF EXISTS "Users can unfollow" ON public.user_follows;
+
+-- RLS Policy: Anyone can view follows (public data)
+CREATE POLICY "Anyone can view follows"
+  ON public.user_follows
+  FOR SELECT
+  USING (true);
+
+-- RLS Policy: Authenticated users can follow others
+CREATE POLICY "Users can follow others"
+  ON public.user_follows
+  FOR INSERT
+  WITH CHECK (auth.uid() = follower_id);
+
+-- RLS Policy: Users can unfollow (delete their own follows)
+CREATE POLICY "Users can unfollow"
+  ON public.user_follows
+  FOR DELETE
+  USING (auth.uid() = follower_id);
+
+-- Verify the table was created
+SELECT 'user_follows table created successfully!' as status;
+
+-- Show sample query to verify it works
+SELECT * FROM public.user_follows LIMIT 1;

@@ -4,20 +4,20 @@ import { GoogleGenAI } from "@google/genai";
 const getApiKey = () => {
   let key = '';
   
-  // Try process.env
+  // Try process.env (for SSR/build time)
   try {
     if (typeof process !== 'undefined' && process.env) {
-      key = process.env.API_KEY || '';
+      key = process.env.GEMINI_API_KEY || '';
     }
   } catch (e) {}
   
-  // Try import.meta.env
+  // Try import.meta.env (for Vite)
   if (!key) {
     try {
       // @ts-ignore
       if (typeof import.meta !== 'undefined' && import.meta.env) {
         // @ts-ignore
-        key = import.meta.env.API_KEY || '';
+        key = import.meta.env.GEMINI_API_KEY || '';
       }
     } catch (e) {}
   }

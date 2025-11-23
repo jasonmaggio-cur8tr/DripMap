@@ -10,8 +10,19 @@ export default defineConfig(({ mode }) => {
         host: '0.0.0.0',
       },
       plugins: [react()],
+      build: {
+        outDir: 'dist',
+        sourcemap: false,
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+              'supabase': ['@supabase/supabase-js']
+            }
+          }
+        }
+      },
       define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
       },
       resolve: {

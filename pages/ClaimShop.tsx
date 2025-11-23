@@ -33,19 +33,24 @@ const ClaimShop: React.FC = () => {
     );
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    submitClaimRequest({
-        shopId: shop.id,
-        userId: user.id,
-        businessEmail: formData.businessEmail,
-        role: formData.role,
-        socialLink: formData.socialLink
-    });
+    try {
+      await submitClaimRequest({
+          shopId: shop.id,
+          userId: user.id,
+          businessEmail: formData.businessEmail,
+          role: formData.role,
+          socialLink: formData.socialLink
+      });
 
-    toast.success("Verification Request Submitted!");
-    navigate(`/shop/${shop.id}`);
+      toast.success("Verification Request Submitted!");
+      navigate(`/shop/${shop.id}`);
+    } catch (error) {
+      console.error('Error submitting claim:', error);
+      toast.error("Failed to submit claim request. Please try again.");
+    }
   };
 
   return (

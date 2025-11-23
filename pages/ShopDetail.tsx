@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { CHEEKY_VIBES_OPTIONS } from '../constants';
@@ -17,6 +17,9 @@ const ShopDetail: React.FC = () => {
   const [galleryFilter, setGalleryFilter] = useState<'all' | 'owner' | 'community'>('all');
   const [isGalleryExpanded, setIsGalleryExpanded] = useState(false);
 
+  // Lightbox State
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
   // Review Modal State
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
@@ -24,12 +27,26 @@ const ShopDetail: React.FC = () => {
   // Community Tabs
   const [communityTab, setCommunityTab] = useState<'visited' | 'saved'>('visited');
 
+  // Lightbox Keyboard Navigation
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (lightboxIndex === null) return;
+    if (e.key === 'Escape') setLightboxIndex(null);
+    if (e.key === 'ArrowRight') handleNextImage(e);
+    if (e.key === 'ArrowLeft') handlePrevImage(e);
+  }, [lightboxIndex]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
   if (!shop) {
     return <div className="p-10 text-center">Shop not found</div>;
   }
 
   const isSaved = user?.savedShops.includes(shop.id);
   const isVisited = user?.visitedShops.includes(shop.id);
+  const isOwner = user && (shop.claimedBy === user.id || user.isAdmin);
   
   const pendingRequest = user ? claimRequests.find(r => r.shopId === shop.id && r.userId === user.id && r.status === 'pending') : null;
   
@@ -42,8 +59,9 @@ const ShopDetail: React.FC = () => {
     galleryFilter === 'all' || img.type === galleryFilter
   );
 
-  const displayedImages = isGalleryExpanded ? filteredImages : filteredImages.slice(0, 6);
-  const showExpandButton = filteredImages.length > 6 && !isGalleryExpanded;
+  // For Masonry, we usually want to show more images initially to make the effect look good
+  const displayedImages = isGalleryExpanded ? filteredImages : filteredImages.slice(0, 9);
+  const showExpandButton = filteredImages.length > 9 && !isGalleryExpanded;
 
   // Handlers
   const handleSaveClick = () => {
@@ -87,6 +105,19 @@ const ShopDetail: React.FC = () => {
     toast.success("Passport Stamped!");
   };
 
+  // Lightbox Handlers
+  const handleNextImage = (e: any) => {
+    e?.stopPropagation();
+    if (lightboxIndex === null) return;
+    setLightboxIndex((prev) => (prev === null ? null : (prev + 1) % filteredImages.length));
+  };
+
+  const handlePrevImage = (e: any) => {
+    e?.stopPropagation();
+    if (lightboxIndex === null) return;
+    setLightboxIndex((prev) => (prev === null ? null : (prev - 1 + filteredImages.length) % filteredImages.length));
+  };
+
   const renderVibeCheck = (vibe: string) => {
     const hasVibe = shop.cheekyVibes.includes(vibe);
     return (
@@ -105,6 +136,46 @@ const ShopDetail: React.FC = () => {
   return (
     <div className="min-h-screen pb-20 bg-coffee-50 relative">
       
+      {/* Lightbox Modal */}
+      {lightboxIndex !== null && (
+        <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-200">
+            <button 
+                onClick={() => setLightboxIndex(null)}
+                className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition-colors z-50"
+            >
+                <i className="fas fa-times text-xl"></i>
+            </button>
+
+            <button 
+                onClick={handlePrevImage}
+                className="absolute left-4 md:left-8 w-12 h-12 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition-colors z-40"
+            >
+                <i className="fas fa-chevron-left text-xl"></i>
+            </button>
+
+            <div className="max-w-6xl max-h-[85vh] px-4 relative">
+                <img 
+                    src={filteredImages[lightboxIndex].url} 
+                    alt="Lightbox view" 
+                    className="max-h-[85vh] max-w-full object-contain rounded-lg shadow-2xl"
+                />
+                <div className="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
+                     <div className="inline-block bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full text-white/90 text-sm font-bold">
+                        <span className="uppercase text-volt-400 text-xs mr-2 tracking-wider">{filteredImages[lightboxIndex].type}</span>
+                        {lightboxIndex + 1} / {filteredImages.length}
+                     </div>
+                </div>
+            </div>
+
+            <button 
+                onClick={handleNextImage}
+                className="absolute right-4 md:right-8 w-12 h-12 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition-colors z-40"
+            >
+                <i className="fas fa-chevron-right text-xl"></i>
+            </button>
+        </div>
+      )}
+
       {/* Review Modal */}
       {showReviewModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-coffee-900/40 backdrop-blur-sm">
@@ -155,13 +226,18 @@ const ShopDetail: React.FC = () => {
       )}
 
       {/* Hero Header */}
-      <div className="h-[50vh] w-full relative group">
+      <div className="h-[50vh] w-full relative group cursor-pointer" onClick={() => setLightboxIndex(0)}>
         <img src={shop.gallery[0].url} alt={shop.name} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10">
+            <div className="bg-white/20 backdrop-blur-md px-6 py-3 rounded-full text-white font-bold text-sm border border-white/30">
+                <i className="fas fa-expand-arrows-alt mr-2"></i> View Gallery
+            </div>
+        </div>
         
         {/* Visited Stamp Overlay */}
         {isVisited && (
-            <div className="absolute top-24 right-8 transform rotate-12 animate-in zoom-in duration-500">
+            <div className="absolute top-24 right-8 transform rotate-12 animate-in zoom-in duration-500 pointer-events-none">
                 <div className="w-24 h-24 rounded-full border-4 border-volt-400/80 flex items-center justify-center bg-coffee-900/80 backdrop-blur-sm shadow-lg">
                     <div className="text-center transform -rotate-12">
                         <p className="text-volt-400 text-[10px] font-bold uppercase tracking-widest">DripMap</p>
@@ -194,7 +270,7 @@ const ShopDetail: React.FC = () => {
             </div>
         </div>
 
-        <Link to="/" className="absolute top-6 left-6 md:top-8 md:left-8 bg-white/20 backdrop-blur-md p-3 rounded-full hover:bg-white hover:text-coffee-900 text-white transition-all">
+        <Link to="/" onClick={(e) => e.stopPropagation()} className="absolute top-6 left-6 md:top-8 md:left-8 bg-white/20 backdrop-blur-md p-3 rounded-full hover:bg-white hover:text-coffee-900 text-white transition-all">
             <i className="fas fa-arrow-left text-xl"></i>
         </Link>
       </div>
@@ -216,7 +292,7 @@ const ShopDetail: React.FC = () => {
                     </div>
                 </section>
 
-                {/* Aesthetic Gallery */}
+                {/* Aesthetic Gallery (Masonry) */}
                 <section className="bg-white p-8 rounded-3xl shadow-sm border border-coffee-100">
                     <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
                         <h2 className="text-2xl font-serif font-bold text-coffee-900">The Aesthetic</h2>
@@ -238,58 +314,66 @@ const ShopDetail: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {displayedImages.length > 0 ? (
-                            displayedImages.map((img, idx) => (
-                                <div key={idx} className="group relative aspect-[4/5] rounded-xl overflow-hidden bg-coffee-200 cursor-pointer">
+                    {displayedImages.length > 0 ? (
+                        <div className="columns-2 md:columns-3 gap-4 space-y-4">
+                            {displayedImages.map((img, idx) => (
+                                <div 
+                                    key={idx} 
+                                    onClick={() => setLightboxIndex(idx)}
+                                    className="break-inside-avoid relative rounded-2xl overflow-hidden bg-coffee-200 cursor-zoom-in group shadow-sm hover:shadow-md transition-all"
+                                >
                                     <img 
                                         src={img.url} 
                                         alt={`Gallery ${idx}`} 
                                         loading="lazy"
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                        className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105" 
                                     />
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300"></div>
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
                                     <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase opacity-0 group-hover:opacity-100 transition-opacity">
                                         {img.type}
                                     </div>
                                 </div>
-                            ))
-                        ) : (
-                            <div className="col-span-full py-12 text-center text-coffee-400 bg-coffee-50 rounded-xl border border-coffee-100 border-dashed">
-                                <i className="fas fa-images text-3xl mb-3 opacity-30"></i>
-                                <p className="text-sm font-medium">
-                                    {galleryFilter === 'all' 
-                                        ? "No photos yet." 
-                                        : `No ${galleryFilter} photos yet.`}
-                                </p>
-                            </div>
-                        )}
-                        
-                        {/* Add Photo Placeholder */}
-                        {isGalleryExpanded || displayedImages.length < 6 ? (
-                             <button className="aspect-[4/5] rounded-xl border-2 border-dashed border-coffee-300 flex flex-col items-center justify-center text-coffee-400 hover:border-volt-400 hover:text-volt-500 hover:bg-coffee-50 transition-all group">
-                                <div className="w-10 h-10 rounded-full bg-coffee-100 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                                    <i className="fas fa-plus text-coffee-500 group-hover:text-volt-500"></i>
-                                </div>
-                                <span className="font-bold text-xs">Add Photo</span>
-                            </button>
-                        ) : null}
-                    </div>
+                            ))}
+                            
+                            {/* Add Photo Button mixed into Masonry if expanding or short list */}
+                            {(isGalleryExpanded || displayedImages.length < 9) && (
+                                <button className="break-inside-avoid w-full aspect-square rounded-2xl border-2 border-dashed border-coffee-300 flex flex-col items-center justify-center text-coffee-400 hover:border-volt-400 hover:text-volt-500 hover:bg-coffee-50 transition-all group">
+                                    <div className="w-12 h-12 rounded-full bg-coffee-100 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                                        <i className="fas fa-plus text-coffee-500 group-hover:text-volt-500"></i>
+                                    </div>
+                                    <span className="font-bold text-xs">Add Photo</span>
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="py-12 text-center text-coffee-400 bg-coffee-50 rounded-xl border border-coffee-100 border-dashed">
+                            <i className="fas fa-images text-3xl mb-3 opacity-30"></i>
+                            <p className="text-sm font-medium">
+                                {galleryFilter === 'all' 
+                                    ? "No photos yet." 
+                                    : `No ${galleryFilter} photos yet.`}
+                            </p>
+                        </div>
+                    )}
 
                     {showExpandButton && (
-                        <Button 
-                            variant="outline" 
-                            className="w-full mt-6 border-coffee-200 text-coffee-600 hover:text-coffee-900 hover:border-coffee-900" 
-                            onClick={() => setIsGalleryExpanded(true)}
-                        >
-                            See All Images ({filteredImages.length})
-                        </Button>
+                        <div className="relative mt-6">
+                            {/* Fade effect for non-expanded */}
+                            <div className="absolute -top-24 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+                            <Button 
+                                variant="outline" 
+                                className="w-full border-coffee-200 text-coffee-600 hover:text-coffee-900 hover:border-coffee-900 relative z-10" 
+                                onClick={() => setIsGalleryExpanded(true)}
+                            >
+                                See All Images ({filteredImages.length})
+                            </Button>
+                        </div>
                     )}
                     
-                    {isGalleryExpanded && filteredImages.length > 6 && (
+                    {isGalleryExpanded && filteredImages.length > 9 && (
                          <Button 
                             variant="ghost" 
-                            className="w-full mt-2 text-sm text-coffee-500" 
+                            className="w-full mt-6 text-sm text-coffee-500" 
                             onClick={() => setIsGalleryExpanded(false)}
                         >
                             Show Less
@@ -371,8 +455,11 @@ const ShopDetail: React.FC = () => {
             <div className="lg:col-span-1">
                 <div className="sticky top-24 space-y-6">
                     {/* Action Card */}
-                    <div className="bg-white p-6 rounded-3xl shadow-lg border border-coffee-100">
-                        
+                    <div className="bg-white p-6 rounded-3xl shadow-lg border border-coffee-100 relative overflow-hidden">
+                        {isOwner && (
+                            <div className="absolute top-0 left-0 right-0 bg-volt-400 h-1.5"></div>
+                        )}
+
                         {shop.isClaimed && (
                             <div className="mb-6 bg-coffee-900 rounded-xl p-4 flex items-center gap-3 shadow-md">
                                 <div className="w-10 h-10 rounded-full bg-volt-400 flex items-center justify-center shrink-0 text-coffee-900 text-lg">
@@ -392,11 +479,31 @@ const ShopDetail: React.FC = () => {
                         </div>
                         <div className="mb-8">
                             <p className="text-sm font-bold text-coffee-400 mb-1">HOURS</p>
-                            <p className="text-coffee-900">Mon-Fri: 7am - 7pm</p>
-                            <p className="text-coffee-900">Sat-Sun: 8am - 6pm</p>
+                            {shop.openHours && Object.values(shop.openHours).some(v => v) ? (
+                              <div className="space-y-1">
+                                {shop.openHours.monday && <p className="text-coffee-900 text-sm"><span className="font-semibold">Mon:</span> {shop.openHours.monday}</p>}
+                                {shop.openHours.tuesday && <p className="text-coffee-900 text-sm"><span className="font-semibold">Tue:</span> {shop.openHours.tuesday}</p>}
+                                {shop.openHours.wednesday && <p className="text-coffee-900 text-sm"><span className="font-semibold">Wed:</span> {shop.openHours.wednesday}</p>}
+                                {shop.openHours.thursday && <p className="text-coffee-900 text-sm"><span className="font-semibold">Thu:</span> {shop.openHours.thursday}</p>}
+                                {shop.openHours.friday && <p className="text-coffee-900 text-sm"><span className="font-semibold">Fri:</span> {shop.openHours.friday}</p>}
+                                {shop.openHours.saturday && <p className="text-coffee-900 text-sm"><span className="font-semibold">Sat:</span> {shop.openHours.saturday}</p>}
+                                {shop.openHours.sunday && <p className="text-coffee-900 text-sm"><span className="font-semibold">Sun:</span> {shop.openHours.sunday}</p>}
+                              </div>
+                            ) : (
+                              <p className="text-coffee-500 text-sm italic">Hours not available</p>
+                            )}
                         </div>
 
                         <div className="space-y-3">
+                             {isOwner && (
+                                <Button 
+                                    onClick={() => navigate(`/edit-shop/${shop.id}`)}
+                                    className="w-full bg-coffee-900 text-volt-400 hover:bg-coffee-800 border-2 border-transparent hover:border-volt-400 transition-all mb-4"
+                                >
+                                    <i className="fas fa-pen mr-2"></i> Edit Shop Details
+                                </Button>
+                             )}
+
                              {user && (
                                 <>
                                     <Button 
@@ -451,7 +558,7 @@ const ShopDetail: React.FC = () => {
                         )}
                     </div>
 
-                    {/* New Community Section */}
+                    {/* Community Section */}
                     <div className="bg-white p-6 rounded-3xl shadow-sm border border-coffee-100">
                         <h3 className="text-lg font-serif font-bold text-coffee-900 mb-4 flex items-center gap-2">
                            <i className="fas fa-users text-coffee-400"></i> The Community

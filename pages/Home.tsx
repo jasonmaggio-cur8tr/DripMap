@@ -4,16 +4,31 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import Map from '../components/Map';
 import TagChip from '../components/TagChip';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { ALL_VIBES } from '../constants';
 
 const Home: React.FC = () => {
-  const { shops, searchQuery, setSearchQuery, selectedVibes, toggleVibe } = useApp();
+  const { shops, searchQuery, setSearchQuery, selectedVibes, toggleVibe, loading } = useApp();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'map' | 'list'>('list'); // Mobile view toggle
 
   const handleShopClick = (id: string) => {
     navigate(`/shop/${id}`);
   };
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-coffee-50">
+        <div className="text-center">
+          <div className="w-20 h-20 bg-coffee-900 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg animate-pulse">
+            <i className="fas fa-droplet text-volt-400 text-4xl"></i>
+          </div>
+          <LoadingSpinner size="lg" />
+          <p className="text-coffee-600 mt-4 font-medium">Loading spots...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-[calc(100vh-4rem)] mt-16 flex flex-col md:flex-row overflow-hidden">

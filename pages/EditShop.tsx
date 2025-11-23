@@ -1,22 +1,22 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Shop, Vibe, ShopImage } from '../types';
 import { ALL_VIBES, CHEEKY_VIBES_OPTIONS } from '../constants';
 import { generateShopDescription } from '../services/geminiService';
-import { uploadImages } from '../services/storageService';
 import Button from '../components/Button';
 import TagChip from '../components/TagChip';
 import LocationPicker from '../components/LocationPicker';
 import { useToast } from '../context/ToastContext';
 
-const AddSpot: React.FC = () => {
-  const { addShop, user } = useApp();
+const EditShop: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const { shops, updateShop, user } = useApp();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -29,8 +29,16 @@ const AddSpot: React.FC = () => {
   const [location, setLocation] = useState<{lat: number; lng: number} | null>(null);
   const [selectedVibes, setSelectedVibes] = useState<Vibe[]>([]);
   const [selectedCheekyVibes, setSelectedCheekyVibes] = useState<string[]>([]);
-  const [uploadedImages, setUploadedImages] = useState<{file: File; preview: string}[]>([]);
-  const [openHours, setOpenHours] = useState({
+  const [uploadedImages, setUploadedImages] = useState<{url: string, isNew: boolean}[]>([]);
+  const [openHours, setOpenHours] = useState<{
+    monday: string;
+    tuesday: string;
+    wednesday: string;
+    thursday: string;
+    friday: string;
+    saturday: string;
+    sunday: string;
+  }>({
     monday: '',
     tuesday: '',
     wednesday: '',
@@ -42,15 +50,62 @@ const AddSpot: React.FC = () => {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Fetch Shop Data on Mount
   useEffect(() => {
     if (!user) {
-      navigate('/auth');
+        navigate('/auth');
+        return;
     }
-  }, [user, navigate]);
 
-  if (!user) {
-    return null;
-  }
+    const shopToEdit = shops.find(s => s.id === id);
+    
+    if (!shopToEdit) {
+        toast.error("Shop not found");
+        navigate('/');
+        return;
+    }
+
+    // Security Check: Ensure user owns this shop or is admin
+    if (shopToEdit.claimedBy !== user.id && !user.isAdmin) {
+        toast.error("You are not authorized to edit this shop.");
+        navigate(`/shop/${id}`);
+        return;
+    }
+
+    // Populate Form
+    setFormData({
+        name: shopToEdit.name,
+        city: shopToEdit.location.city,
+        state: shopToEdit.location.state,
+        address: shopToEdit.location.address,
+        description: shopToEdit.description
+    });
+    setLocation({
+        lat: shopToEdit.location.lat,
+        lng: shopToEdit.location.lng
+    });
+    setSelectedVibes(shopToEdit.vibes);
+    setSelectedCheekyVibes(shopToEdit.cheekyVibes || []);
+    
+    // Load opening hours if they exist
+    if (shopToEdit.openHours) {
+      setOpenHours({
+        monday: shopToEdit.openHours.monday || '',
+        tuesday: shopToEdit.openHours.tuesday || '',
+        wednesday: shopToEdit.openHours.wednesday || '',
+        thursday: shopToEdit.openHours.thursday || '',
+        friday: shopToEdit.openHours.friday || '',
+        saturday: shopToEdit.openHours.saturday || '',
+        sunday: shopToEdit.openHours.sunday || ''
+      });
+    }
+    
+    // Map existing gallery to preview format
+    setUploadedImages(shopToEdit.gallery.map(img => ({ url: img.url, isNew: false })));
+    
+    setIsLoading(false);
+  }, [id, shops, user, navigate, toast]);
+
 
   const handleVibeToggle = (vibe: Vibe) => {
     setSelectedVibes(prev => 
@@ -82,21 +137,18 @@ const AddSpot: React.FC = () => {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const files: File[] = Array.from(e.target.files);
+      const files = Array.from(e.target.files);
       
       files.forEach((file: File) => {
         const reader = new FileReader();
-        reader.onload = (event: ProgressEvent<FileReader>) => {
+        reader.onload = (event) => {
           if (event.target?.result) {
-            setUploadedImages(prev => [...prev, {
-              file,
-              preview: event.target!.result as string
-            }]);
+            setUploadedImages(prev => [...prev, { url: event.target!.result as string, isNew: true }]);
           }
         };
         reader.readAsDataURL(file);
       });
-      toast.success(`${files.length} photo(s) added`);
+      toast.success(`${files.length} photos added`);
     }
   };
 
@@ -104,87 +156,67 @@ const AddSpot: React.FC = () => {
     setUploadedImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!location) {
-        toast.error("Please pin the location on the map.");
-        return;
-    }
+    const originalShop = shops.find(s => s.id === id);
+    if (!originalShop || !location) return;
 
     if (uploadedImages.length === 0) {
-        toast.error("Please upload at least one photo.");
+        toast.error("Please allow at least one photo.");
         return;
     }
 
-    setIsSubmitting(true);
+    // Preserve existing community photos, only edit owner photos basically
+    // For MVP simplicity, we assume the owner is managing the 'owner' type photos mainly, 
+    // but here we just reconstruct the array.
     
-    try {
-      console.log('Starting image upload...', uploadedImages.length, 'images');
-      
-      // Upload images to Supabase Storage
-      const imageFiles = uploadedImages.map(img => img.file);
-      const uploadResult = await uploadImages(imageFiles, 'shops');
-      
-      console.log('Upload result:', uploadResult);
-      
-      if (!uploadResult.success || !uploadResult.urls) {
-        const errorMsg = uploadResult.error || 'Failed to upload images';
-        console.error('Upload failed:', errorMsg);
-        
-        // Check if it's a bucket error
-        if (errorMsg.includes('Bucket not found') || errorMsg.includes('bucket')) {
-          toast.error('Storage not configured. Please create a "shop-images" bucket in Supabase Storage.');
-        } else {
-          toast.error(errorMsg);
-        }
-        setIsSubmitting(false);
-        return;
-      }
+    // Logic: If it was already there, keep its type. If new, it's 'owner'.
+    const updatedGallery: ShopImage[] = uploadedImages.map(img => {
+        const existing = originalShop.gallery.find(g => g.url === img.url);
+        return {
+            url: img.url,
+            type: existing ? existing.type : 'owner'
+        };
+    });
 
-      console.log('Images uploaded successfully, creating shop...');
-
-      // Convert URLs to ShopImage objects
-      const galleryImages: ShopImage[] = uploadResult.urls.map(url => ({
-        url,
-        type: 'owner'
-      }));
-
-      // Create shop
-      await addShop({
-        name: formData.name,
-        description: formData.description,
-        location: {
-          lat: location.lat,
-          lng: location.lng,
-          address: formData.address,
-          city: formData.city,
-          state: formData.state
-        },
-        gallery: galleryImages,
-        vibes: selectedVibes,
-        cheekyVibes: selectedCheekyVibes,
-        openHours: openHours,
-        isClaimed: false,
-        claimedBy: undefined
-      });
-      
-      toast.success("Spot added successfully!");
-      navigate('/');
-    } catch (error: any) {
-      console.error('Error adding spot:', error);
-      toast.error(error.message || 'Failed to add spot. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    const updatedShop: Shop = {
+      ...originalShop,
+      name: formData.name,
+      description: formData.description,
+      location: {
+        lat: location.lat,
+        lng: location.lng,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state
+      },
+      gallery: updatedGallery,
+      vibes: selectedVibes,
+      cheekyVibes: selectedCheekyVibes,
+      openHours: openHours,
+    };
+    
+    updateShop(updatedShop);
+    toast.success("Shop updated successfully!");
+    navigate(`/shop/${id}`);
   };
+
+  if (isLoading) {
+      return <div className="min-h-screen pt-24 text-center text-coffee-500">Loading editor...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-coffee-50 pt-24 pb-10 px-4">
-      <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-xl p-6 md:p-10 border border-coffee-100">
-        <div className="mb-8 text-center md:text-left">
-            <h1 className="text-3xl font-serif font-bold text-coffee-900 mb-2">Add a New Spot</h1>
-            <p className="text-coffee-500">Share a hidden gem with the DripMap community.</p>
+      <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-xl p-6 md:p-10 border border-coffee-100 border-t-4 border-t-volt-400">
+        <div className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="text-center md:text-left">
+                <h1 className="text-3xl font-serif font-bold text-coffee-900 mb-2">Edit Shop Details</h1>
+                <p className="text-coffee-500">Update the Lowdown for <span className="font-bold">{formData.name}</span>.</p>
+            </div>
+            <Button variant="outline" onClick={() => navigate(`/shop/${id}`)}>
+                Cancel
+            </Button>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -196,7 +228,6 @@ const AddSpot: React.FC = () => {
                     <label className="block text-sm font-bold text-coffee-900 mb-2">Shop Name</label>
                     <input
                         required
-                        placeholder="e.g. The Daily Grind"
                         className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
                         value={formData.name}
                         onChange={e => setFormData({...formData, name: e.target.value})}
@@ -206,7 +237,6 @@ const AddSpot: React.FC = () => {
                     <label className="block text-sm font-bold text-coffee-900 mb-2">City</label>
                     <input
                         required
-                        placeholder="e.g. Sacramento"
                         className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
                         value={formData.city}
                         onChange={e => setFormData({...formData, city: e.target.value})}
@@ -222,19 +252,16 @@ const AddSpot: React.FC = () => {
                 <label className="block text-sm font-bold text-coffee-900 mb-2">Full Address</label>
                 <input
                     required
-                    placeholder="123 Bean St, Sacramento, CA"
                     className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none mb-4"
                     value={formData.address}
                     onChange={e => setFormData({...formData, address: e.target.value})}
                 />
                 
-                {/* Map Picker */}
                 <LocationPicker 
                     searchAddress={`${formData.address} ${formData.city}`}
                     value={location || undefined}
                     onLocationSelect={(loc) => {
                         setLocation({ lat: loc.lat, lng: loc.lng });
-                        // Optional: Update address field if we got a reverse geocode result (not implemented in picker for simplicity)
                     }}
                 />
              </div>
@@ -246,22 +273,17 @@ const AddSpot: React.FC = () => {
             
             <div>
                 <label className="block text-sm font-bold text-coffee-900 mb-3">Standard Vibes</label>
-                <div className="flex flex-wrap gap-2 mb-1">
+                <div className="flex flex-wrap gap-2">
                     {ALL_VIBES.map(vibe => (
                         <TagChip 
                             key={vibe} 
                             label={vibe} 
                             isSelected={selectedVibes.includes(vibe)}
                             onClick={() => handleVibeToggle(vibe)}
-                            type="button"
+                            type="button" 
                         />
                     ))}
                 </div>
-                <p className="text-xs text-coffee-500 mt-2">
-                    {selectedVibes.length > 0 
-                        ? `${selectedVibes.length} vibe${selectedVibes.length > 1 ? 's' : ''} selected` 
-                        : 'Select at least one vibe'}
-                </p>
             </div>
 
             <div>
@@ -284,16 +306,11 @@ const AddSpot: React.FC = () => {
                         </label>
                     ))}
                 </div>
-                <p className="text-xs text-coffee-500 mt-2">
-                    {selectedCheekyVibes.length > 0 
-                        ? `${selectedCheekyVibes.length} cheeky vibe${selectedCheekyVibes.length > 1 ? 's' : ''} selected` 
-                        : 'Add some personality to your spot'}
-                </p>
             </div>
 
             <div>
                 <div className="flex justify-between items-end mb-2">
-                    <label className="block text-sm font-bold text-coffee-900">Description</label>
+                    <label className="block text-sm font-bold text-coffee-900">The Lowdown (Description)</label>
                     <button 
                         type="button"
                         onClick={handleAiGenerate}
@@ -301,7 +318,7 @@ const AddSpot: React.FC = () => {
                         className="text-xs text-volt-500 font-bold hover:underline disabled:opacity-50 flex items-center gap-1"
                     >
                         <i className="fas fa-magic"></i>
-                        {isGenerating ? 'Generating...' : 'Generate with AI'}
+                        {isGenerating ? 'Generating...' : 'Regenerate with AI'}
                     </button>
                 </div>
                 <textarea
@@ -310,14 +327,13 @@ const AddSpot: React.FC = () => {
                     className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
                     value={formData.description}
                     onChange={e => setFormData({...formData, description: e.target.value})}
-                    placeholder="Tell us what makes this place special..."
                 />
             </div>
           </section>
 
           {/* Section 4: Opening Hours */}
           <section className="space-y-4">
-            <h2 className="text-sm font-bold text-coffee-400 uppercase tracking-wider border-b border-coffee-100 pb-2">Opening Hours (Optional)</h2>
+            <h2 className="text-sm font-bold text-coffee-400 uppercase tracking-wider border-b border-coffee-100 pb-2">Opening Hours</h2>
             <p className="text-xs text-coffee-500">Leave blank for days you're closed. Example: "8:00 AM - 5:00 PM" or "Closed"</p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -343,7 +359,7 @@ const AddSpot: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {uploadedImages.map((img, idx) => (
                     <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group">
-                        <img src={img.preview} alt="Upload" className="w-full h-full object-cover" />
+                        <img src={img.url} alt="Upload" className="w-full h-full object-cover" />
                         <button 
                             type="button"
                             onClick={() => removeImage(idx)}
@@ -378,13 +394,9 @@ const AddSpot: React.FC = () => {
             </div>
           </section>
 
-          <div className="pt-4">
-            <Button 
-              type="submit" 
-              className="w-full py-4 text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all"
-              isLoading={isSubmitting}
-            >
-                {isSubmitting ? 'Uploading...' : 'Submit Spot'} <i className="fas fa-arrow-right ml-2"></i>
+          <div className="pt-4 flex gap-4">
+            <Button type="submit" className="flex-1 py-4 text-lg shadow-xl hover:shadow-2xl">
+                Save Changes
             </Button>
           </div>
         </form>
@@ -393,4 +405,4 @@ const AddSpot: React.FC = () => {
   );
 };
 
-export default AddSpot;
+export default EditShop;

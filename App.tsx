@@ -6,6 +6,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import ShopDetail from './pages/ShopDetail';
 import AddSpot from './pages/AddSpot';
+import EditShop from './pages/EditShop';
 import Auth from './pages/Auth';
 import Profile from './pages/Profile';
 import ClaimShop from './pages/ClaimShop';
@@ -20,6 +21,7 @@ const App: React.FC = () => {
           <Route path="/" element={<Home />} />
           <Route path="/shop/:id" element={<ShopDetail />} />
           <Route path="/add" element={<AddSpot />} />
+          <Route path="/edit-shop/:id" element={<EditShop />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/:id" element={<Profile />} />

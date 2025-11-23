@@ -1,7 +1,19 @@
 
 import { Shop, Vibe } from './types';
 
-export const ALL_VIBES = Object.values(Vibe);
+export const ALL_VIBES: Vibe[] = [
+  Vibe.COZY,
+  Vibe.LAPTOP_FRIENDLY,
+  Vibe.FAST_WIFI,
+  Vibe.MATCHA,
+  Vibe.SPECIALTY,
+  Vibe.OUTDOOR_SEATING,
+  Vibe.MINIMALIST,
+  Vibe.AESTHETIC,
+  Vibe.PLANTS,
+  Vibe.LATTE_ART,
+  Vibe.QUIET,
+];
 
 export const CHEEKY_VIBES_OPTIONS = [
   "Bring Your Dog",

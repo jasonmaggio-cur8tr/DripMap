@@ -3,107 +3,151 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Shop, User, Vibe, ClaimRequest, Review } from '../types';
 import { INITIAL_SHOPS } from '../constants';
 import { supabase } from '../lib/supabase';
+import * as db from '../services/dbService';
 
 interface AppContextType {
   shops: Shop[];
   user: User | null;
-  login: (email: string) => Promise<void>;
-  logout: () => void;
-  updateUserProfile: (updates: Partial<User>) => void;
-  addShop: (shop: Shop) => void;
-  toggleSaveShop: (shopId: string) => void;
-  toggleVisitedShop: (shopId: string) => void;
-  addReview: (shopId: string, review: Omit<Review, 'id' | 'username' | 'userId' | 'date'>) => void;
-  claimShop: (shopId: string) => void;
+  loading: boolean;
+  signup: (email: string, password: string, username: string) => Promise<{ success: boolean; error?: any }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: any }>;
+  logout: () => Promise<void>;
+  updateUserProfile: (updates: Partial<User>) => Promise<void>;
+  addShop: (shop: Omit<Shop, 'id' | 'rating' | 'reviewCount' | 'reviews' | 'stampCount'>) => Promise<void>;
+  updateShop: (updatedShop: Shop) => void;
+  toggleSaveShop: (shopId: string) => Promise<void>;
+  toggleVisitedShop: (shopId: string) => Promise<void>;
+  addReview: (shopId: string, review: Omit<Review, 'id' | 'username' | 'userId' | 'date'>) => Promise<void>;
   
   // Claim Logic
   claimRequests: ClaimRequest[];
-  submitClaimRequest: (request: Omit<ClaimRequest, 'id' | 'status' | 'date'>) => void;
-  approveClaimRequest: (requestId: string) => void;
+  submitClaimRequest: (request: Omit<ClaimRequest, 'id' | 'status' | 'date'>) => Promise<void>;
+  approveClaimRequest: (requestId: string) => Promise<void>;
   
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   selectedVibes: Vibe[];
   toggleVibe: (vibe: Vibe) => void;
+  refreshShops: () => Promise<void>;
   
-  // Social Data
+  // Social Features
   getShopCommunity: (shopId: string) => { 
       savers: { id: string; username: string; avatarUrl: string }[], 
       visitors: { id: string; username: string; avatarUrl: string }[] 
   };
   getProfileById: (userId: string) => Promise<User | null>;
+  getProfileByUsername: (username: string) => Promise<User | null>;
   toggleFollow: (targetUserId: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [shops, setShops] = useState<Shop[]>(INITIAL_SHOPS);
+  const [shops, setShops] = useState<Shop[]>([]);
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVibes, setSelectedVibes] = useState<Vibe[]>([]);
   const [claimRequests, setClaimRequests] = useState<ClaimRequest[]>([]);
 
-  // Initialize Supabase Auth Listener
+  // Initialize app - load shops and set up auth listener
   useEffect(() => {
-    // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        fetchUserProfile(session.user);
-      }
-    });
+    initializeApp();
+  }, []);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+  const initializeApp = async () => {
+    setLoading(true);
+    
+    // Load shops
+    await refreshShops();
+    
+    // Check active session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      await loadUserProfile(session.user.id);
+    }
+    
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        fetchUserProfile(session.user);
+        await loadUserProfile(session.user.id);
       } else {
-        // Don't clear user if it was set by manual demo login (no ID conflicts)
-        if (user && user.id.startsWith('demo-')) return;
         setUser(null);
       }
     });
 
+    setLoading(false);
+    
     return () => subscription.unsubscribe();
-  }, []);
+  };
 
-  const fetchUserProfile = async (authUser: any) => {
-    try {
-        const username = authUser.email?.split('@')[0] || 'user';
-        
-        setUser({
-            id: authUser.id,
-            username: username,
-            email: authUser.email || '',
-            avatarUrl: `https://ui-avatars.com/api/?name=${username}&background=231b15&color=ccff00`,
-            bio: '', 
-            socialLinks: {}, 
-            isBusinessOwner: false,
-            savedShops: [],
-            visitedShops: [],
-            followers: [],
-            following: []
-        });
-    } catch (error) {
-        console.error("Error loading user profile", error);
+  const loadUserProfile = async (userId: string) => {
+    const profile = await db.fetchUserProfile(userId);
+    if (profile) {
+      setUser(profile);
+      
+      // Load claim requests if user is admin or business owner
+      if (profile.isAdmin || profile.isBusinessOwner) {
+        const requests = await db.fetchClaimRequests();
+        setClaimRequests(requests.map(r => ({
+          id: r.id,
+          shopId: r.shop_id,
+          userId: r.user_id,
+          businessEmail: r.business_email,
+          role: r.role,
+          socialLink: r.social_link,
+          status: r.status as 'pending' | 'approved' | 'rejected',
+          date: r.created_at
+        })));
+      }
     }
   };
 
-  // DEMO LOGIN: Bypasses Supabase for instant access
-  const login = async (email: string) => {
-     const username = email.split('@')[0];
-     setUser({
-        id: `demo-${Math.random().toString(36).substr(2, 9)}`,
-        username: username,
-        email: email,
-        avatarUrl: `https://ui-avatars.com/api/?name=${username}&background=231b15&color=ccff00`,
-        bio: 'Just a coffee lover exploring the world.', 
-        socialLinks: {}, 
-        isBusinessOwner: false,
-        savedShops: [],
-        visitedShops: [],
-        followers: ['fake-1', 'fake-2'],
-        following: ['fake-3']
-     });
+  const refreshShops = async () => {
+    const fetchedShops = await db.fetchShops();
+    setShops(fetchedShops.length > 0 ? fetchedShops : INITIAL_SHOPS);
+  };
+
+  // Authentication
+  const signup = async (email: string, password: string, username: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username
+          }
+        }
+      });
+
+      if (error) {
+        console.error('Signup error:', error);
+        throw error;
+      }
+      
+      console.log('Signup successful:', data);
+      return { success: true };
+    } catch (error: any) {
+      console.error('Signup error details:', error);
+      return { success: false, error: error.message || 'Failed to create account' };
+    }
+  };
+
+  const login = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+      
+      return { success: true };
+    } catch (error: any) {
+      console.error('Login error:', error);
+      return { success: false, error: error.message };
+    }
   };
 
   const logout = async () => {
@@ -111,110 +155,187 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setUser(null);
   };
 
-  const updateUserProfile = (updates: Partial<User>) => {
-    setUser(prev => prev ? { ...prev, ...updates } : null);
-  };
-
-  const addShop = (newShop: Shop) => {
-    setShops(prev => [newShop, ...prev]);
-  };
-
-  const toggleSaveShop = (shopId: string) => {
+  const updateUserProfile = async (updates: Partial<User>) => {
     if (!user) return;
     
-    setUser(prev => {
-        if(!prev) return null;
-        const isSaved = prev.savedShops.includes(shopId);
-        return {
+    try {
+      const result = await db.updateUserProfile(user.id, {
+        username: updates.username,
+        bio: updates.bio,
+        instagram: updates.socialLinks?.instagram,
+        x: updates.socialLinks?.x
+      });
+
+      if (result.success) {
+        setUser(prev => {
+          if (!prev) return null;
+          return {
             ...prev,
-            savedShops: isSaved 
-                ? prev.savedShops.filter(id => id !== shopId)
-                : [...prev.savedShops, shopId]
-        }
-    });
+            username: updates.username ?? prev.username,
+            bio: updates.bio ?? prev.bio,
+            avatarUrl: updates.avatarUrl ?? prev.avatarUrl,
+            socialLinks: {
+              instagram: updates.socialLinks?.instagram ?? prev.socialLinks?.instagram,
+              x: updates.socialLinks?.x ?? prev.socialLinks?.x
+            }
+          };
+        });
+      } else {
+        console.error('Failed to update profile:', result.error);
+        throw new Error('Profile update failed');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      throw error;
+    }
   };
 
-  const toggleVisitedShop = (shopId: string) => {
-    if (!user) return;
+  const addShop = async (newShop: Omit<Shop, 'id' | 'rating' | 'reviewCount' | 'reviews' | 'stampCount'>) => {
+    const result = await db.createShop({
+      name: newShop.name,
+      description: newShop.description,
+      lat: newShop.location.lat,
+      lng: newShop.location.lng,
+      address: newShop.location.address,
+      city: newShop.location.city,
+      state: newShop.location.state,
+      vibes: newShop.vibes,
+      cheekyVibes: newShop.cheekyVibes,
+      images: newShop.gallery
+    });
 
-    // Optimistically update shop stamp count
-    setShops(prevShops => prevShops.map(shop => {
-        if (shop.id === shopId) {
-            const isNowVisited = !user.visitedShops.includes(shopId);
-            return {
-                ...shop,
-                stampCount: isNowVisited ? (shop.stampCount || 0) + 1 : Math.max(0, (shop.stampCount || 0) - 1)
-            };
-        }
-        return shop;
-    }));
+    if (result.success) {
+      await refreshShops();
+    }
+  };
+
+  const updateShop = (updatedShop: Shop) => {
+    setShops(prev => prev.map(s => s.id === updatedShop.id ? updatedShop : s));
+  };
+
+  const toggleSaveShop = async (shopId: string) => {
+    if (!user) return;
     
+    const isSaved = user.savedShops.includes(shopId);
+    
+    // Optimistic update
     setUser(prev => {
-        if(!prev) return null;
-        const isVisited = prev.visitedShops.includes(shopId);
-        return {
-            ...prev,
-            visitedShops: isVisited 
-                ? prev.visitedShops.filter(id => id !== shopId)
-                : [...prev.visitedShops, shopId]
-        }
+      if (!prev) return null;
+      return {
+        ...prev,
+        savedShops: isSaved 
+          ? prev.savedShops.filter(id => id !== shopId)
+          : [...prev.savedShops, shopId]
+      };
     });
+
+    // Sync with database
+    await db.toggleSavedShop(user.id, shopId, isSaved);
   };
 
-  const addReview = (shopId: string, reviewData: Omit<Review, 'id' | 'username' | 'userId' | 'date'>) => {
+  const toggleVisitedShop = async (shopId: string) => {
     if (!user) return;
 
-    const newReview: Review = {
-        id: Math.random().toString(36).substr(2, 9),
-        userId: user.id,
-        username: user.username,
-        date: new Date().toLocaleDateString(),
-        ...reviewData
-    };
+    const isVisited = user.visitedShops.includes(shopId);
+
+    // Optimistic update
+    setUser(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        visitedShops: isVisited 
+          ? prev.visitedShops.filter(id => id !== shopId)
+          : [...prev.visitedShops, shopId]
+      };
+    });
 
     setShops(prevShops => prevShops.map(shop => {
-        if (shop.id !== shopId) return shop;
-
-        const updatedReviews = [newReview, ...shop.reviews];
-        const totalStars = updatedReviews.reduce((acc, r) => acc + r.rating, 0);
-        const newRating = Number((totalStars / updatedReviews.length).toFixed(1));
-
+      if (shop.id === shopId) {
+        const isNowVisited = !isVisited;
         return {
-            ...shop,
-            reviews: updatedReviews,
-            reviewCount: updatedReviews.length,
-            rating: newRating
+          ...shop,
+          stampCount: isNowVisited ? (shop.stampCount || 0) + 1 : Math.max(0, (shop.stampCount || 0) - 1)
         };
+      }
+      return shop;
     }));
+
+    // Sync with database
+    await db.toggleVisitedShop(user.id, shopId, isVisited);
   };
 
-  const claimShop = (shopId: string) => {
-    setShops(prev => prev.map(shop => 
-        shop.id === shopId ? { ...shop, isClaimed: true, claimedBy: user?.id } : shop
-    ));
+  const addReview = async (shopId: string, reviewData: Omit<Review, 'id' | 'username' | 'userId' | 'date'>) => {
+    if (!user) return;
+
+    const result = await db.addReview(shopId, user.id, reviewData.rating, reviewData.comment);
+    
+    if (result.success) {
+      // Refresh shops to get updated ratings
+      await refreshShops();
+    }
   };
 
-  const submitClaimRequest = (requestData: Omit<ClaimRequest, 'id' | 'status' | 'date'>) => {
-    const newRequest: ClaimRequest = {
-        ...requestData,
-        id: Math.random().toString(36).substr(2, 9),
-        status: 'pending',
-        date: new Date().toISOString()
-    };
-    setClaimRequests(prev => [...prev, newRequest]);
+  const submitClaimRequest = async (requestData: Omit<ClaimRequest, 'id' | 'status' | 'date'>) => {
+    try {
+      const result = await db.submitClaimRequest({
+        shopId: requestData.shopId,
+        userId: requestData.userId,
+        businessEmail: requestData.businessEmail,
+        role: requestData.role,
+        socialLink: requestData.socialLink
+      });
+
+      if (result.success) {
+        // Refresh claim requests
+        const requests = await db.fetchClaimRequests();
+        setClaimRequests(requests.map(r => ({
+          id: r.id,
+          shopId: r.shop_id,
+          userId: r.user_id,
+          businessEmail: r.business_email,
+          role: r.role,
+          socialLink: r.social_link,
+          status: r.status as 'pending' | 'approved' | 'rejected',
+          date: r.created_at
+        })));
+      } else {
+        console.error('Failed to submit claim request:', result.error);
+        throw result.error;
+      }
+    } catch (error) {
+      console.error('Error in submitClaimRequest:', error);
+      throw error;
+    }
   };
 
-  const approveClaimRequest = (requestId: string) => {
-    const request = claimRequests.find(r => r.id === requestId);
-    if (!request) return;
-
-    setClaimRequests(prev => prev.map(r => 
-        r.id === requestId ? { ...r, status: 'approved' } : r
-    ));
-
-    setShops(prev => prev.map(shop => 
-        shop.id === request.shopId ? { ...shop, isClaimed: true, claimedBy: request.userId } : shop
-    ));
+  const approveClaimRequest = async (requestId: string) => {
+    const result = await db.approveClaimRequest(requestId);
+    
+    if (result.success) {
+      // Refresh data
+      await refreshShops();
+      
+      // Refresh current user profile if they were the one approved
+      if (user) {
+        const updatedProfile = await db.fetchUserProfile(user.id);
+        if (updatedProfile) {
+          setUser(updatedProfile);
+        }
+      }
+      
+      // Refresh claim requests
+      const requests = await db.fetchClaimRequests();
+      setClaimRequests(requests.map(r => ({
+        id: r.id,
+        shopId: r.shop_id,
+        userId: r.user_id,
+        businessEmail: r.business_email,
+        role: r.role,
+        socialLink: r.social_link,
+        status: r.status as 'pending' | 'approved' | 'rejected',
+        date: r.created_at
+      })));
+    }
   };
 
   const toggleVibe = (vibe: Vibe) => {
@@ -223,22 +344,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     );
   };
 
-  const filteredShops = shops.filter(shop => {
-    const query = searchQuery.toLowerCase();
-    const matchesSearch = 
-        shop.name.toLowerCase().includes(query) || 
-        shop.location.city.toLowerCase().includes(query) ||
-        shop.location.state.toLowerCase().includes(query) ||
-        shop.description.toLowerCase().includes(query) ||
-        shop.vibes.some(v => v.toLowerCase().includes(query));
-    
-    const matchesVibes = selectedVibes.length === 0 || 
-                         selectedVibes.every(v => shop.vibes.includes(v));
-    
-    return matchesSearch && matchesVibes;
-  });
-
-  // --- DEMO FEATURE: Simulate Community Data ---
+  // --- SOCIAL FEATURES ---
   const getShopCommunity = (shopId: string) => {
       // Generate deterministic fake users based on shop ID
       const seed = shopId.charCodeAt(0) + (shopId.charCodeAt(1) || 0);
@@ -271,10 +377,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return { savers, visitors };
   };
 
-  // --- DEMO FEATURE: Fetch Profile ---
   const getProfileById = async (userId: string): Promise<User | null> => {
     // If it's me
     if (user && user.id === userId) return user;
+
+    // Try to fetch from database
+    const profile = await db.fetchUserProfile(userId);
+    if (profile) return profile;
 
     // If it's a fake/mock user from the community list
     if (userId.startsWith('fake-')) {
@@ -293,42 +402,86 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             socialLinks: { instagram: 'https://instagram.com' },
             isBusinessOwner: false,
             savedShops: ['1', '3', '5'], // Mock saved shops
-            visitedShops: ['2', '4', '6', '8'], // Mock visited shops
-            followers: Array(Math.floor(Math.random() * 50)).fill('fake'),
-            following: Array(Math.floor(Math.random() * 30)).fill('fake')
+            visitedShops: ['2', '4', '6', '8'] // Mock visited shops
         };
     }
 
     return null;
   };
 
-  const toggleFollow = (targetUserId: string) => {
-      if (!user) return;
+  const getProfileByUsername = async (username: string): Promise<User | null> => {
+    // If it's me
+    if (user && user.username.toLowerCase() === username.toLowerCase()) return user;
+
+    // Try to fetch from database by username
+    const profile = await db.fetchUserProfileByUsername(username);
+    return profile;
+  };
+
+  const toggleFollow = async (targetUserId: string) => {
+      if (!user) return { success: false, error: 'Not logged in' };
       
+      const isCurrentlyFollowing = user.followingIds?.includes(targetUserId) || false;
+      
+      // Optimistic update
       setUser(prev => {
           if (!prev) return null;
-          const isFollowing = prev.following.includes(targetUserId);
           return {
               ...prev,
-              following: isFollowing 
-                ? prev.following.filter(id => id !== targetUserId)
-                : [...prev.following, targetUserId]
+              followingIds: isCurrentlyFollowing 
+                ? (prev.followingIds || []).filter(id => id !== targetUserId)
+                : [...(prev.followingIds || []), targetUserId]
           };
       });
+
+      // Sync with database
+      const result = await db.toggleFollowUser(user.id, targetUserId, isCurrentlyFollowing);
+      
+      if (!result.success) {
+          // Revert on error
+          setUser(prev => {
+              if (!prev) return null;
+              return {
+                  ...prev,
+                  followingIds: isCurrentlyFollowing 
+                    ? [...(prev.followingIds || []), targetUserId]
+                    : (prev.followingIds || []).filter(id => id !== targetUserId)
+              };
+          });
+      }
+      
+      return result;
   };
+
+  const filteredShops = shops.filter(shop => {
+    const query = searchQuery.toLowerCase();
+    const matchesSearch = 
+        shop.name.toLowerCase().includes(query) || 
+        shop.location.city.toLowerCase().includes(query) ||
+        shop.location.state.toLowerCase().includes(query) ||
+        shop.description.toLowerCase().includes(query) ||
+        shop.vibes.some(v => v.toLowerCase().includes(query));
+    
+    const matchesVibes = selectedVibes.length === 0 || 
+                         selectedVibes.every(v => shop.vibes.includes(v));
+    
+    return matchesSearch && matchesVibes;
+  });
 
   return (
     <AppContext.Provider value={{
       shops: filteredShops,
       user,
+      loading,
+      signup,
       login,
       logout,
       updateUserProfile,
       addShop,
+      updateShop,
       toggleSaveShop,
       toggleVisitedShop,
       addReview,
-      claimShop,
       claimRequests,
       submitClaimRequest,
       approveClaimRequest,
@@ -336,8 +489,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setSearchQuery,
       selectedVibes,
       toggleVibe,
+      refreshShops,
       getShopCommunity,
       getProfileById,
+      getProfileByUsername,
       toggleFollow
     }}>
       {children}

@@ -36,6 +36,16 @@ export interface ShopImage {
   caption?: string;
 }
 
+export interface OpenHours {
+  monday?: string;
+  tuesday?: string;
+  wednesday?: string;
+  thursday?: string;
+  friday?: string;
+  saturday?: string;
+  sunday?: string;
+}
+
 export interface Shop {
   id: string;
   name: string;
@@ -50,6 +60,7 @@ export interface Shop {
   isClaimed: boolean; 
   claimedBy?: string;
   stampCount: number; // New: How many users have this in their passport
+  openHours?: OpenHours; // New: Opening hours
 }
 
 export interface SocialLinks {
@@ -65,10 +76,11 @@ export interface User {
   bio?: string; // New bio field
   socialLinks?: SocialLinks; // New social links
   isBusinessOwner: boolean;
+  isAdmin?: boolean; // Platform admin role
   savedShops: string[];
   visitedShops: string[]; // New field for tracking check-ins
-  followers: string[];
-  following: string[];
+  followerIds?: string[]; // IDs of users who follow this user
+  followingIds?: string[]; // IDs of users this user follows
 }
 
 export interface ClaimRequest {
