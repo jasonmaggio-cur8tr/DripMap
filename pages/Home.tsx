@@ -89,7 +89,7 @@ const Home: React.FC = () => {
                               </div>
                           )}
                           <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center">
-                              <i className="fas fa-star text-volt-400 mr-1"></i> {shop.rating}
+                              <i className="fas fa-star text-volt-400 mr-1"></i> {shop.rating.toFixed(1)}
                           </div>
                       </div>
                       <div className="p-4">

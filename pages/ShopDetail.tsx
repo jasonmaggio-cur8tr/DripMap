@@ -257,7 +257,7 @@ const ShopDetail: React.FC = () => {
                         </span>
                     )}
                     <div className="flex items-center text-volt-400 font-bold bg-black/30 backdrop-blur-sm px-2 py-1 rounded-lg">
-                        <i className="fas fa-star mr-1"></i> {shop.rating}
+                        <i className="fas fa-star mr-1"></i> {shop.rating.toFixed(1)} ({shop.reviewCount})
                     </div>
                     <div className="flex items-center text-white/80 font-bold text-xs bg-black/30 backdrop-blur-sm px-2 py-1 rounded-lg">
                         <i className="fas fa-stamp mr-1.5"></i> {shop.stampCount} Passports Stamped

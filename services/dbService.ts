@@ -151,7 +151,7 @@ export const fetchShops = async (): Promise<Shop[]> => {
       .select(`
         *,
         shop_images(*),
-        reviews(*)
+        reviews(*, profiles(username, avatar_url))
       `)
       .order('created_at', { ascending: false });
 
@@ -181,7 +181,7 @@ export const fetchShops = async (): Promise<Shop[]> => {
       reviews: shop.reviews?.map((r: any) => ({
         id: r.id,
         userId: r.user_id,
-        username: r.username || 'Anonymous',
+        username: r.profiles?.username || 'Anonymous',
         rating: r.rating,
         comment: r.comment || '',
         date: new Date(r.created_at).toLocaleDateString()
