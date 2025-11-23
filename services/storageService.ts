@@ -47,9 +47,9 @@ export const uploadImage = async (
         upsert: false
       });
 
-    // Add 10 second timeout for faster feedback
+    // Add 120 second timeout (2 minutes - allows for large images and slower connections)
     const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Upload timeout after 10s - check Supabase connection and CORS settings')), 10000)
+      setTimeout(() => reject(new Error('Upload timeout after 120s - check your internet connection and Supabase storage settings')), 120000)
     );
 
     const { data, error } = await Promise.race([uploadPromise, timeoutPromise]) as any;
@@ -77,12 +77,15 @@ export const uploadImage = async (
     
     // More specific error messages
     let errorMessage = error.message || 'Failed to upload image';
+    
     if (errorMessage.includes('timeout')) {
-      errorMessage = 'Upload timed out. Check your internet connection and Supabase configuration.';
+      errorMessage = 'Upload timed out. This may be due to:\n• Slow internet connection\n• Large image file\n• Supabase storage not configured\n• Missing "shop-images" bucket in Supabase Storage';
     } else if (errorMessage.includes('CORS')) {
-      errorMessage = 'CORS error. Check Supabase project settings.';
-    } else if (errorMessage.includes('bucket')) {
-      errorMessage = 'Storage bucket error. Verify "shop-images" bucket exists.';
+      errorMessage = 'CORS error. Add your domain to allowed origins in Supabase Storage settings.';
+    } else if (errorMessage.includes('bucket') || errorMessage.includes('not found')) {
+      errorMessage = 'Storage bucket "shop-images" not found. Please create it in your Supabase project (Storage > New Bucket > "shop-images" with Public access).';
+    } else if (errorMessage.includes('not configured')) {
+      errorMessage = 'Supabase Storage is not configured. Check your .env file and Supabase project settings.';
     }
     
     return {
