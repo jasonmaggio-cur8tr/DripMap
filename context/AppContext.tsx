@@ -111,13 +111,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Authentication
   const signup = async (email: string, password: string, username: string) => {
     try {
+      // Get the current origin for email redirect (works for both localhost and production)
+      const redirectUrl = `${window.location.origin}/`;
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             username
-          }
+          },
+          emailRedirectTo: redirectUrl
         }
       });
 
