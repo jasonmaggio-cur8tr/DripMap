@@ -3,6 +3,49 @@ import { supabase } from '../lib/supabase';
 const BUCKET_NAME = 'shop-images';
 
 /**
+ * Convert HEIC/HEIF image to JPEG
+ * @param file - The HEIC/HEIF file to convert
+ * @returns A JPEG file or the original file if conversion fails
+ */
+const convertHEICtoJPEG = async (file: File): Promise<File> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        // Create canvas and draw image
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0);
+        
+        // Convert to JPEG blob
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const convertedFile = new File(
+              [blob], 
+              file.name.replace(/\.heic$/i, '.jpg').replace(/\.heif$/i, '.jpg'),
+              { type: 'image/jpeg' }
+            );
+            resolve(convertedFile);
+          } else {
+            resolve(file); // Fallback to original
+          }
+        }, 'image/jpeg', 0.9);
+      };
+      
+      img.onerror = () => resolve(file); // Fallback to original
+      img.src = e.target?.result as string;
+    };
+    
+    reader.onerror = () => resolve(file); // Fallback to original
+    reader.readAsDataURL(file);
+  });
+};
+
+/**
  * Upload an image to Supabase Storage
  * @param file - The image file to upload
  * @param folder - Optional folder name (e.g., 'shops', 'profiles')
@@ -12,20 +55,29 @@ export const uploadImage = async (
   file: File,
   folder: string = 'shops'
 ): Promise<{ success: boolean; url?: string; error?: any }> => {
-  console.log('uploadImage called for file:', file.name, 'size:', file.size);
+  console.log('uploadImage called for file:', file.name, 'size:', file.size, 'type:', file.type);
+  
+  // Handle HEIC/HEIF files - convert to JPEG
+  let processedFile = file;
+  if (file.type === 'image/heic' || file.type === 'image/heif' || 
+      file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+    console.log('HEIC/HEIF detected, converting to JPEG...');
+    processedFile = await convertHEICtoJPEG(file);
+    console.log('Converted to:', processedFile.type, processedFile.size);
+  }
   
   // Validate file type
   const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-  if (!validTypes.includes(file.type)) {
+  if (!validTypes.includes(processedFile.type)) {
     return {
       success: false,
-      error: 'Invalid file type. Please upload an image (JPG, PNG, WebP, or GIF)'
+      error: `Invalid file type: ${processedFile.type}. Please upload an image (JPG, PNG, WebP, or GIF). HEIC/HEIF images from iPhone are automatically converted.`
     };
   }
 
   // Validate file size (max 5MB)
   const maxSize = 5 * 1024 * 1024; // 5MB
-  if (file.size > maxSize) {
+  if (processedFile.size > maxSize) {
     return {
       success: false,
       error: 'File too large. Maximum size is 5MB'
@@ -33,7 +85,7 @@ export const uploadImage = async (
   }
 
   // Generate unique filename
-  const fileExt = file.name.split('.').pop();
+  const fileExt = processedFile.name.split('.').pop();
   const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
 
   console.log('Uploading to:', fileName);
@@ -42,7 +94,7 @@ export const uploadImage = async (
     // Upload to Supabase Storage with timeout
     const uploadPromise = supabase.storage
       .from(BUCKET_NAME)
-      .upload(fileName, file, {
+      .upload(fileName, processedFile, {
         cacheControl: '3600',
         upsert: false
       });
