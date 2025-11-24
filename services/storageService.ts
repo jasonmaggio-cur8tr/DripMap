@@ -276,52 +276,38 @@ export const deleteImage = async (imageUrl: string): Promise<boolean> => {
 };
 
 /**
- * Create the storage bucket if it doesn't exist and verify access
+ * Verify the storage bucket exists (does NOT auto-create)
  * This should be run once during app initialization
  */
 export const initializeStorage = async (): Promise<boolean> => {
   try {
-    console.log(`Checking if storage bucket "${BUCKET_NAME}" exists...`);
+    console.log(`Verifying storage bucket "${BUCKET_NAME}" exists...`);
     
-    const { data, error } = await supabase.storage.getBucket(BUCKET_NAME);
+    // List all buckets to check if ours exists
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
     
-    if (error) {
-      if (error.message.includes('not found')) {
-        console.log(`Bucket "${BUCKET_NAME}" not found, attempting to create...`);
-        
-        // Bucket doesn't exist, try to create it
-        const { data: newBucket, error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
-          public: true,
-          fileSizeLimit: 5242880, // 5MB
-          allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
-        });
-
-        if (createError) {
-          console.error('Failed to create storage bucket:', createError);
-          console.warn(`⚠️ Please manually create the "${BUCKET_NAME}" bucket in Supabase Dashboard:`);
-          console.warn('1. Go to Storage > New Bucket');
-          console.warn(`2. Name: "${BUCKET_NAME}"`);
-          console.warn('3. Enable "Public bucket"');
-          console.warn('4. Set file size limit to 5MB');
-          return false;
-        }
-        
-        console.log(`✅ Storage bucket "${BUCKET_NAME}" created successfully!`);
-        return true;
-      } else {
-        console.error('Error checking storage bucket:', error);
-        return false;
-      }
+    if (listError) {
+      console.error('❌ Cannot access storage:', listError.message);
+      return false;
     }
 
-    console.log(`✅ Storage bucket "${BUCKET_NAME}" exists and is accessible`);
+    const bucketExists = buckets?.some(b => b.id === BUCKET_NAME);
+    
+    if (!bucketExists) {
+      console.error(`❌ Bucket "${BUCKET_NAME}" not found in production!`);
+      console.warn(`⚠️ Please create the "${BUCKET_NAME}" bucket in Supabase Dashboard:`);
+      console.warn('1. Go to https://supabase.com/dashboard/project/zxetnactllyzslievgxj/storage');
+      console.warn('2. Click "New Bucket"');
+      console.warn(`3. Name: "${BUCKET_NAME}"`);
+      console.warn('4. Enable "Public bucket" ✅');
+      console.warn('5. Set file size limit to 5MB (5242880 bytes)');
+      return false;
+    }
+
+    console.log(`✅ Storage bucket "${BUCKET_NAME}" verified and accessible`);
     return true;
   } catch (error) {
-    console.error('Error initializing storage:', error);
-    console.warn(`⚠️ Storage initialization failed. Please check:`);
-    console.warn('1. Supabase credentials are correct in .env');
-    console.warn('2. Storage is enabled in your Supabase project');
-    console.warn(`3. "${BUCKET_NAME}" bucket exists and is public`);
+    console.error('Error verifying storage:', error);
     return false;
   }
 };
