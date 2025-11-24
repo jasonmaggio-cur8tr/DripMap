@@ -405,16 +405,6 @@ const ShopDetail: React.FC = () => {
                                 </button>
                             )}
                         </div>
-
-                        {/* Hidden file input */}
-                        <input 
-                            type="file" 
-                            ref={photoInputRef} 
-                            onChange={handlePhotoUpload} 
-                            className="hidden" 
-                            multiple 
-                            accept="image/*"
-                        />
                     ) : (
                         <div className="py-12 text-center text-coffee-400 bg-coffee-50 rounded-xl border border-coffee-100 border-dashed">
                             <i className="fas fa-images text-3xl mb-3 opacity-30"></i>
@@ -425,6 +415,16 @@ const ShopDetail: React.FC = () => {
                             </p>
                         </div>
                     )}
+
+                    {/* Hidden file input */}
+                    <input 
+                        type="file" 
+                        ref={photoInputRef} 
+                        onChange={handlePhotoUpload} 
+                        className="hidden" 
+                        multiple 
+                        accept="image/*"
+                    />
 
                     {showExpandButton && (
                         <div className="relative mt-6">
