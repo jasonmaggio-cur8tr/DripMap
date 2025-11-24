@@ -91,6 +91,52 @@ export const uploadImage = async (
   console.log('Uploading to:', fileName);
 
   try {
+    // Check if user is authenticated and refresh if needed
+    let { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session) {
+      console.error('No active session found for upload');
+      return {
+        success: false,
+        error: 'Your session has expired. Please log out and log back in to continue.'
+      };
+    }
+    
+    // Check if token is about to expire and refresh if needed
+    const expiresAt = session.expires_at ? session.expires_at * 1000 : 0;
+    const now = Date.now();
+    
+    if (expiresAt < now) {
+      console.log('Session expired, attempting to refresh...');
+      const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+      
+      if (refreshError || !refreshedSession) {
+        console.error('Failed to refresh session:', refreshError);
+        return {
+          success: false,
+          error: 'Your session has expired. Please log out and log back in to continue uploading.'
+        };
+      }
+      
+      session = refreshedSession;
+      console.log('Session refreshed successfully');
+    }
+    
+    console.log('User authenticated, session valid until:', new Date(expiresAt));
+
+    // First, check if bucket exists
+    const { data: bucketData, error: bucketError } = await supabase.storage.getBucket(BUCKET_NAME);
+    
+    if (bucketError || !bucketData) {
+      console.error('Bucket check failed:', bucketError);
+      return {
+        success: false,
+        error: `Storage bucket "${BUCKET_NAME}" not found. Please run STORAGE_FIX.sql in your Supabase SQL Editor.`
+      };
+    }
+
+    console.log('Bucket exists, proceeding with upload...');
+
     // Upload to Supabase Storage with timeout
     const uploadPromise = supabase.storage
       .from(BUCKET_NAME)
@@ -99,9 +145,9 @@ export const uploadImage = async (
         upsert: false
       });
 
-    // Add 120 second timeout (2 minutes - allows for large images and slower connections)
+    // Add 30 second timeout - if it takes longer, there's a real issue
     const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Upload timeout after 120s - check your internet connection and Supabase storage settings')), 120000)
+      setTimeout(() => reject(new Error('Upload timeout after 30s - check Supabase storage configuration and internet connection')), 30000)
     );
 
     const { data, error } = await Promise.race([uploadPromise, timeoutPromise]) as any;
@@ -110,6 +156,29 @@ export const uploadImage = async (
 
     if (error) {
       console.error('Upload error:', error);
+      
+      // Provide specific error messages
+      if (error.message?.includes('row-level security') || error.message?.includes('policy')) {
+        return {
+          success: false,
+          error: 'Storage upload blocked by security policy. Please run STORAGE_FIX.sql in your Supabase SQL Editor to fix permissions.'
+        };
+      }
+      
+      if (error.message?.includes('JWT') || error.message?.includes('expired')) {
+        return {
+          success: false,
+          error: 'Session expired. Please log out and log back in, then try again.'
+        };
+      }
+      
+      if (error.message?.includes('not found')) {
+        return {
+          success: false,
+          error: `Bucket "${BUCKET_NAME}" not found. Run STORAGE_FIX.sql in Supabase SQL Editor.`
+        };
+      }
+      
       throw error;
     }
 
@@ -131,13 +200,9 @@ export const uploadImage = async (
     let errorMessage = error.message || 'Failed to upload image';
     
     if (errorMessage.includes('timeout')) {
-      errorMessage = 'Upload timed out. This may be due to:\n• Slow internet connection\n• Large image file\n• Supabase storage not configured\n• Missing "shop-images" bucket in Supabase Storage';
-    } else if (errorMessage.includes('CORS')) {
-      errorMessage = 'CORS error. Add your domain to allowed origins in Supabase Storage settings.';
-    } else if (errorMessage.includes('bucket') || errorMessage.includes('not found')) {
-      errorMessage = 'Storage bucket "shop-images" not found. Please create it in your Supabase project (Storage > New Bucket > "shop-images" with Public access).';
-    } else if (errorMessage.includes('not configured')) {
-      errorMessage = 'Supabase Storage is not configured. Check your .env file and Supabase project settings.';
+      errorMessage = 'Upload timed out after 30s. Possible causes:\n• Supabase storage bucket not configured correctly\n• Storage RLS policies blocking uploads\n• Network connectivity issues\n\nPlease check STORAGE_SETUP.md for configuration steps.';
+    } else if (errorMessage.includes('not found')) {
+      errorMessage = `Storage bucket "${BUCKET_NAME}" not found. Please:\n1. Go to Supabase Dashboard > Storage\n2. Create bucket named "${BUCKET_NAME}"\n3. Enable "Public bucket"\n4. Add RLS policies for authenticated uploads`;
     }
     
     return {
@@ -211,28 +276,52 @@ export const deleteImage = async (imageUrl: string): Promise<boolean> => {
 };
 
 /**
- * Create the storage bucket if it doesn't exist
- * This should be run once during setup
+ * Create the storage bucket if it doesn't exist and verify access
+ * This should be run once during app initialization
  */
-export const initializeStorage = async () => {
+export const initializeStorage = async (): Promise<boolean> => {
   try {
+    console.log(`Checking if storage bucket "${BUCKET_NAME}" exists...`);
+    
     const { data, error } = await supabase.storage.getBucket(BUCKET_NAME);
     
-    if (error && error.message.includes('not found')) {
-      // Bucket doesn't exist, create it
-      const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
-        public: true,
-        fileSizeLimit: 5242880 // 5MB
-      });
+    if (error) {
+      if (error.message.includes('not found')) {
+        console.log(`Bucket "${BUCKET_NAME}" not found, attempting to create...`);
+        
+        // Bucket doesn't exist, try to create it
+        const { data: newBucket, error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
+          public: true,
+          fileSizeLimit: 5242880, // 5MB
+          allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
+        });
 
-      if (createError) throw createError;
-      console.log('Storage bucket created successfully');
-      return true;
+        if (createError) {
+          console.error('Failed to create storage bucket:', createError);
+          console.warn(`⚠️ Please manually create the "${BUCKET_NAME}" bucket in Supabase Dashboard:`);
+          console.warn('1. Go to Storage > New Bucket');
+          console.warn(`2. Name: "${BUCKET_NAME}"`);
+          console.warn('3. Enable "Public bucket"');
+          console.warn('4. Set file size limit to 5MB');
+          return false;
+        }
+        
+        console.log(`✅ Storage bucket "${BUCKET_NAME}" created successfully!`);
+        return true;
+      } else {
+        console.error('Error checking storage bucket:', error);
+        return false;
+      }
     }
 
+    console.log(`✅ Storage bucket "${BUCKET_NAME}" exists and is accessible`);
     return true;
   } catch (error) {
     console.error('Error initializing storage:', error);
+    console.warn(`⚠️ Storage initialization failed. Please check:`);
+    console.warn('1. Supabase credentials are correct in .env');
+    console.warn('2. Storage is enabled in your Supabase project');
+    console.warn(`3. "${BUCKET_NAME}" bucket exists and is public`);
     return false;
   }
 };

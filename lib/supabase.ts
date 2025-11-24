@@ -91,5 +91,24 @@ const mockClient = {
 
 // Export real client if configured, otherwise export mock cast as any to satisfy types
 export const supabase = (isConfigured 
-  ? createClient(supabaseUrl, supabaseAnonKey) 
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      },
+      global: {
+        headers: {
+          'x-client-info': 'dripmap-web'
+        }
+      },
+      db: {
+        schema: 'public'
+      },
+      realtime: {
+        params: {
+          eventsPerSecond: 10
+        }
+      }
+    })
   : mockClient) as any as SupabaseClient;

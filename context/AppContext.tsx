@@ -4,6 +4,7 @@ import { Shop, User, Vibe, ClaimRequest, Review } from '../types';
 import { INITIAL_SHOPS } from '../constants';
 import { supabase } from '../lib/supabase';
 import * as db from '../services/dbService';
+import { initializeStorage } from '../services/storageService';
 
 interface AppContextType {
   shops: Shop[];
@@ -58,6 +59,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const initializeApp = async () => {
     setLoading(true);
     
+    // Initialize storage bucket (creates if doesn't exist)
+    console.log('Checking/initializing storage...');
+    await initializeStorage();
+    
     // Load shops
     await refreshShops();
     
@@ -68,10 +73,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
     
     // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event);
+      
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('Token refreshed automatically');
+      }
+      
+      if (event === 'SIGNED_OUT') {
+        console.log('User signed out');
+        setUser(null);
+      }
+      
       if (session?.user) {
         await loadUserProfile(session.user.id);
-      } else {
+      } else if (event !== 'TOKEN_REFRESHED') {
         setUser(null);
       }
     });
@@ -106,6 +122,36 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const refreshShops = async () => {
     const fetchedShops = await db.fetchShops();
     setShops(fetchedShops.length > 0 ? fetchedShops : INITIAL_SHOPS);
+  };
+
+  // Helper to refresh session if needed
+  const ensureValidSession = async () => {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error || !session) {
+      console.warn('Session invalid or expired');
+      return null;
+    }
+    
+    // Check if token is about to expire (within 5 minutes)
+    const expiresAt = session.expires_at ? session.expires_at * 1000 : 0;
+    const now = Date.now();
+    const fiveMinutes = 5 * 60 * 1000;
+    
+    if (expiresAt - now < fiveMinutes) {
+      console.log('Session expiring soon, refreshing...');
+      const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+      
+      if (refreshError || !refreshedSession) {
+        console.error('Failed to refresh session:', refreshError);
+        return null;
+      }
+      
+      console.log('Session refreshed successfully');
+      return refreshedSession;
+    }
+    
+    return session;
   };
 
   // Authentication
@@ -162,6 +208,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const updateUserProfile = async (updates: Partial<User>) => {
     if (!user) return;
     
+    // Ensure session is valid before updating profile
+    const session = await ensureValidSession();
+    if (!session) {
+      throw new Error('Your session has expired. Please log out and log back in.');
+    }
+    
     try {
       const result = await db.updateUserProfile(user.id, {
         username: updates.username,
@@ -196,6 +248,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const addShop = async (newShop: Omit<Shop, 'id' | 'rating' | 'reviewCount' | 'reviews' | 'stampCount'>) => {
+    // Ensure session is valid before creating shop
+    const session = await ensureValidSession();
+    if (!session) {
+      throw new Error('Your session has expired. Please log out and log back in.');
+    }
+    
     const result = await db.createShop({
       name: newShop.name,
       description: newShop.description,
@@ -271,6 +329,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const addReview = async (shopId: string, reviewData: Omit<Review, 'id' | 'username' | 'userId' | 'date'>) => {
     if (!user) return;
+
+    // Ensure session is valid before adding review
+    const session = await ensureValidSession();
+    if (!session) {
+      console.error('Session expired, cannot add review');
+      return;
+    }
 
     console.log('AppContext: Adding review for shop', shopId);
     const result = await db.addReview(shopId, user.id, reviewData.rating, reviewData.comment);
