@@ -133,7 +133,7 @@ const ShopDetail: React.FC = () => {
 
     setIsUploadingPhoto(true);
     try {
-      const files = Array.from(e.target.files);
+      const files = Array.from(e.target.files) as File[];
       const result = await uploadImages(files, 'shops');
 
       if (!result.success) {
