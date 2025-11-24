@@ -186,12 +186,11 @@ const EditShop: React.FC = () => {
       if (newImagesToUpload.length > 0) {
         console.log(`Uploading ${newImagesToUpload.length} new images...`);
         const files = newImagesToUpload.map(img => img.file!);
-        const uploadResults = await uploadImages(files);
+        const uploadResult = await uploadImages(files);
 
-        // Check for upload failures
-        const failedUploads = uploadResults.filter(r => !r.success);
-        if (failedUploads.length > 0) {
-          toast.error(`Failed to upload ${failedUploads.length} image(s): ${failedUploads[0].error}`);
+        // Check for upload failure
+        if (!uploadResult.success) {
+          toast.error(`Failed to upload images: ${uploadResult.error}`);
           setIsUploading(false);
           return;
         }
@@ -207,8 +206,8 @@ const EditShop: React.FC = () => {
             };
           });
 
-        const newImages = uploadResults.map(r => ({
-          url: r.url!,
+        const newImages = (uploadResult.urls || []).map(url => ({
+          url: url,
           type: 'owner' as const
         }));
 
