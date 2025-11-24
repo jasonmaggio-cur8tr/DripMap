@@ -124,18 +124,8 @@ export const uploadImage = async (
     
     console.log('User authenticated, session valid until:', new Date(expiresAt));
 
-    // First, check if bucket exists
-    const { data: bucketData, error: bucketError } = await supabase.storage.getBucket(BUCKET_NAME);
-    
-    if (bucketError || !bucketData) {
-      console.error('Bucket check failed:', bucketError);
-      return {
-        success: false,
-        error: `Storage bucket "${BUCKET_NAME}" not found. Please run STORAGE_FIX.sql in your Supabase SQL Editor.`
-      };
-    }
-
-    console.log('Bucket exists, proceeding with upload...');
+    // Bucket existence verified on app init - proceed directly to upload
+    console.log(`Uploading to bucket: ${BUCKET_NAME}...`);
 
     // Upload to Supabase Storage with timeout
     const uploadPromise = supabase.storage

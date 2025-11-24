@@ -42,6 +42,10 @@ DROP POLICY IF EXISTS "Authenticated users can update images" ON storage.objects
 DROP POLICY IF EXISTS "Authenticated users can delete images" ON storage.objects;
 DROP POLICY IF EXISTS "Public can view shop images" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated can upload shop images" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update own shop images" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete own shop images" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update shop images" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete shop images" ON storage.objects;
 
 -- 3. Create comprehensive RLS policies
 
@@ -63,14 +67,14 @@ TO public
 USING (bucket_id = 'shop-images');
 
 -- Allow authenticated users to UPDATE their own uploads
-CREATE POLICY "Users can update own shop images"
+CREATE POLICY "Users can update shop images"
 ON storage.objects
 FOR UPDATE
 TO authenticated
 USING (bucket_id = 'shop-images');
 
 -- Allow authenticated users to DELETE their own uploads
-CREATE POLICY "Users can delete own shop images"
+CREATE POLICY "Users can delete shop images"
 ON storage.objects
 FOR DELETE
 TO authenticated
