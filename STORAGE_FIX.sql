@@ -3,20 +3,37 @@
 -- Run this in Supabase SQL Editor to fix upload issues
 -- ============================================
 
--- 1. Create the bucket if it doesn't exist
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES (
-  'shop-images', 
-  'shop-images', 
-  true,
-  5242880, -- 5MB
-  ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
-)
-ON CONFLICT (id) DO UPDATE 
-SET 
-  public = true,
-  file_size_limit = 5242880,
-  allowed_mime_types = ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+-- IMPORTANT: You may need to run this with service_role permissions
+-- If you get "row-level security policy" errors, contact Supabase support
+-- or use the Supabase Dashboard UI to create the bucket manually
+
+-- 1. Create the bucket (Dashboard method is more reliable)
+-- Go to: Storage > New Bucket > Name: "shop-images" > Public: YES
+-- OR run this SQL (may require elevated permissions):
+
+-- First, disable RLS temporarily on buckets table (Supabase admins only)
+-- If this fails, use the Dashboard UI instead
+
+DO $$
+BEGIN
+  -- Try to create bucket
+  INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+  VALUES (
+    'shop-images', 
+    'shop-images', 
+    true,
+    5242880, -- 5MB
+    ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
+  )
+  ON CONFLICT (id) DO UPDATE 
+  SET 
+    public = true,
+    file_size_limit = 5242880,
+    allowed_mime_types = ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE NOTICE 'Could not create bucket via SQL. Please create manually in Dashboard: Storage > New Bucket > "shop-images" (Public)';
+END $$;
 
 -- 2. Drop existing policies if they exist (to avoid conflicts)
 DROP POLICY IF EXISTS "Authenticated users can upload images" ON storage.objects;
