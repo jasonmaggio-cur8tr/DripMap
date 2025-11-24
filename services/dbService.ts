@@ -246,6 +246,65 @@ export const createShop = async (shopData: {
   }
 };
 
+/**
+ * Add images to an existing shop
+ */
+export const addShopImages = async (
+  shopId: string, 
+  images: { url: string; type: 'owner' | 'community' }[]
+) => {
+  try {
+    if (images.length === 0) return { success: true };
+
+    const imageInserts = images.map(img => ({
+      shop_id: shopId,
+      url: img.url,
+      type: img.type
+    }));
+
+    const { error } = await supabase
+      .from('shop_images')
+      .insert(imageInserts);
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error adding shop images:', error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Update shop details
+ */
+export const updateShopInDB = async (shopId: string, updates: {
+  name?: string;
+  description?: string;
+  lat?: number;
+  lng?: number;
+  address?: string;
+  city?: string;
+  state?: string;
+  vibes?: string[];
+  cheeky_vibes?: string[];
+  open_hours?: any;
+}) => {
+  try {
+    const { error } = await supabase
+      .from('shops')
+      .update(updates)
+      .eq('id', shopId);
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating shop:', error);
+    return { success: false, error };
+  }
+};
+
 // ==================== REVIEWS ====================
 
 export const addReview = async (shopId: string, userId: string, rating: number, comment: string) => {

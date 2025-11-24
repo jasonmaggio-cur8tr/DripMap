@@ -4,6 +4,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { CHEEKY_VIBES_OPTIONS } from '../constants';
 import { uploadImages } from '../services/storageService';
+import { addShopImages } from '../services/dbService';
 import Button from '../components/Button';
 import TagChip from '../components/TagChip';
 import { useToast } from '../context/ToastContext';
@@ -147,13 +148,22 @@ const ShopDetail: React.FC = () => {
         type: 'community' as const
       }));
 
+      // Save images to database
+      const dbResult = await addShopImages(shop.id, newImages);
+      
+      if (!dbResult.success) {
+        toast.error('Images uploaded but failed to save to database. Please refresh the page.');
+        return;
+      }
+
+      // Update local state
       const updatedShop = {
         ...shop,
         gallery: [...shop.gallery, ...newImages]
       };
 
-      // Update shop in context
-      await updateShop(updatedShop);
+      // Update shop in context (local state only)
+      updateShop(updatedShop);
 
       toast.success(`${files.length} photo${files.length > 1 ? 's' : ''} added!`);
       
