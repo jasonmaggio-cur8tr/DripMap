@@ -1,15 +1,16 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { CHEEKY_VIBES_OPTIONS } from '../constants';
+import { uploadImages } from '../services/storageService';
 import Button from '../components/Button';
 import TagChip from '../components/TagChip';
 import { useToast } from '../context/ToastContext';
 
 const ShopDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { shops, user, toggleSaveShop, toggleVisitedShop, addReview, claimRequests, getShopCommunity } = useApp();
+  const { shops, user, toggleSaveShop, toggleVisitedShop, addReview, updateShop, claimRequests, getShopCommunity } = useApp();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -26,6 +27,10 @@ const ShopDetail: React.FC = () => {
 
   // Community Tabs
   const [communityTab, setCommunityTab] = useState<'visited' | 'saved'>('visited');
+
+  // Photo Upload
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   // Lightbox Keyboard Navigation
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -116,6 +121,50 @@ const ShopDetail: React.FC = () => {
     e?.stopPropagation();
     if (lightboxIndex === null) return;
     setLightboxIndex((prev) => (prev === null ? null : (prev - 1 + filteredImages.length) % filteredImages.length));
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    if (!e.target.files || e.target.files.length === 0) return;
+
+    setIsUploadingPhoto(true);
+    try {
+      const files = Array.from(e.target.files);
+      const result = await uploadImages(files, 'shops');
+
+      if (!result.success) {
+        toast.error(`Upload failed: ${result.error}`);
+        return;
+      }
+
+      // Add new photos to shop gallery as 'community' type
+      const newImages = (result.urls || []).map(url => ({
+        url,
+        type: 'community' as const
+      }));
+
+      const updatedShop = {
+        ...shop,
+        gallery: [...shop.gallery, ...newImages]
+      };
+
+      // Update shop in context
+      await updateShop(updatedShop);
+
+      toast.success(`${files.length} photo${files.length > 1 ? 's' : ''} added!`);
+      
+      // Reset input
+      e.target.value = '';
+    } catch (error) {
+      console.error('Photo upload error:', error);
+      toast.error('Failed to upload photos. Please try again.');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
   };
 
   const renderVibeCheck = (vibe: string) => {
@@ -337,14 +386,35 @@ const ShopDetail: React.FC = () => {
                             
                             {/* Add Photo Button mixed into Masonry if expanding or short list */}
                             {(isGalleryExpanded || displayedImages.length < 9) && (
-                                <button className="break-inside-avoid w-full aspect-square rounded-2xl border-2 border-dashed border-coffee-300 flex flex-col items-center justify-center text-coffee-400 hover:border-volt-400 hover:text-volt-500 hover:bg-coffee-50 transition-all group">
+                                <button 
+                                    type="button"
+                                    onClick={() => photoInputRef.current?.click()}
+                                    disabled={isUploadingPhoto}
+                                    className="break-inside-avoid w-full aspect-square rounded-2xl border-2 border-dashed border-coffee-300 flex flex-col items-center justify-center text-coffee-400 hover:border-volt-400 hover:text-volt-500 hover:bg-coffee-50 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
                                     <div className="w-12 h-12 rounded-full bg-coffee-100 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                                        <i className="fas fa-plus text-coffee-500 group-hover:text-volt-500"></i>
+                                        {isUploadingPhoto ? (
+                                            <i className="fas fa-spinner fa-spin text-coffee-500"></i>
+                                        ) : (
+                                            <i className="fas fa-plus text-coffee-500 group-hover:text-volt-500"></i>
+                                        )}
                                     </div>
-                                    <span className="font-bold text-xs">Add Photo</span>
+                                    <span className="font-bold text-xs">
+                                        {isUploadingPhoto ? 'Uploading...' : 'Add Photo'}
+                                    </span>
                                 </button>
                             )}
                         </div>
+
+                        {/* Hidden file input */}
+                        <input 
+                            type="file" 
+                            ref={photoInputRef} 
+                            onChange={handlePhotoUpload} 
+                            className="hidden" 
+                            multiple 
+                            accept="image/*"
+                        />
                     ) : (
                         <div className="py-12 text-center text-coffee-400 bg-coffee-50 rounded-xl border border-coffee-100 border-dashed">
                             <i className="fas fa-images text-3xl mb-3 opacity-30"></i>
