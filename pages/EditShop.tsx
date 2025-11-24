@@ -5,6 +5,7 @@ import { useApp } from '../context/AppContext';
 import { Shop, Vibe, ShopImage } from '../types';
 import { ALL_VIBES, CHEEKY_VIBES_OPTIONS } from '../constants';
 import { generateShopDescription } from '../services/geminiService';
+import { uploadImages } from '../services/storageService';
 import Button from '../components/Button';
 import TagChip from '../components/TagChip';
 import LocationPicker from '../components/LocationPicker';
@@ -29,7 +30,7 @@ const EditShop: React.FC = () => {
   const [location, setLocation] = useState<{lat: number; lng: number} | null>(null);
   const [selectedVibes, setSelectedVibes] = useState<Vibe[]>([]);
   const [selectedCheekyVibes, setSelectedCheekyVibes] = useState<string[]>([]);
-  const [uploadedImages, setUploadedImages] = useState<{url: string, isNew: boolean}[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<{url: string, isNew: boolean, file?: File}[]>([]);
   const [openHours, setOpenHours] = useState<{
     monday: string;
     tuesday: string;
@@ -47,6 +48,7 @@ const EditShop: React.FC = () => {
     saturday: '',
     sunday: ''
   });
+  const [isUploading, setIsUploading] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -143,12 +145,19 @@ const EditShop: React.FC = () => {
         const reader = new FileReader();
         reader.onload = (event) => {
           if (event.target?.result) {
-            setUploadedImages(prev => [...prev, { url: event.target!.result as string, isNew: true }]);
+            setUploadedImages(prev => [...prev, { 
+              url: event.target!.result as string, 
+              isNew: true,
+              file: file // Store the actual file for upload later
+            }]);
           }
         };
         reader.readAsDataURL(file);
       });
-      toast.success(`${files.length} photos added`);
+      toast.success(`${files.length} photo${files.length > 1 ? 's' : ''} added`);
+      
+      // Reset input so same file can be selected again
+      e.target.value = '';
     }
   };
 
@@ -156,50 +165,91 @@ const EditShop: React.FC = () => {
     setUploadedImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const originalShop = shops.find(s => s.id === id);
     if (!originalShop || !location) return;
 
     if (uploadedImages.length === 0) {
-        toast.error("Please allow at least one photo.");
+        toast.error("Please add at least one photo.");
         return;
     }
 
-    // Preserve existing community photos, only edit owner photos basically
-    // For MVP simplicity, we assume the owner is managing the 'owner' type photos mainly, 
-    // but here we just reconstruct the array.
-    
-    // Logic: If it was already there, keep its type. If new, it's 'owner'.
-    const updatedGallery: ShopImage[] = uploadedImages.map(img => {
-        const existing = originalShop.gallery.find(g => g.url === img.url);
-        return {
-            url: img.url,
-            type: existing ? existing.type : 'owner'
-        };
-    });
+    setIsUploading(true);
 
-    const updatedShop: Shop = {
-      ...originalShop,
-      name: formData.name,
-      description: formData.description,
-      location: {
-        lat: location.lat,
-        lng: location.lng,
-        address: formData.address,
-        city: formData.city,
-        state: formData.state
-      },
-      gallery: updatedGallery,
-      vibes: selectedVibes,
-      cheekyVibes: selectedCheekyVibes,
-      openHours: openHours,
-    };
-    
-    updateShop(updatedShop);
-    toast.success("Shop updated successfully!");
-    navigate(`/shop/${id}`);
+    try {
+      // Upload any new images to Supabase Storage
+      const newImagesToUpload = uploadedImages.filter(img => img.isNew && img.file);
+      let finalGallery: ShopImage[] = [];
+
+      if (newImagesToUpload.length > 0) {
+        console.log(`Uploading ${newImagesToUpload.length} new images...`);
+        const files = newImagesToUpload.map(img => img.file!);
+        const uploadResults = await uploadImages(files);
+
+        // Check for upload failures
+        const failedUploads = uploadResults.filter(r => !r.success);
+        if (failedUploads.length > 0) {
+          toast.error(`Failed to upload ${failedUploads.length} image(s): ${failedUploads[0].error}`);
+          setIsUploading(false);
+          return;
+        }
+
+        // Build gallery: keep existing images + add newly uploaded URLs
+        const existingImages = uploadedImages
+          .filter(img => !img.isNew)
+          .map(img => {
+            const existing = originalShop.gallery.find(g => g.url === img.url);
+            return {
+              url: img.url,
+              type: existing ? existing.type : 'owner' as const
+            };
+          });
+
+        const newImages = uploadResults.map(r => ({
+          url: r.url!,
+          type: 'owner' as const
+        }));
+
+        finalGallery = [...existingImages, ...newImages];
+      } else {
+        // No new images, just preserve existing ones
+        finalGallery = uploadedImages.map(img => {
+          const existing = originalShop.gallery.find(g => g.url === img.url);
+          return {
+            url: img.url,
+            type: existing ? existing.type : 'owner' as const
+          };
+        });
+      }
+
+      const updatedShop: Shop = {
+        ...originalShop,
+        name: formData.name,
+        description: formData.description,
+        location: {
+          lat: location.lat,
+          lng: location.lng,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state
+        },
+        gallery: finalGallery,
+        vibes: selectedVibes,
+        cheekyVibes: selectedCheekyVibes,
+        openHours: openHours,
+      };
+      
+      await updateShop(updatedShop);
+      toast.success("Shop updated successfully!");
+      navigate(`/shop/${id}`);
+    } catch (error) {
+      console.error('Error updating shop:', error);
+      toast.error('Failed to update shop. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   if (isLoading) {
@@ -395,8 +445,19 @@ const EditShop: React.FC = () => {
           </section>
 
           <div className="pt-4 flex gap-4">
-            <Button type="submit" className="flex-1 py-4 text-lg shadow-xl hover:shadow-2xl">
-                Save Changes
+            <Button 
+              type="submit" 
+              className="flex-1 py-4 text-lg shadow-xl hover:shadow-2xl"
+              disabled={isUploading}
+            >
+                {isUploading ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin mr-2"></i>
+                    Uploading...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
             </Button>
           </div>
         </form>
