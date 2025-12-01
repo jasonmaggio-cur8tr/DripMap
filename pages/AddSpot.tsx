@@ -18,6 +18,7 @@ const AddSpot: React.FC = () => {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ completed: 0, total: 0 });
   
   const [formData, setFormData] = useState({
     name: '',
@@ -159,8 +160,11 @@ const AddSpot: React.FC = () => {
       
       // Upload images to Supabase Storage
       const imageFiles = uploadedImages.map(img => img.file);
-      // Upload images. NOTE: uploadImages now throws on Supabase upload errors to surface their details.
-      const uploadResult = await uploadImages(imageFiles, 'shops');
+      // Upload images sequentially. Pass progress callback so UI can show per-file progress.
+      setUploadProgress({ completed: 0, total: imageFiles.length });
+      const uploadResult = await uploadImages(imageFiles, 'shops', (completed, total) => {
+        setUploadProgress({ completed, total });
+      });
 
       console.log('Upload result:', uploadResult);
 
@@ -199,6 +203,7 @@ const AddSpot: React.FC = () => {
       toast.error(error.message || error.toString() || 'Failed to add spot. Please try again.');
     } finally {
       setIsSubmitting(false);
+      setUploadProgress({ completed: 0, total: 0 });
     }
   };
 
@@ -407,7 +412,10 @@ const AddSpot: React.FC = () => {
               className="w-full py-4 text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all"
               isLoading={isSubmitting}
             >
-                {isSubmitting ? 'Uploading...' : 'Submit Spot'} <i className="fas fa-arrow-right ml-2"></i>
+                {isSubmitting 
+                  ? (uploadProgress.total > 0 ? `Uploading... (${uploadProgress.completed}/${uploadProgress.total})` : 'Uploading...') 
+                  : 'Submit Spot'}
+                <i className="fas fa-arrow-right ml-2"></i>
             </Button>
           </div>
         </form>

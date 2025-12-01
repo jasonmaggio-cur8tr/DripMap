@@ -174,17 +174,34 @@ export const uploadImage = async (
  */
 export const uploadImages = async (
   files: File[],
-  folder: string = 'shops'
+  folder: string = 'shops',
+  onProgress?: (completed: number, total: number, fileName?: string) => void
 ): Promise<{ success: boolean; urls?: string[]; error?: any }> => {
-  console.log(`Starting upload of ${files.length} files...`);
+  console.log(`Starting sequential upload of ${files.length} files...`);
 
-  // uploadImage now throws on Supabase storage errors, which will reject this Promise
-  const uploadPromises = files.map(file => uploadImage(file, folder));
-  const results = await Promise.all(uploadPromises);
+  const urls: string[] = [];
 
-  // If we make it here, every upload succeeded
-  const urls = results.map(r => r.url).filter(Boolean) as string[];
-  console.log('Successfully uploaded URLs:', urls);
+  // Upload files one-by-one to avoid concurrency issues (session refresh, RLS, or network) that can make parallel uploads hang.
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    console.log(`Uploading file ${i + 1}/${files.length}: ${file.name}`);
+
+    // uploadImage will throw on any error — bubble that up so callers can surface it in UI
+    const result = await uploadImage(file, folder);
+
+    if (!result || !result.success || !result.url) {
+      // Defensive: If uploadImage returns a non-throwing error result, convert to thrown Error
+      const errMsg = (result && (result as any).error) || 'Unknown upload failure';
+      console.error(`Failed to upload file ${file.name}:`, errMsg);
+      throw new Error(errMsg);
+    }
+
+    console.log(`Uploaded file ${i + 1}/${files.length}: ${file.name} -> ${result.url}`);
+    if (onProgress) onProgress(i + 1, files.length, file.name);
+    urls.push(result.url);
+  }
+
+  console.log('All files uploaded sequentially, URLs:', urls);
   return { success: true, urls };
 };
 
