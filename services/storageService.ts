@@ -115,24 +115,74 @@ export const uploadImage = async (
     // Bucket existence verified on app init - proceed directly to upload
     console.log(`Uploading to bucket: ${BUCKET_NAME}...`);
 
-    // Upload to Supabase Storage with timeout
-    const uploadPromise = supabase.storage
-      .from(BUCKET_NAME)
-      .upload(fileName, processedFile, {
-        cacheControl: '3600',
-        upsert: false
-      });
+    // Upload to Supabase Storage with retries & per-attempt timeouts
+    const doUpload = async () => {
+      return supabase.storage
+        .from(BUCKET_NAME)
+        .upload(fileName, processedFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
+    };
 
-    // Also attach listeners to the underlying upload promise so we can see in the console when it resolves or rejects
-    // (this will still allow Promise.race below to handle timeout)
-    uploadPromise.then((res: any) => console.log('uploadPromise resolved for', fileName, res)).catch((err: any) => console.error('uploadPromise rejected for', fileName, err));
+    // Helper to attempt a single upload with a per-attempt timeout
+    const attemptUploadWithTimeout = async (timeoutMs: number) => {
+      const uploadPromise = doUpload();
+      uploadPromise.then((res: any) => console.log('uploadPromise resolved for', fileName, res)).catch((err: any) => console.error('uploadPromise rejected for', fileName, err));
 
-    // Add 120 second timeout - uploads may take longer on slow networks and we want to make the timeout diagnostic rather than immediate
-    const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Upload timeout after 120s - check Supabase storage configuration, RLS policies, and internet connection')), 120000)
-    );
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Upload timeout after ${timeoutMs / 1000}s - check Supabase storage configuration, RLS policies, and internet connection`)), timeoutMs)
+      );
 
-    const { data, error } = await Promise.race([uploadPromise, timeoutPromise]) as any;
+      return await Promise.race([uploadPromise, timeoutPromise]) as any;
+    };
+
+    // Try multiple attempts with increasing timeouts and exponential backoff
+    const maxAttempts = 3;
+    let attempt = 0;
+    let data: any = null;
+    let error: any = null;
+
+    while (attempt < maxAttempts) {
+      attempt += 1;
+      const timeoutForAttempt = attempt === 1 ? 30000 : (attempt === 2 ? 60000 : 120000);
+      console.log(`Attempt ${attempt}/${maxAttempts} for upload ${fileName} (timeout ${timeoutForAttempt}ms)`);
+
+      try {
+        const result = await attemptUploadWithTimeout(timeoutForAttempt);
+        data = result.data;
+        error = result.error;
+
+        // If success, break out
+        if (!error) break;
+
+        // If it's an auth-related error, try refreshing the session once and continue retries
+        const isAuthError = error && (error.message?.toLowerCase?.().includes('jwt') || error.message?.toLowerCase?.().includes('expired') || error.status === 401 || error.status === 403 || error.message?.toLowerCase?.().includes('unauthorized'));
+        if (isAuthError) {
+          console.warn('Auth-related upload error detected; attempting to refresh session before next attempt', error);
+          try {
+            const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+            if (refreshError || !refreshedSession) {
+              console.error('Session refresh failed during upload retry:', refreshError);
+              break;
+            }
+            console.log('Session refreshed successfully during upload retry');
+          } catch (refreshErr) {
+            console.error('Error while attempting session refresh during upload retry:', refreshErr);
+            break;
+          }
+        }
+      } catch (err: any) {
+        console.error(`Attempt ${attempt} for ${fileName} failed:`, err);
+        error = err;
+      }
+
+      if (attempt < maxAttempts) {
+        const backoffMs = 250 * Math.pow(2, attempt - 1);
+        console.log(`Waiting ${backoffMs}ms before retrying ${fileName}`);
+        await new Promise(res => setTimeout(res, backoffMs));
+      }
+    }
 
     console.log('Upload response - data:', data, 'error:', error);
 
@@ -160,7 +210,7 @@ export const uploadImage = async (
     let errorMessage = error.message || 'Failed to upload image';
 
     if (errorMessage.includes('timeout')) {
-      errorMessage = 'Upload timed out after 30s. Possible causes:\n• Supabase storage bucket not configured correctly\n• Storage RLS policies blocking uploads\n• Network connectivity issues\n\nPlease check STORAGE_SETUP.md for configuration steps.';
+      errorMessage = 'Upload timed out after 120s. Possible causes:\n• Supabase storage bucket not configured correctly\n• Storage RLS policies blocking uploads\n• Network connectivity issues\n\nPlease check STORAGE_SETUP.md for configuration steps.';
     } else if (errorMessage.includes('not found')) {
       errorMessage = `Storage bucket "${BUCKET_NAME}" not found. Please:\n1. Go to Supabase Dashboard > Storage\n2. Create bucket named "${BUCKET_NAME}"\n3. Enable "Public bucket"\n4. Add RLS policies for authenticated uploads`;
     }

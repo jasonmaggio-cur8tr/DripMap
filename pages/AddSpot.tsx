@@ -19,6 +19,7 @@ const AddSpot: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ completed: 0, total: 0 });
+  const [sessionIssue, setSessionIssue] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -156,6 +157,22 @@ const AddSpot: React.FC = () => {
         .single();
       console.log('createSpot (pre-upload) profile:', profile, profileError);
 
+      // Check for mismatch between the AppContext user and the supabase client user
+      if (currentUser?.id && user && currentUser.id !== user.id) {
+        console.warn('Detected mismatch between app user and auth user before upload', { appUser: user.id, authUser: currentUser.id });
+        // Try one session refresh attempt to re-hydrate session if the token is stale
+        const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError || !refreshedSession) {
+          console.error('Session refresh failed while attempting to correct mismatch:', refreshError);
+          const message = 'Session mismatch detected — your stored session looks stale. Please refresh the page or sign out and sign back in.';
+          toast.error(message);
+          setSessionIssue(message);
+          setIsSubmitting(false);
+          return;
+        }
+        console.log('Session refreshed successfully after mismatch; proceeding with uploads');
+      }
+
       console.log('Starting image upload...', uploadedImages.length, 'images');
       
       // Upload images to Supabase Storage
@@ -204,6 +221,8 @@ const AddSpot: React.FC = () => {
     } finally {
       setIsSubmitting(false);
       setUploadProgress({ completed: 0, total: 0 });
+      // clear any transient session issue after an attempt (on success it will be cleared)
+      setSessionIssue(null);
     }
   };
 
@@ -214,6 +233,35 @@ const AddSpot: React.FC = () => {
             <h1 className="text-3xl font-serif font-bold text-coffee-900 mb-2">Add a New Spot</h1>
             <p className="text-coffee-500">Share a hidden gem with the DripMap community.</p>
         </div>
+        {sessionIssue && (
+          <div className="mb-6 p-4 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-900">
+            <div className="flex items-center justify-between gap-4">
+              <div className="text-sm">{sessionIssue}</div>
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    try {
+                      await supabase.auth.signOut();
+                    } catch (e) {
+                      console.error('Error signing out during session refresh:', e);
+                    }
+                    // reload the page to re-hydrate a clean session
+                    window.location.reload();
+                  }}
+                  className="text-xs bg-yellow-700 text-white px-3 py-1 rounded-md"
+                >
+                  Refresh session
+                </button>
+                <button
+                  onClick={() => setSessionIssue(null)}
+                  className="text-xs bg-white border border-yellow-200 px-3 py-1 rounded-md"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Section 1: Basic Info */}
