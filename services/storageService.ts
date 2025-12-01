@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { resetSupabaseAuthState } from '../lib/authUtils';
 
 const BUCKET_NAME = 'shop-images';
 
@@ -89,8 +90,12 @@ export const uploadImage = async (
     let { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
     if (sessionError || !session) {
-      console.error('No active session found for upload');
-      throw new Error('Your session has expired. Please log out and log back in to continue.');
+      console.error('No active session found for upload:', sessionError);
+      
+      // Reset auth state to clear corrupted localStorage tokens
+      await resetSupabaseAuthState();
+      
+      throw new Error('Your session has expired or is invalid. Please log in again to continue.');
     }
     
     // Check if token is about to expire and refresh if needed
@@ -103,7 +108,11 @@ export const uploadImage = async (
       
       if (refreshError || !refreshedSession) {
         console.error('Failed to refresh session:', refreshError);
-        throw new Error('Your session has expired. Please log out and log back in to continue uploading.');
+        
+        // Reset auth state to clear corrupted/stale tokens
+        await resetSupabaseAuthState();
+        
+        throw new Error('Your session has expired and could not be refreshed. Please log in again to continue.');
       }
       
       session = refreshedSession;
@@ -164,11 +173,19 @@ export const uploadImage = async (
             const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
             if (refreshError || !refreshedSession) {
               console.error('Session refresh failed during upload retry:', refreshError);
-              break;
+              
+              // Reset auth state to clear corrupted/stale tokens
+              await resetSupabaseAuthState();
+              
+              throw new Error('Your session is invalid and could not be refreshed. Please log in again.');
             }
             console.log('Session refreshed successfully during upload retry');
           } catch (refreshErr) {
             console.error('Error while attempting session refresh during upload retry:', refreshErr);
+            
+            // Reset auth state before re-throwing
+            await resetSupabaseAuthState();
+            
             break;
           }
         }

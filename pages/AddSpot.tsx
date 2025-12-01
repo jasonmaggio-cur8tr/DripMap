@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { supabase } from '../lib/supabase';
+import { resetSupabaseAuthState } from '../lib/authUtils';
 import { Shop, Vibe, ShopImage } from '../types';
 import { ALL_VIBES, CHEEKY_VIBES_OPTIONS } from '../constants';
 import { generateShopDescription } from '../services/geminiService';
@@ -182,7 +183,11 @@ const AddSpot: React.FC = () => {
         const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
         if (refreshError || !refreshedSession) {
           console.error('Session refresh failed while attempting to correct mismatch:', refreshError);
-          const message = 'Session mismatch detected — your stored session looks stale. Please refresh the page or sign out and sign back in.';
+          
+          // Reset auth state to clear corrupted/stale tokens
+          await resetSupabaseAuthState();
+          
+          const message = 'Session mismatch detected and could not be refreshed. Please log in again.';
           toast.error(message);
           setSessionIssue(message);
           setIsSubmitting(false);
