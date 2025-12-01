@@ -123,9 +123,13 @@ export const uploadImage = async (
         upsert: false
       });
 
-    // Add 30 second timeout - if it takes longer, there's a real issue
+    // Also attach listeners to the underlying upload promise so we can see in the console when it resolves or rejects
+    // (this will still allow Promise.race below to handle timeout)
+    uploadPromise.then((res: any) => console.log('uploadPromise resolved for', fileName, res)).catch((err: any) => console.error('uploadPromise rejected for', fileName, err));
+
+    // Add 120 second timeout - uploads may take longer on slow networks and we want to make the timeout diagnostic rather than immediate
     const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Upload timeout after 30s - check Supabase storage configuration and internet connection')), 30000)
+      setTimeout(() => reject(new Error('Upload timeout after 120s - check Supabase storage configuration, RLS policies, and internet connection')), 120000)
     );
 
     const { data, error } = await Promise.race([uploadPromise, timeoutPromise]) as any;

@@ -182,16 +182,21 @@ const Profile: React.FC = () => {
       let finalAvatarUrl = editData.avatarUrl;
       
       // Upload new avatar if a file was selected
-      if (avatarFile) {
-        toast.info("Uploading profile picture...");
-        const uploadResult = await uploadImage(avatarFile, 'avatars');
-        
-        if (uploadResult.success && uploadResult.url) {
-          finalAvatarUrl = uploadResult.url;
-        } else {
-          throw new Error(uploadResult.error || 'Failed to upload avatar');
-        }
-      }
+            if (avatarFile) {
+                toast.info("Uploading profile picture...");
+                try {
+                    const uploadResult = await uploadImage(avatarFile, 'avatars');
+                    if (uploadResult.success && uploadResult.url) {
+                        finalAvatarUrl = uploadResult.url;
+                    } else {
+                        // defensive: uploadImage may return a result wrapper on success, but if it returned an error-like object, throw
+                        throw new Error(uploadResult.error || 'Failed to upload avatar');
+                    }
+                } catch (err: any) {
+                    console.error('Avatar upload error (Profile):', err);
+                    throw err;
+                }
+            }
       
       await updateUserProfile({
         username: editData.username,

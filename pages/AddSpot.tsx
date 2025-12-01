@@ -144,6 +144,17 @@ const AddSpot: React.FC = () => {
     setIsSubmitting(true);
     
     try {
+      // Log current auth/session + profile immediately before upload so we can debug first-attempt issues
+      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+      console.log('createSpot (pre-upload) user:', currentUser, userError);
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser?.id)
+        .single();
+      console.log('createSpot (pre-upload) profile:', profile, profileError);
+
       console.log('Starting image upload...', uploadedImages.length, 'images');
       
       // Upload images to Supabase Storage
