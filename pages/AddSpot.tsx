@@ -32,7 +32,7 @@ const AddSpot: React.FC = () => {
   const [location, setLocation] = useState<{lat: number; lng: number} | null>(null);
   const [selectedVibes, setSelectedVibes] = useState<Vibe[]>([]);
   const [selectedCheekyVibes, setSelectedCheekyVibes] = useState<string[]>([]);
-  const [uploadedImages, setUploadedImages] = useState<{file: File; preview: string}[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<{file: File; preview: string | null; loading: boolean}[]>([]);
   const [openHours, setOpenHours] = useState({
     monday: '',
     tuesday: '',
@@ -109,26 +109,39 @@ const AddSpot: React.FC = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files: File[] = Array.from(e.target.files);
-      
+
+      // Add placeholders for each selected file so we can track per-file loading
+      const placeholders = files.map(file => ({ file, preview: null as string | null, loading: true }));
+      setUploadedImages(prev => [...prev, ...placeholders]);
+
       files.forEach((file: File) => {
         const reader = new FileReader();
         reader.onload = (event: ProgressEvent<FileReader>) => {
           if (event.target?.result) {
-            setUploadedImages(prev => [...prev, {
-              file,
-              preview: event.target!.result as string
-            }]);
+            setUploadedImages(prev => prev.map(item => {
+              // match by object identity (File reference) and loading state
+              if (item.file === file && item.loading) {
+                return { file: item.file, preview: event.target!.result as string, loading: false };
+              }
+              return item;
+            }));
           }
         };
         reader.readAsDataURL(file);
       });
+
       toast.success(`${files.length} photo(s) added`);
+      // Reset input so same file can be selected again
+      e.target.value = '';
     }
   };
 
   const removeImage = (index: number) => {
     setUploadedImages(prev => prev.filter((_, i) => i !== index));
   };
+
+  // Are all previews finished loading?
+  const allPreviewsReady = uploadedImages.length > 0 && uploadedImages.every(img => !img.loading && !!img.preview);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,6 +154,11 @@ const AddSpot: React.FC = () => {
     if (uploadedImages.length === 0) {
         toast.error("Please upload at least one photo.");
         return;
+    }
+
+    if (uploadedImages.some(img => img.loading)) {
+      toast.error('Please wait until all images have finished loading before submitting.');
+      return;
     }
 
     setIsSubmitting(true);
@@ -418,21 +436,32 @@ const AddSpot: React.FC = () => {
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {uploadedImages.map((img, idx) => (
-                    <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group">
-                        <img src={img.preview} alt="Upload" className="w-full h-full object-cover" />
-                        <button 
-                            type="button"
-                            onClick={() => removeImage(idx)}
-                            className="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                            <i className="fas fa-times text-xs"></i>
-                        </button>
-                        {idx === 0 && (
-                             <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] font-bold text-center py-1">
-                                HERO IMAGE
-                             </div>
-                        )}
-                    </div>
+                  <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group bg-coffee-50 flex items-center justify-center">
+                    {img.preview && !img.loading ? (
+                      <img src={img.preview} alt="Upload" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center gap-2 text-coffee-400">
+                        <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <div className="text-xs font-medium">Loading preview...</div>
+                      </div>
+                    )}
+
+                    <button 
+                      type="button"
+                      onClick={() => removeImage(idx)}
+                      className="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <i className="fas fa-times text-xs"></i>
+                    </button>
+                    {idx === 0 && (
+                       <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] font-bold text-center py-1">
+                        HERO IMAGE
+                       </div>
+                    )}
+                  </div>
                 ))}
                 
                 <button 
@@ -459,6 +488,7 @@ const AddSpot: React.FC = () => {
               type="submit" 
               className="w-full py-4 text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all"
               isLoading={isSubmitting}
+              disabled={!allPreviewsReady}
             >
                 {isSubmitting 
                   ? (uploadProgress.total > 0 ? `Uploading... (${uploadProgress.completed}/${uploadProgress.total})` : 'Uploading...') 
