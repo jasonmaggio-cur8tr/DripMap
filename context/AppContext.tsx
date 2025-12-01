@@ -269,6 +269,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     if (result.success) {
       await refreshShops();
+    } else {
+      console.error('AppContext.addShop failed:', result.error);
+      // Throw to allow caller (UI) to handle/display the real error
+      throw result.error || new Error('Failed to create shop');
     }
   };
 

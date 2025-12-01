@@ -186,11 +186,13 @@ const EditShop: React.FC = () => {
       if (newImagesToUpload.length > 0) {
         console.log(`Uploading ${newImagesToUpload.length} new images...`);
         const files = newImagesToUpload.map(img => img.file!);
-        const uploadResult = await uploadImages(files);
 
-        // Check for upload failure
-        if (!uploadResult.success) {
-          toast.error(`Failed to upload images: ${uploadResult.error}`);
+        let uploadResult;
+        try {
+          uploadResult = await uploadImages(files);
+        } catch (err: any) {
+          console.error('Supabase upload error (EditShop):', err);
+          toast.error(err.message || 'Failed to upload images');
           setIsUploading(false);
           return;
         }

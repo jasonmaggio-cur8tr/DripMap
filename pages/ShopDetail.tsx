@@ -133,14 +133,17 @@ const ShopDetail: React.FC = () => {
     if (!e.target.files || e.target.files.length === 0) return;
 
     setIsUploadingPhoto(true);
-    try {
-      const files = Array.from(e.target.files) as File[];
-      const result = await uploadImages(files, 'shops');
-
-      if (!result.success) {
-        toast.error(`Upload failed: ${result.error}`);
-        return;
-      }
+        try {
+            const files = Array.from(e.target.files) as File[];
+            let result;
+            try {
+                result = await uploadImages(files, 'shops');
+            } catch (err: any) {
+                console.error('Supabase upload error (ShopDetail):', err);
+                toast.error(err.message || 'Failed to upload photos');
+                setIsUploadingPhoto(false);
+                return;
+            }
 
       // Add new photos to shop gallery as 'community' type
       const newImages = (result.urls || []).map(url => ({

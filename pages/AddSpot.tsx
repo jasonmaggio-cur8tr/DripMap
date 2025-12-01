@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { supabase } from '../lib/supabase';
 import { Shop, Vibe, ShopImage } from '../types';
 import { ALL_VIBES, CHEEKY_VIBES_OPTIONS } from '../constants';
 import { generateShopDescription } from '../services/geminiService';
@@ -12,7 +13,7 @@ import LocationPicker from '../components/LocationPicker';
 import { useToast } from '../context/ToastContext';
 
 const AddSpot: React.FC = () => {
-  const { addShop, user } = useApp();
+  const { addShop, user, loading } = useApp();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -43,10 +44,22 @@ const AddSpot: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!user) {
+    // Only redirect to the auth page once we've finished the app/session initialization
+    if (!loading && !user) {
       navigate('/auth');
     }
-  }, [user, navigate]);
+  }, [user, navigate, loading]);
+
+  // If the app is still hydrating/loading session, don't render the form yet.
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-coffee-50 pt-24 pb-10 px-4 flex items-center justify-center">
+        <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-xl p-6 md:p-10 border border-coffee-100 text-center">
+          <p className="text-coffee-500">Preparing your session — please wait...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return null;
@@ -69,6 +82,17 @@ const AddSpot: React.FC = () => {
     
     setIsGenerating(true);
     try {
+      // Log auth + profile state before creating spot so we can debug first-attempt failures
+      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+      console.log('createSpot user:', currentUser, userError);
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser?.id)
+        .single();
+      console.log('createSpot profile:', profile, profileError);
+
         const description = await generateShopDescription(formData.name, selectedVibes.map(String), formData.city);
         setFormData(prev => ({ ...prev, description }));
         toast.success("Description generated!");
@@ -124,23 +148,10 @@ const AddSpot: React.FC = () => {
       
       // Upload images to Supabase Storage
       const imageFiles = uploadedImages.map(img => img.file);
+      // Upload images. NOTE: uploadImages now throws on Supabase upload errors to surface their details.
       const uploadResult = await uploadImages(imageFiles, 'shops');
-      
+
       console.log('Upload result:', uploadResult);
-      
-      if (!uploadResult.success || !uploadResult.urls) {
-        const errorMsg = uploadResult.error || 'Failed to upload images';
-        console.error('Upload failed:', errorMsg);
-        
-        // Check if it's a bucket error
-        if (errorMsg.includes('Bucket not found') || errorMsg.includes('bucket')) {
-          toast.error('Storage not configured. Please create a "shop-images" bucket in Supabase Storage.');
-        } else {
-          toast.error(errorMsg);
-        }
-        setIsSubmitting(false);
-        return;
-      }
 
       console.log('Images uploaded successfully, creating shop...');
 
@@ -172,8 +183,9 @@ const AddSpot: React.FC = () => {
       toast.success("Spot added successfully!");
       navigate('/');
     } catch (error: any) {
-      console.error('Error adding spot:', error);
-      toast.error(error.message || 'Failed to add spot. Please try again.');
+      // Surface the real reason to console so it's visible when debugging first-attempt failures
+      console.error('Error adding spot (createSpot path):', error);
+      toast.error(error.message || error.toString() || 'Failed to add spot. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
