@@ -1,6 +1,54 @@
 import { supabase } from '../lib/supabase';
 import { Shop, User, Review, ClaimRequest, ShopImage } from '../types';
 
+// ==================== RETRY UTILITY ====================
+
+/**
+ * Retry a function with exponential backoff
+ * Helps handle transient network errors like ERR_QUIC_PROTOCOL_ERROR
+ */
+const retryWithBackoff = async <T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000,
+  operationName: string = 'operation'
+): Promise<T> => {
+  let lastError: any;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      if (attempt > 0) {
+        const delay = baseDelay * Math.pow(2, attempt - 1);
+        console.log(`[dbService] Retry attempt ${attempt}/${maxRetries} for ${operationName} after ${delay}ms delay`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+      
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      const errorMsg = error?.message || error?.details || String(error);
+      
+      // Check if it's a retryable error (network issues, QUIC protocol errors, etc.)
+      const isRetryable = 
+        errorMsg.includes('Failed to fetch') ||
+        errorMsg.includes('QUIC') ||
+        errorMsg.includes('network') ||
+        errorMsg.includes('timeout') ||
+        errorMsg.includes('ECONNRESET') ||
+        errorMsg.includes('ETIMEDOUT');
+      
+      if (!isRetryable || attempt === maxRetries) {
+        console.error(`[dbService] ${operationName} failed after ${attempt + 1} attempts:`, error);
+        throw error;
+      }
+      
+      console.warn(`[dbService] ${operationName} failed (attempt ${attempt + 1}), will retry:`, errorMsg);
+    }
+  }
+  
+  throw lastError;
+};
+
 // ==================== PROFILES ====================
 
 export const fetchUserProfile = async (userId: string): Promise<User | null> => {
@@ -146,53 +194,55 @@ export const updateUserProfile = async (userId: string, updates: {
 
 export const fetchShops = async (): Promise<Shop[]> => {
   try {
-    const { data: shops, error } = await supabase
-      .from('shops')
-      .select(`
-        *,
-        shop_images(*),
-        reviews(*, profiles(username, avatar_url))
-      `)
-      .order('created_at', { ascending: false });
+    return await retryWithBackoff(async () => {
+      const { data: shops, error } = await supabase
+        .from('shops')
+        .select(`
+          *,
+          shop_images(*),
+          reviews(*, profiles(username, avatar_url))
+        `)
+        .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    if (!shops) return [];
+      if (error) throw error;
+      if (!shops) return [];
 
-    return shops.map(shop => ({
-      id: shop.id,
-      name: shop.name,
-      description: shop.description || '',
-      location: {
-        lat: parseFloat(shop.lat),
-        lng: parseFloat(shop.lng),
-        address: shop.address,
-        city: shop.city,
-        state: shop.state
-      },
-      gallery: shop.shop_images?.map((img: any) => ({
-        url: img.url,
-        type: img.type,
-        caption: img.caption
-      })) || [],
-      vibes: shop.vibes || [],
-      cheekyVibes: shop.cheeky_vibes || [],
-      rating: parseFloat(shop.rating) || 0,
-      reviewCount: shop.review_count || 0,
-      reviews: shop.reviews?.map((r: any) => ({
-        id: r.id,
-        userId: r.user_id,
-        username: r.profiles?.username || 'Anonymous',
-        avatarUrl: r.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${r.profiles?.username || 'User'}&background=random`,
-        rating: r.rating,
-        comment: r.comment || '',
-        date: new Date(r.created_at).toLocaleDateString()
-      })) || [],
-      isClaimed: shop.is_claimed,
-      claimedBy: shop.claimed_by,
-      stampCount: shop.stamp_count || 0
-    }));
+      return shops.map(shop => ({
+        id: shop.id,
+        name: shop.name,
+        description: shop.description || '',
+        location: {
+          lat: parseFloat(shop.lat),
+          lng: parseFloat(shop.lng),
+          address: shop.address,
+          city: shop.city,
+          state: shop.state
+        },
+        gallery: shop.shop_images?.map((img: any) => ({
+          url: img.url,
+          type: img.type,
+          caption: img.caption
+        })) || [],
+        vibes: shop.vibes || [],
+        cheekyVibes: shop.cheeky_vibes || [],
+        rating: parseFloat(shop.rating) || 0,
+        reviewCount: shop.review_count || 0,
+        reviews: shop.reviews?.map((r: any) => ({
+          id: r.id,
+          userId: r.user_id,
+          username: r.profiles?.username || 'Anonymous',
+          avatarUrl: r.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${r.profiles?.username || 'User'}&background=random`,
+          rating: r.rating,
+          comment: r.comment || '',
+          date: new Date(r.created_at).toLocaleDateString()
+        })) || [],
+        isClaimed: shop.is_claimed,
+        claimedBy: shop.claimed_by,
+        stampCount: shop.stamp_count || 0
+      }));
+    }, 3, 1000, 'fetchShops');
   } catch (error) {
-    console.error('Error fetching shops:', error);
+    console.error('[dbService] Error fetching shops (all retries exhausted):', error);
     return [];
   }
 };

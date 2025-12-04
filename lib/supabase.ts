@@ -100,6 +100,20 @@ export const supabase = (isConfigured
       global: {
         headers: {
           'x-client-info': 'dripmap-web'
+        },
+        fetch: (url, options = {}) => {
+          // Wrap fetch to add better error logging for QUIC protocol errors
+          return fetch(url, options).catch((error) => {
+            console.error('[supabase] Fetch error:', {
+              url,
+              error: error.message || String(error),
+              type: error.name,
+              stack: error.stack
+            });
+            
+            // Re-throw to let retry logic handle it
+            throw error;
+          });
         }
       },
       db: {

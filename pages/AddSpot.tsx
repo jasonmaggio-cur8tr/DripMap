@@ -240,7 +240,18 @@ const AddSpot: React.FC = () => {
     } catch (error: any) {
       // Surface the real reason to console so it's visible when debugging first-attempt failures
       console.error('Error adding spot (createSpot path):', error);
-      toast.error(error.message || error.toString() || 'Failed to add spot. Please try again.');
+      
+      // Check if it's a session/auth error
+      const errorMsg = error.message || error.toString() || 'Failed to add spot. Please try again.';
+      if (errorMsg.includes('session') || errorMsg.includes('expired') || errorMsg.includes('401') || errorMsg.includes('JWT')) {
+        toast.error('Your session has expired. Please log in again to continue.');
+        // Give user time to read the message before redirecting
+        setTimeout(() => {
+          window.location.href = '/auth';
+        }, 2000);
+      } else {
+        toast.error(errorMsg);
+      }
     } finally {
       setIsSubmitting(false);
       setUploadProgress({ completed: 0, total: 0 });
@@ -264,16 +275,17 @@ const AddSpot: React.FC = () => {
                 <button
                   onClick={async () => {
                     try {
+                      console.log('User clicked session refresh - signing out and reloading');
                       await supabase.auth.signOut();
                     } catch (e) {
                       console.error('Error signing out during session refresh:', e);
                     }
-                    // reload the page to re-hydrate a clean session
-                    window.location.reload();
+                    // Force full reload to clear stale state
+                    window.location.href = '/auth';
                   }}
                   className="text-xs bg-yellow-700 text-white px-3 py-1 rounded-md"
                 >
-                  Refresh session
+                  Log out & refresh
                 </button>
                 <button
                   onClick={() => setSessionIssue(null)}

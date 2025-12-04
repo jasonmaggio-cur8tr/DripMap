@@ -74,20 +74,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event);
+      console.log('[AppContext] Auth state changed:', event);
       
       if (event === 'TOKEN_REFRESHED') {
-        console.log('Token refreshed automatically');
+        console.log('[AppContext] Token refreshed automatically');
       }
       
       if (event === 'SIGNED_OUT') {
-        console.log('User signed out');
+        console.log('[AppContext] User signed out, clearing all state');
         setUser(null);
+        setShops([]);
+        setClaimRequests([]);
       }
       
-      if (session?.user) {
+      if (session?.user && event !== 'SIGNED_OUT') {
         await loadUserProfile(session.user.id);
-      } else if (event !== 'TOKEN_REFRESHED') {
+      } else if (event !== 'TOKEN_REFRESHED' && event !== 'SIGNED_OUT') {
         setUser(null);
       }
     });
@@ -120,8 +122,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const refreshShops = async () => {
-    const fetchedShops = await db.fetchShops();
-    setShops(fetchedShops.length > 0 ? fetchedShops : INITIAL_SHOPS);
+    try {
+      console.log('[AppContext] Fetching shops...');
+      const fetchedShops = await db.fetchShops();
+      
+      if (fetchedShops.length > 0) {
+        console.log(`[AppContext] Loaded ${fetchedShops.length} shops from database`);
+        setShops(fetchedShops);
+      } else {
+        console.warn('[AppContext] No shops returned from database, using fallback data');
+        setShops(INITIAL_SHOPS);
+      }
+    } catch (error) {
+      console.error('[AppContext] Failed to refresh shops:', error);
+      // Fall back to initial shops on error
+      setShops(INITIAL_SHOPS);
+    }
   };
 
   // Helper to refresh session if needed
@@ -129,7 +145,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { data: { session }, error } = await supabase.auth.getSession();
     
     if (error || !session) {
-      console.warn('Session invalid or expired');
+      console.warn('[AppContext] Session invalid or expired, clearing user state');
+      setUser(null);
       return null;
     }
     
@@ -139,15 +156,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const fiveMinutes = 5 * 60 * 1000;
     
     if (expiresAt - now < fiveMinutes) {
-      console.log('Session expiring soon, refreshing...');
+      console.log('[AppContext] Session expiring soon, refreshing...');
       const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
       
       if (refreshError || !refreshedSession) {
-        console.error('Failed to refresh session:', refreshError);
+        console.error('[AppContext] Failed to refresh session:', refreshError);
+        // Clear user state on refresh failure
+        setUser(null);
         return null;
       }
       
-      console.log('Session refreshed successfully');
+      console.log('[AppContext] Session refreshed successfully');
       return refreshedSession;
     }
     
@@ -201,8 +220,47 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
+    try {
+      console.log('[AppContext] Logging out...');
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('[AppContext] Error during signOut:', error);
+      }
+      
+      // Clear user state
+      setUser(null);
+      
+      // Clear any cached data
+      setShops([]);
+      setClaimRequests([]);
+      
+      console.log('[AppContext] Logout complete, clearing cache and forcing reload');
+      
+      // Clear all browser storage
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+        console.log('[AppContext] Browser storage cleared');
+      } catch (e) {
+        console.warn('[AppContext] Could not clear storage:', e);
+      }
+      
+      // Force a hard reload to home page with cache clear
+      // Using origin + '/' ensures we go to home, cache-busting param forces fresh load
+      window.location.href = window.location.origin + '/#/?t=' + Date.now();
+    } catch (error) {
+      console.error('[AppContext] Logout error:', error);
+      // Even if there's an error, try to clear state and reload
+      setUser(null);
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (e) {
+        console.warn('[AppContext] Could not clear storage on error:', e);
+      }
+      window.location.href = window.location.origin + '/#/?t=' + Date.now();
+    }
   };
 
   const updateUserProfile = async (updates: Partial<User>) => {

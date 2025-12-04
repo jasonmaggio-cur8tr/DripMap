@@ -226,10 +226,13 @@ export const uploadImage = async (
     // Convert some known issues into clearer messages, then rethrow so callers see the reason
     let errorMessage = error.message || 'Failed to upload image';
 
-    if (errorMessage.includes('timeout')) {
-      errorMessage = 'Upload timed out after 120s. Possible causes:\n• Supabase storage bucket not configured correctly\n• Storage RLS policies blocking uploads\n• Network connectivity issues\n\nPlease check STORAGE_SETUP.md for configuration steps.';
+    // Check for auth/session errors first
+    if (errorMessage.includes('JWT') || errorMessage.includes('session') || errorMessage.includes('expired') || errorMessage.includes('401')) {
+      errorMessage = 'Your session has expired. Please log in again to continue uploading.';
+    } else if (errorMessage.includes('timeout')) {
+      errorMessage = 'Upload timed out. The file may be too large or your connection is slow. Please try again with smaller images.';
     } else if (errorMessage.includes('not found')) {
-      errorMessage = `Storage bucket "${BUCKET_NAME}" not found. Please:\n1. Go to Supabase Dashboard > Storage\n2. Create bucket named "${BUCKET_NAME}"\n3. Enable "Public bucket"\n4. Add RLS policies for authenticated uploads`;
+      errorMessage = `Storage bucket \"${BUCKET_NAME}\" not found. Please contact support.`;
     }
 
     throw new Error(errorMessage);

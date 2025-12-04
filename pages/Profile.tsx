@@ -446,7 +446,7 @@ const Profile: React.FC = () => {
                                     <Button variant="ghost" size="sm" onClick={handleShareProfile} className="text-volt-500 hover:bg-volt-50">
                                         <i className="fas fa-share mr-2"></i> Share Profile
                                     </Button>
-                                    <Button variant="ghost" size="sm" onClick={async () => { await logout(); navigate('/'); }} className="text-red-500 hover:bg-red-50">
+                                    <Button variant="ghost" size="sm" onClick={logout} className="text-red-500 hover:bg-red-50">
                                         Log Out
                                     </Button>
                                 </>
