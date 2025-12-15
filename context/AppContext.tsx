@@ -43,7 +43,10 @@ interface AppContextType {
   submitClaimRequest: (
     request: Omit<ClaimRequest, "id" | "status" | "date">
   ) => Promise<void>;
-  approveClaimRequest: (requestId: string) => Promise<void>;
+  markClaimRequest: (
+    requestId: string,
+    status: "approved" | "rejected"
+  ) => Promise<void>;
 
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -479,8 +482,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  const approveClaimRequest = async (requestId: string) => {
-    const result = await db.approveClaimRequest(requestId);
+  const markClaimRequest = async (
+    requestId: string,
+    status: "approved" | "rejected"
+  ) => {
+    const result = await db.markClaimRequest(requestId, status);
 
     if (result.success) {
       // Refresh data
@@ -694,7 +700,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         addReview,
         claimRequests,
         submitClaimRequest,
-        approveClaimRequest,
+        markClaimRequest,
         searchQuery,
         setSearchQuery,
         selectedVibes,
