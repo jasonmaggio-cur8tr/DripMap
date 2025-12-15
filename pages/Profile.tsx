@@ -462,7 +462,14 @@ const Profile: React.FC = () => {
 
                 <div className="flex gap-3 pt-4 justify-center md:justify-start">
                   <Button onClick={handleSave} size="sm">
-                    Save Profile
+                    {uploadingAvatar ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin mr-2"></i>
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Profile"
+                    )}
                   </Button>
                   <Button onClick={handleCancel} variant="ghost" size="sm">
                     Cancel
