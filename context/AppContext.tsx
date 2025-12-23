@@ -416,13 +416,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     shopId: string,
     reviewData: Omit<Review, "id" | "username" | "userId" | "date">
   ) => {
-    if (!user) return;
+    if (!user) throw new Error("Not logged in");
 
     // Ensure session is valid before adding review
     const session = await ensureValidSession();
     if (!session) {
       console.error("Session expired, cannot add review");
-      return;
+      throw new Error("Please log in to submit your review.");
     }
 
     console.log("AppContext: Adding review for shop", shopId);
@@ -442,6 +442,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       console.log("AppContext: Shops refreshed");
     } else {
       console.error("AppContext: Failed to add review:", result.error);
+      throw new Error("Failed to add review");
     }
   };
 

@@ -117,16 +117,22 @@ const ShopDetail: React.FC = () => {
     }
   };
 
-  const handleSubmitReview = () => {
+  const handleSubmitReview = async () => {
     if (!shop) return;
-    addReview(shop.id, {
-      rating: newReview.rating,
-      comment: newReview.comment,
-    });
-    toggleVisitedShop(shop.id);
-    setShowReviewModal(false);
-    setNewReview({ rating: 5, comment: "" });
-    toast.success("Passport Stamped & Review Posted!");
+    try {
+      await addReview(shop.id, {
+        rating: newReview.rating,
+        comment: newReview.comment,
+      });
+      toast.success("Passport Stamped & Review Posted!");
+    } catch (error) {
+      console.error("Error adding review:", error);
+      toast.error(error.message || "Failed to post review. Please try again.");
+    } finally {
+      setShowReviewModal(false);
+      toggleVisitedShop(shop.id);
+      setNewReview({ rating: 5, comment: "" });
+    }
   };
 
   const handleSkipReview = () => {
@@ -353,7 +359,11 @@ const ShopDetail: React.FC = () => {
             />
 
             <div className="flex flex-col gap-3 relative z-10">
-              <Button onClick={handleSubmitReview} className="w-full py-3">
+              <Button
+                onClick={handleSubmitReview}
+                className="w-full py-3"
+                disabled={newReview.comment.trim() === ""}
+              >
                 Post Review & Stamp
               </Button>
               <button
@@ -446,9 +456,10 @@ const ShopDetail: React.FC = () => {
               <h2 className="text-2xl font-serif font-bold text-coffee-900 mb-4">
                 The Lowdown
               </h2>
-              <p className="text-lg text-coffee-800/80 leading-relaxed mb-6">
+              <p className="text-lg text-coffee-800/80 leading-relaxed mb-6 whitespace-pre-line">
                 {shop.description}
               </p>
+
               <div className="flex flex-wrap gap-2">
                 {shop.vibes.map(vibe => (
                   <TagChip key={vibe} label={vibe} isSelected />
