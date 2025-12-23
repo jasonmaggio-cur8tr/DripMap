@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { supabase } from "../lib/supabase";
 import { Shop, User, Review, ClaimRequest, ShopImage } from "../types";
 
