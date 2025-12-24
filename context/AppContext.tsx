@@ -5,7 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { Shop, User, Vibe, ClaimRequest, Review } from "../types";
+import { Shop, User, Vibe, ClaimRequest, Review, CalendarEvent, Brand } from "../types";
 import { INITIAL_SHOPS } from "../constants";
 import { supabase } from "../lib/supabase";
 import { resetSupabaseAuthState } from "../lib/authUtils";
@@ -62,6 +62,16 @@ interface AppContextType {
   getProfileById: (userId: string) => Promise<User | null>;
   getProfileByUsername: (username: string) => Promise<User | null>;
   toggleFollow: (targetUserId: string) => void;
+
+  // Events (PRO Feature)
+  events: CalendarEvent[];
+  addEvent: (event: Omit<CalendarEvent, "id" | "createdAt">) => void;
+  updateEvent: (event: CalendarEvent) => void;
+  deleteEvent: (eventId: string) => void;
+
+  // Brands
+  brands: Brand[];
+  addBrand: (brand: Brand) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -75,6 +85,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedVibes, setSelectedVibes] = useState<Vibe[]>([]);
   const [claimRequests, setClaimRequests] = useState<ClaimRequest[]>([]);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
 
   // Initialize app - load shops and set up auth listener
   useEffect(() => {
@@ -109,9 +121,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     if (profile) {
       setUser(profile);
 
-      // Load claim requests if user is admin or business owner
+      // Load claim requests - all for admin/business owner, own requests for regular users
+      let requests: any[] = [];
       if (profile.isAdmin || profile.isBusinessOwner) {
-        const requests = await db.fetchClaimRequests();
+        requests = await db.fetchClaimRequests();
+      } else {
+        // Regular users: fetch their own claim requests so they can see pending status
+        requests = await db.fetchUserClaimRequests(userId);
+      }
+
+      if (requests.length > 0) {
         setClaimRequests(
           requests.map(r => ({
             id: r.id,
@@ -381,6 +400,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     if (!user) return;
 
     const isVisited = user.visitedShops.includes(shopId);
+    const previousVisitedShops = [...user.visitedShops];
 
     // Optimistic update
     setUser(prev => {
@@ -409,7 +429,33 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     );
 
     // Sync with database
-    await db.toggleVisitedShop(user.id, shopId, isVisited);
+    const result = await db.toggleVisitedShop(user.id, shopId, isVisited);
+
+    // If DB operation failed, rollback optimistic update
+    if (!result.success) {
+      console.error("[toggleVisitedShop] DB operation failed, rolling back:", result.error);
+      setUser(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          visitedShops: previousVisitedShops,
+        };
+      });
+      setShops(prevShops =>
+        prevShops.map(shop => {
+          if (shop.id === shopId) {
+            return {
+              ...shop,
+              stampCount: isVisited
+                ? (shop.stampCount || 0) + 1
+                : Math.max(0, (shop.stampCount || 0) - 1),
+            };
+          }
+          return shop;
+        })
+      );
+      throw new Error(result.error?.message || "Failed to update visited status");
+    }
   };
 
   const addReview = async (
@@ -458,8 +504,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       });
 
       if (result.success) {
-        // Refresh claim requests
-        const requests = await db.fetchClaimRequests();
+        // Refresh claim requests - fetch user's own requests (works for all users)
+        const requests = await db.fetchUserClaimRequests(requestData.userId);
         setClaimRequests(
           requests.map(r => ({
             id: r.id,
@@ -683,6 +729,29 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     return matchesSearch && matchesVibes;
   });
 
+  // Event functions (PRO Feature - placeholder until DB integration)
+  const addEvent = (eventData: Omit<CalendarEvent, "id" | "createdAt">) => {
+    const newEvent: CalendarEvent = {
+      ...eventData,
+      id: `event-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+    setEvents(prev => [...prev, newEvent]);
+  };
+
+  const updateEvent = (updatedEvent: CalendarEvent) => {
+    setEvents(prev => prev.map(e => e.id === updatedEvent.id ? updatedEvent : e));
+  };
+
+  const deleteEvent = (eventId: string) => {
+    setEvents(prev => prev.filter(e => e.id !== eventId));
+  };
+
+  // Brands
+  const addBrand = (newBrand: Brand) => {
+    setBrands(prev => [...prev, newBrand]);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -710,6 +779,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         getProfileById,
         getProfileByUsername,
         toggleFollow,
+        events,
+        addEvent,
+        updateEvent,
+        deleteEvent,
+        brands,
+        addBrand,
       }}
     >
       {children}

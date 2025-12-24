@@ -3,10 +3,27 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { CHEEKY_VIBES_OPTIONS } from "../constants";
 import { uploadImages } from "../services/storageService";
-import { addShopImages } from "../services/dbService";
+import {
+  addShopImages,
+  updateHappeningNow,
+  updateNowBrewing,
+  updateCoffeeTech,
+  updateBaristaProfiles,
+  updateSpecialtyMenu,
+  updateVeganOptions,
+} from "../services/dbService";
 import Button from "../components/Button";
 import TagChip from "../components/TagChip";
 import { useToast } from "../context/ToastContext";
+import PricingModal from "../components/PricingModal";
+import {
+  HappeningNowEditor,
+  NowBrewingEditor,
+  SpecialtyMenuEditor,
+  BaristaEditor,
+  VeganInfoEditor,
+  EditableField,
+} from "../components/OwnerTools";
 
 const ShopDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,10 +36,10 @@ const ShopDetail: React.FC = () => {
     updateShop,
     claimRequests,
     getShopCommunity,
+    refreshShops,
   } = useApp();
   const navigate = useNavigate();
   const { toast } = useToast();
-  console.log("Shops in ShopDetail:", id, shops);
   const shop = shops.find(s => s.id === id);
 
   const [galleryFilter, setGalleryFilter] = useState<
@@ -36,6 +53,7 @@ const ShopDetail: React.FC = () => {
   // Review Modal State
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   // Community Tabs
   const [communityTab, setCommunityTab] = useState<"visited" | "saved">(
@@ -45,6 +63,10 @@ const ShopDetail: React.FC = () => {
   // Photo Upload
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+
+  // PRO Features State
+  const [showPricing, setShowPricing] = useState(false);
+  const [coffeeTechEditMode, setCoffeeTechEditMode] = useState(false);
 
   const ref = useRef<HTMLDivElement>(null);
 
@@ -70,6 +92,82 @@ const ShopDetail: React.FC = () => {
   const isSaved = user?.savedShops.includes(shop.id);
   const isVisited = user?.visitedShops.includes(shop.id);
   const isOwner = user && (shop.claimedBy === user.id || user.isAdmin);
+  const isPro = user?.isPro || shop.subscriptionTier === 'pro';
+  const hasAlreadyReviewed = user && shop.reviews?.some(r => r.userId === user.id);
+
+  // Handler for updating shop PRO fields - saves immediately for features with explicit save buttons
+  const handleUpdateShop = async (updates: Partial<typeof shop>, saveImmediately = true) => {
+    // Update local state immediately
+    updateShop({ ...shop, ...updates });
+
+    // Save to database if requested
+    if (saveImmediately) {
+      await saveChangesToDB(updates);
+    }
+  };
+
+  // Save changes to database
+  const saveChangesToDB = async (changes: Partial<typeof shop>) => {
+    if (Object.keys(changes).length === 0) return;
+
+    try {
+      // Happening Now
+      if ('happeningNow' in changes) {
+        const status = changes.happeningNow;
+        await updateHappeningNow(shop.id, status ? {
+          title: status.title,
+          message: status.message,
+          sticker: status.sticker,
+        } : null);
+      }
+
+      // Now Brewing Menu
+      if ('currentMenu' in changes && changes.currentMenu) {
+        await updateNowBrewing(shop.id, changes.currentMenu);
+      }
+
+      // Coffee Tech
+      if ('sourcingInfo' in changes || 'espressoMachine' in changes || 'grinderDetails' in changes) {
+        await updateCoffeeTech(shop.id, {
+          sourcingInfo: changes.sourcingInfo ?? shop.sourcingInfo,
+          espressoMachine: changes.espressoMachine ?? shop.espressoMachine,
+          grinderDetails: changes.grinderDetails ?? shop.grinderDetails,
+        });
+      }
+
+      // Barista Profiles
+      if ('baristas' in changes && changes.baristas) {
+        await updateBaristaProfiles(shop.id, changes.baristas);
+      }
+
+      // Specialty Menu
+      if ('specialtyDrinks' in changes && changes.specialtyDrinks) {
+        await updateSpecialtyMenu(shop.id, changes.specialtyDrinks);
+      }
+
+      // Vegan Options
+      if ('veganFoodOptions' in changes || 'plantMilks' in changes) {
+        await updateVeganOptions(shop.id, {
+          veganFoodOptions: changes.veganFoodOptions ?? shop.veganFoodOptions ?? false,
+          plantMilks: changes.plantMilks ?? shop.plantMilks ?? [],
+        });
+      }
+
+      toast.success("Changes saved!");
+    } catch (error) {
+      console.error("Error saving PRO features:", error);
+      toast.error("Failed to save changes");
+    }
+  };
+
+  // Save Coffee Tech changes when clicking Save button
+  const saveCoffeeTechChanges = async () => {
+    await saveChangesToDB({
+      sourcingInfo: shop.sourcingInfo,
+      espressoMachine: shop.espressoMachine,
+      grinderDetails: shop.grinderDetails,
+    });
+  };
 
   const pendingRequest = user
     ? claimRequests.find(
@@ -112,27 +210,81 @@ const ShopDetail: React.FC = () => {
     if (isVisited) {
       toggleVisitedShop(shop.id);
     } else {
-      // Trigger animation via state or simple toast for now
-      setShowReviewModal(true);
+      // If user already reviewed, just stamp passport without opening modal
+      if (hasAlreadyReviewed) {
+        toggleVisitedShop(shop.id);
+        toast.success("Passport stamped!");
+      } else {
+        // First time - open review modal
+        setShowReviewModal(true);
+      }
     }
   };
 
-  const handleSubmitReview = () => {
-    if (!shop) return;
-    addReview(shop.id, {
-      rating: newReview.rating,
-      comment: newReview.comment,
-    });
-    toggleVisitedShop(shop.id);
-    setShowReviewModal(false);
-    setNewReview({ rating: 5, comment: "" });
-    toast.success("Passport Stamped & Review Posted!");
+  const handleSubmitReview = async () => {
+    if (!shop || isSubmittingReview) return;
+
+    // Check if user already reviewed this shop
+    if (hasAlreadyReviewed) {
+      toast.error("You've already reviewed this shop.");
+      setShowReviewModal(false);
+      return;
+    }
+
+    // Validate review comment
+    if (!newReview.comment.trim()) {
+      toast.error("Please write a review before submitting.");
+      return;
+    }
+
+    setIsSubmittingReview(true);
+    try {
+      // First mark as visited (updates stamp_count in DB) - only if not already visited
+      if (!isVisited) {
+        await toggleVisitedShop(shop.id);
+      }
+      // Then add review (will refresh shops and get updated stamp_count)
+      await addReview(shop.id, {
+        rating: newReview.rating,
+        comment: newReview.comment.trim(),
+      });
+      setShowReviewModal(false);
+      setNewReview({ rating: 5, comment: "" });
+      toast.success("Passport Stamped & Review Posted!");
+    } catch (error: any) {
+      console.error("Error submitting review:", error);
+      // Check for duplicate constraint error
+      if (error?.code === "23505" || error?.message?.includes("duplicate")) {
+        toast.error("You've already reviewed this shop.");
+      } else {
+        toast.error("Failed to submit review. Please try again.");
+      }
+    } finally {
+      setIsSubmittingReview(false);
+    }
   };
 
-  const handleSkipReview = () => {
-    toggleVisitedShop(shop.id);
-    setShowReviewModal(false);
-    toast.success("Passport Stamped!");
+  const handleSkipReview = async () => {
+    if (!shop || isSubmittingReview) return;
+
+    // If already visited, just close modal
+    if (isVisited) {
+      setShowReviewModal(false);
+      toast.success("Already stamped!");
+      return;
+    }
+
+    setIsSubmittingReview(true);
+    try {
+      await toggleVisitedShop(shop.id);
+      setShowReviewModal(false);
+      toast.success("Passport Stamped!");
+    } catch (error) {
+      console.error("Error stamping passport:", error);
+      toast.error("Failed to stamp passport. Please try again.");
+    } finally {
+      setIsSubmittingReview(false);
+    }
   };
 
   // Lightbox Handlers
@@ -162,6 +314,11 @@ const ShopDetail: React.FC = () => {
 
     if (!e.target.files || e.target.files.length === 0) return;
 
+    // Prevent duplicate uploads if already in progress
+    if (isUploadingPhoto) {
+      return;
+    }
+
     setIsUploadingPhoto(true);
     try {
       const files = Array.from(e.target.files) as File[];
@@ -181,6 +338,9 @@ const ShopDetail: React.FC = () => {
         type: "community" as const,
       }));
 
+      // Reset input BEFORE refresh to prevent re-trigger
+      e.target.value = "";
+
       // Save images to database
       const dbResult = await addShopImages(shop.id, newImages);
 
@@ -191,21 +351,12 @@ const ShopDetail: React.FC = () => {
         return;
       }
 
-      // Update local state
-      const updatedShop = {
-        ...shop,
-        gallery: [...shop.gallery, ...newImages],
-      };
-
-      // Update shop in context (local state only)
-      updateShop(updatedShop);
+      // Refresh shop data from database to get the new images
+      await refreshShops();
 
       toast.success(
         `${files.length} photo${files.length > 1 ? "s" : ""} added!`
       );
-
-      // Reset input
-      e.target.value = "";
     } catch (error) {
       console.error("Photo upload error:", error);
       toast.error("Failed to upload photos. Please try again.");
@@ -353,14 +504,25 @@ const ShopDetail: React.FC = () => {
             />
 
             <div className="flex flex-col gap-3 relative z-10">
-              <Button onClick={handleSubmitReview} className="w-full py-3">
-                Post Review & Stamp
+              <Button
+                onClick={handleSubmitReview}
+                className="w-full py-3"
+                disabled={isSubmittingReview}
+              >
+                {isSubmittingReview ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <i className="fas fa-spinner fa-spin"></i> Submitting...
+                  </span>
+                ) : (
+                  "Post Review & Stamp"
+                )}
               </Button>
               <button
                 onClick={handleSkipReview}
-                className="text-coffee-400 text-xs font-bold hover:text-coffee-900 uppercase tracking-wide"
+                disabled={isSubmittingReview}
+                className={`text-coffee-400 text-xs font-bold hover:text-coffee-900 uppercase tracking-wide ${isSubmittingReview ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                Just Stamp Passport
+                {isSubmittingReview ? "Processing..." : "Just Stamp Passport"}
               </button>
             </div>
           </div>
@@ -409,6 +571,11 @@ const ShopDetail: React.FC = () => {
                   <i className="fas fa-certificate"></i> VERIFIED
                 </span>
               )}
+              {isPro && (
+                <span className="bg-purple-600 text-white text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 border border-purple-400">
+                  <i className="fas fa-star"></i> PRO
+                </span>
+              )}
               <div className="flex items-center text-volt-400 font-bold bg-black/30 backdrop-blur-sm px-2 py-1 rounded-lg">
                 <i className="fas fa-star mr-1"></i> {shop.rating.toFixed(1)} (
                 {shop.reviewCount})
@@ -446,7 +613,7 @@ const ShopDetail: React.FC = () => {
               <h2 className="text-2xl font-serif font-bold text-coffee-900 mb-4">
                 The Lowdown
               </h2>
-              <p className="text-lg text-coffee-800/80 leading-relaxed mb-6">
+              <p className="text-lg text-coffee-800/80 leading-relaxed mb-6 whitespace-pre-wrap">
                 {shop.description}
               </p>
               <div className="flex flex-wrap gap-2">
@@ -580,6 +747,118 @@ const ShopDetail: React.FC = () => {
                 {CHEEKY_VIBES_OPTIONS.map(vibe => renderVibeCheck(vibe))}
               </div>
             </section>
+
+            {/* Happening Now - PRO Feature */}
+            <HappeningNowEditor
+              status={shop.happeningNow}
+              isOwner={!!isOwner}
+              isLocked={!isPro}
+              onUpgrade={() => setShowPricing(true)}
+              onUpdate={(status) => handleUpdateShop({ happeningNow: status }, true)}
+            />
+
+            {/* Now Brewing Menu - PRO Feature */}
+            <NowBrewingEditor
+              menu={shop.currentMenu}
+              isOwner={!!isOwner}
+              isLocked={!isPro}
+              onUpgrade={() => setShowPricing(true)}
+              onUpdate={(items) => handleUpdateShop({ currentMenu: items })}
+            />
+
+            {/* Coffee Tech - PRO Feature */}
+            {(isOwner || shop.sourcingInfo || shop.espressoMachine || shop.grinderDetails) && (
+              <section className="bg-white p-8 rounded-3xl shadow-sm border border-coffee-100">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-serif font-bold text-coffee-900 flex items-center gap-2">
+                    <i className="fas fa-cogs text-volt-400"></i> Coffee Tech
+                    {!isPro && <i className="fas fa-lock text-gray-400 text-sm ml-2"></i>}
+                  </h2>
+                  {isOwner && isPro && (
+                    <button
+                      onClick={async () => {
+                        if (coffeeTechEditMode) {
+                          await saveCoffeeTechChanges();
+                        }
+                        setCoffeeTechEditMode(!coffeeTechEditMode);
+                      }}
+                      className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
+                        coffeeTechEditMode
+                          ? 'bg-volt-400 text-coffee-900'
+                          : 'bg-coffee-800 text-white hover:bg-coffee-700'
+                      }`}
+                    >
+                      {coffeeTechEditMode ? 'Save Changes' : 'Edit'}
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-4">
+                  <EditableField
+                    label="Sourcing"
+                    value={shop.sourcingInfo}
+                    onChange={(val) => handleUpdateShop({ sourcingInfo: val }, false)}
+                    isOwner={!!isOwner}
+                    isEditing={coffeeTechEditMode}
+                    isLocked={!isPro}
+                    onUpgrade={() => setShowPricing(true)}
+                    multiline
+                    placeholder="Direct trade details..."
+                    icon="fa-globe-americas"
+                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <EditableField
+                      label="Espresso Machine"
+                      value={shop.espressoMachine}
+                      onChange={(val) => handleUpdateShop({ espressoMachine: val }, false)}
+                      isOwner={!!isOwner}
+                      isEditing={coffeeTechEditMode}
+                      isLocked={!isPro}
+                      onUpgrade={() => setShowPricing(true)}
+                      icon="fa-cogs"
+                    />
+                    <EditableField
+                      label="Grinder"
+                      value={shop.grinderDetails}
+                      onChange={(val) => handleUpdateShop({ grinderDetails: val }, false)}
+                      isOwner={!!isOwner}
+                      isEditing={coffeeTechEditMode}
+                      isLocked={!isPro}
+                      onUpgrade={() => setShowPricing(true)}
+                      icon="fa-microchip"
+                    />
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Specialty Menu - PRO Feature */}
+            <SpecialtyMenuEditor
+              items={shop.specialtyDrinks}
+              isOwner={!!isOwner}
+              isLocked={!isPro}
+              onUpgrade={() => setShowPricing(true)}
+              onUpdate={(items) => handleUpdateShop({ specialtyDrinks: items })}
+            />
+
+            {/* Vegan Options - PRO Feature */}
+            <VeganInfoEditor
+              hasOptions={shop.veganFoodOptions}
+              milks={shop.plantMilks}
+              isOwner={!!isOwner}
+              isLocked={!isPro}
+              isEditing={true}
+              onUpgrade={() => setShowPricing(true)}
+              onUpdate={(updates) => handleUpdateShop(updates)}
+            />
+
+            {/* Barista Profiles - PRO Feature */}
+            <BaristaEditor
+              baristas={shop.baristas}
+              isOwner={!!isOwner}
+              isLocked={!isPro}
+              onUpgrade={() => setShowPricing(true)}
+              onUpdate={(items) => handleUpdateShop({ baristas: items })}
+            />
 
             {/* Reviews */}
             <section className="bg-white p-8 rounded-3xl shadow-sm border border-coffee-100">
@@ -931,6 +1210,17 @@ const ShopDetail: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* PRO Pricing Modal */}
+      <PricingModal
+        isOpen={showPricing}
+        onClose={() => setShowPricing(false)}
+        onSubscribe={() => {
+          // In production, this would handle Stripe checkout
+          toast.success("PRO upgrade coming soon!");
+          setShowPricing(false);
+        }}
+      />
     </div>
   );
 };

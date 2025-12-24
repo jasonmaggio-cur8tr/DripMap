@@ -55,6 +55,7 @@ const ClaimShop: React.FC = () => {
     } catch (error) {
       console.error("Error submitting claim:", error);
       toast.error("Failed to submit claim request. Please try again.");
+      setLoading(false);
     }
   };
 

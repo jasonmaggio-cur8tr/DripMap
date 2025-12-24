@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { supabase } from '../lib/supabase';
 import { resetSupabaseAuthState } from '../lib/authUtils';
-import { Shop, Vibe, ShopImage } from '../types';
+import { Shop, Vibe, ShopImage, Brand } from '../types';
 import { ALL_VIBES, CHEEKY_VIBES_OPTIONS } from '../constants';
 import { generateShopDescription } from '../services/geminiService';
 import { uploadImages } from '../services/storageService';
@@ -14,16 +14,28 @@ import LocationPicker from '../components/LocationPicker';
 import { useToast } from '../context/ToastContext';
 
 const AddSpot: React.FC = () => {
-  const { addShop, user, loading } = useApp();
+  const { addShop, addBrand, user, loading, shops, brands } = useApp();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ completed: 0, total: 0 });
   const [sessionIssue, setSessionIssue] = useState<string | null>(null);
-  
-  const [formData, setFormData] = useState({
+  const [similarShops, setSimilarShops] = useState<typeof shops>([]);
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
+
+  // Brand State
+  const [isCreatingBrand, setIsCreatingBrand] = useState(false);
+  const [newBrandData, setNewBrandData] = useState({
     name: '',
+    description: '',
+    websiteUrl: ''
+  });
+
+  const [formData, setFormData] = useState({
+    brandId: '',
+    name: '',
+    locationName: '',
     city: '',
     state: '',
     address: '',
@@ -52,6 +64,27 @@ const AddSpot: React.FC = () => {
       navigate('/auth');
     }
   }, [user, navigate, loading]);
+
+  // Check for duplicate/similar shop names
+  useEffect(() => {
+    if (formData.name.length < 3) {
+      setSimilarShops([]);
+      setShowDuplicateWarning(false);
+      return;
+    }
+
+    const searchName = formData.name.toLowerCase().trim();
+    const matches = shops.filter(shop => {
+      const shopName = shop.name.toLowerCase();
+      // Check for exact match or if names are very similar
+      return shopName === searchName ||
+             shopName.includes(searchName) ||
+             searchName.includes(shopName);
+    });
+
+    setSimilarShops(matches);
+    setShowDuplicateWarning(matches.length > 0);
+  }, [formData.name, shops]);
 
   // If the app is still hydrating/loading session, don't render the form yet.
   if (loading) {
@@ -216,9 +249,37 @@ const AddSpot: React.FC = () => {
         type: 'owner'
       }));
 
+      // Handle Brand Logic
+      let finalBrandId = formData.brandId;
+      let finalShopName = formData.name;
+
+      if (isCreatingBrand) {
+        if (!newBrandData.name) {
+          toast.error("Please enter a Brand Name.");
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Create new Brand
+        finalBrandId = `brand-${Math.random().toString(36).substr(2, 9)}`;
+        const newBrand: Brand = {
+          id: finalBrandId,
+          name: newBrandData.name,
+          slug: newBrandData.name.toLowerCase().replace(/\s+/g, '-'),
+          description: newBrandData.description || undefined,
+          websiteUrl: newBrandData.websiteUrl || undefined,
+          logoUrl: galleryImages[0]?.url
+        };
+
+        addBrand(newBrand);
+        finalShopName = newBrandData.name;
+      }
+
       // Create shop
       await addShop({
-        name: formData.name,
+        name: finalShopName,
+        brandId: finalBrandId || undefined,
+        locationName: formData.locationName || undefined,
         description: formData.description,
         location: {
           lat: location.lat,
@@ -234,8 +295,12 @@ const AddSpot: React.FC = () => {
         isClaimed: false,
         claimedBy: undefined
       });
-      
-      toast.success("Spot added successfully!");
+
+      if (isCreatingBrand) {
+        toast.success("Brand registered & spot added successfully!");
+      } else {
+        toast.success("Spot added successfully!");
+      }
       navigate('/');
     } catch (error: any) {
       // Surface the real reason to console so it's visible when debugging first-attempt failures
@@ -302,16 +367,122 @@ const AddSpot: React.FC = () => {
           {/* Section 1: Basic Info */}
           <section className="space-y-4">
              <h2 className="text-sm font-bold text-coffee-400 uppercase tracking-wider border-b border-coffee-100 pb-2">The Basics</h2>
+
+             {/* Brand Selection */}
+             <div>
+                 <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-bold text-coffee-900">Brand / Chain Association</label>
+                    <button
+                        type="button"
+                        onClick={() => {
+                          setIsCreatingBrand(!isCreatingBrand);
+                          setFormData(prev => ({ ...prev, brandId: '' }));
+                          if (!isCreatingBrand) {
+                            setFormData(prev => ({ ...prev, name: '' }));
+                          }
+                        }}
+                        className="text-xs font-bold text-volt-500 hover:text-coffee-900 hover:underline transition-colors"
+                    >
+                        {isCreatingBrand ? 'Select Existing Brand' : '+ Register New Brand'}
+                    </button>
+                 </div>
+
+                 {isCreatingBrand ? (
+                    <div className="bg-coffee-50 border border-coffee-200 rounded-xl p-4 space-y-4 animate-in fade-in duration-300">
+                        <div className="flex items-center gap-2 text-coffee-500 text-xs font-bold uppercase tracking-wider mb-2">
+                            <i className="fas fa-plus-circle text-volt-500"></i> Creating New Brand
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-bold text-coffee-900 mb-1">Brand Name</label>
+                                <input
+                                    required={isCreatingBrand}
+                                    placeholder="e.g. Blue Bottle Coffee"
+                                    className="w-full px-3 py-2 bg-white border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
+                                    value={newBrandData.name}
+                                    onChange={e => setNewBrandData({...newBrandData, name: e.target.value})}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-coffee-900 mb-1">Brand Website <span className="text-coffee-400 font-normal">(Optional)</span></label>
+                                <input
+                                    placeholder="https://..."
+                                    className="w-full px-3 py-2 bg-white border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
+                                    value={newBrandData.websiteUrl}
+                                    onChange={e => setNewBrandData({...newBrandData, websiteUrl: e.target.value})}
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-coffee-900 mb-1">Brand Description <span className="text-coffee-400 font-normal">(Optional)</span></label>
+                            <input
+                                placeholder="Short slogan or story about the brand"
+                                className="w-full px-3 py-2 bg-white border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
+                                value={newBrandData.description}
+                                onChange={e => setNewBrandData({...newBrandData, description: e.target.value})}
+                            />
+                        </div>
+                    </div>
+                 ) : (
+                    <select
+                        className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none appearance-none"
+                        value={formData.brandId}
+                        onChange={e => {
+                          const selectedBrand = brands.find(b => b.id === e.target.value);
+                          setFormData(prev => ({
+                            ...prev,
+                            brandId: e.target.value,
+                            name: selectedBrand ? selectedBrand.name : prev.name
+                          }));
+                        }}
+                    >
+                        <option value="">No, it's an independent spot</option>
+                        <optgroup label="Registered Brands">
+                            {brands.map(b => (
+                                <option key={b.id} value={b.id}>{b.name}</option>
+                            ))}
+                        </optgroup>
+                    </select>
+                 )}
+             </div>
+
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label className="block text-sm font-bold text-coffee-900 mb-2">Shop Name</label>
                     <input
                         required
-                        placeholder="e.g. The Daily Grind"
-                        className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
-                        value={formData.name}
-                        onChange={e => setFormData({...formData, name: e.target.value})}
+                        placeholder={isCreatingBrand ? "Will use Brand Name" : "e.g. The Daily Grind"}
+                        className={`w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none ${formData.brandId || isCreatingBrand ? 'opacity-75 bg-gray-100' : ''}`}
+                        value={isCreatingBrand ? newBrandData.name : formData.name}
+                        onChange={e => !isCreatingBrand && !formData.brandId && setFormData({...formData, name: e.target.value})}
+                        readOnly={!!formData.brandId || isCreatingBrand}
                     />
+                    {showDuplicateWarning && similarShops.length > 0 && (
+                      <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p className="text-sm text-amber-800 font-medium mb-2">
+                          <i className="fas fa-exclamation-triangle mr-2"></i>
+                          Similar shop(s) already exist:
+                        </p>
+                        <ul className="space-y-1">
+                          {similarShops.slice(0, 3).map(shop => (
+                            <li key={shop.id} className="text-sm text-amber-700 flex items-center justify-between">
+                              <span>{shop.name} - {shop.location.city}</span>
+                              <button
+                                type="button"
+                                onClick={() => navigate(`/shop/${shop.id}`)}
+                                className="text-xs text-amber-600 hover:text-amber-800 underline"
+                              >
+                                View
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="text-xs text-amber-600 mt-2">
+                          If this is the same shop, please don't create a duplicate.
+                        </p>
+                      </div>
+                    )}
                 </div>
                 <div>
                     <label className="block text-sm font-bold text-coffee-900 mb-2">City</label>

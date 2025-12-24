@@ -12,12 +12,14 @@ declare global {
 interface MapProps {
   shops: Shop[];
   onShopClick: (shopId: string) => void;
+  userLocation?: { lat: number; lng: number } | null;
 }
 
-const Map: React.FC<MapProps> = ({ shops, onShopClick }) => {
+const Map: React.FC<MapProps> = ({ shops, onShopClick, userLocation }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const userMarkerRef = useRef<any>(null);
   const [locating, setLocating] = useState(false);
   
   // Store previous shop IDs to prevent re-zooming if data hasn't meaningfully changed
@@ -116,6 +118,29 @@ const Map: React.FC<MapProps> = ({ shops, onShopClick }) => {
     }
 
   }, [shops, onShopClick, locating]);
+
+  // Show user location marker when provided from parent (Near Me feature)
+  useEffect(() => {
+    const L = window.L;
+    if (!mapInstanceRef.current || !L || !userLocation) return;
+
+    // Remove existing user marker if any
+    if (userMarkerRef.current) {
+      userMarkerRef.current.remove();
+    }
+
+    // Add user location marker
+    userMarkerRef.current = L.circleMarker([userLocation.lat, userLocation.lng], {
+      radius: 10,
+      fillColor: '#3b82f6',
+      color: '#fff',
+      weight: 3,
+      opacity: 1,
+      fillOpacity: 1
+    }).addTo(mapInstanceRef.current);
+
+    userMarkerRef.current.bindPopup('<div class="text-center font-bold">You are here</div>');
+  }, [userLocation]);
 
   const handleLocateMe = () => {
     if (!mapInstanceRef.current) return;

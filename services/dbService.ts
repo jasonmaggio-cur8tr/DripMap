@@ -103,6 +103,7 @@ export const fetchUserProfile = async (
       },
       isBusinessOwner: profile.is_business_owner,
       isAdmin: profile.is_admin || false,
+      isPro: profile.is_pro || false,
       savedShops: savedResult.data?.map(s => s.shop_id) || [],
       visitedShops: visitedResult.data?.map(v => v.shop_id) || [],
       followerIds: followersResult.data?.map(f => f.follower_id) || [],
@@ -162,6 +163,7 @@ export const fetchUserProfileByUsername = async (
       },
       isBusinessOwner: profile.is_business_owner,
       isAdmin: profile.is_admin || false,
+      isPro: profile.is_pro || false,
       savedShops: savedResult.data?.map(s => s.shop_id) || [],
       visitedShops: visitedResult.data?.map(v => v.shop_id) || [],
       followerIds: followersResult.data?.map(f => f.follower_id) || [],
@@ -260,6 +262,22 @@ export const fetchShops = async (): Promise<Shop[]> => {
         if (error) throw error;
         if (!shops) return [];
 
+        // Debug: Log raw data to check field values
+        if (shops.length > 0) {
+          // Find shop with reviews to debug
+          const shopWithReview = shops.find(s => s.reviews && s.reviews.length > 0) || shops[0];
+          console.log("[fetchShops] Shop with reviews - raw data:", {
+            id: shopWithReview.id,
+            name: shopWithReview.name,
+            rating: shopWithReview.rating,
+            rating_type: typeof shopWithReview.rating,
+            review_count: shopWithReview.review_count,
+            stamp_count: shopWithReview.stamp_count,
+            reviews_length: shopWithReview.reviews?.length,
+            first_review: shopWithReview.reviews?.[0]
+          });
+        }
+
         return shops.map(shop => ({
           id: shop.id,
           name: shop.name,
@@ -298,6 +316,45 @@ export const fetchShops = async (): Promise<Shop[]> => {
           isClaimed: shop.is_claimed,
           claimedBy: shop.claimed_by,
           stampCount: shop.stamp_count || 0,
+          subscriptionTier: shop.subscription_tier || 'free',
+
+          // PRO Features
+          brandId: shop.brand_id,
+          locationName: shop.location_name,
+          customVibes: shop.custom_vibes || [],
+          spotifyPlaylistUrl: shop.spotify_playlist_url,
+          websiteUrl: shop.website_url,
+          mapsUrl: shop.maps_url,
+          onlineOrderUrl: shop.online_order_url,
+
+          // Happening Now
+          happeningNow: shop.happening_now_title ? {
+            id: shop.id, // Use shop ID as happening now ID
+            title: shop.happening_now_title,
+            message: shop.happening_now_message,
+            sticker: shop.happening_now_sticker,
+            expiresAt: shop.happening_now_expires_at,
+            createdAt: shop.updated_at || shop.created_at, // Use shop's updated_at
+          } : undefined,
+
+          // Now Brewing
+          currentMenu: shop.current_menu || [],
+
+          // Coffee Tech
+          sourcingInfo: shop.sourcing_info,
+          espressoMachine: shop.espresso_machine,
+          grinderDetails: shop.grinder_details,
+          brewingMethods: shop.brewing_methods || [],
+
+          // Barista Profiles
+          baristas: shop.baristas || [],
+
+          // Specialty Menu
+          specialtyDrinks: shop.specialty_drinks || [],
+
+          // Vegan Options
+          veganFoodOptions: shop.vegan_food_options || false,
+          plantMilks: shop.plant_milks || [],
         }));
       },
       3,
@@ -378,9 +435,12 @@ export const addShopImages = async (
       type: img.type,
     }));
 
-    const { error } = await supabase.from("shop_images").insert(imageInserts);
+    const { error } = await supabase.from("shop_images").insert(imageInserts).select();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[addShopImages] Database insert error (RLS may be blocking):', error);
+      throw error;
+    }
 
     return { success: true };
   } catch (error) {
@@ -422,6 +482,195 @@ export const updateShopInDB = async (
   }
 };
 
+// ==================== PRO FEATURES ====================
+
+/**
+ * Update Happening Now status (Digital A-Frame)
+ */
+export const updateHappeningNow = async (
+  shopId: string,
+  status: { title: string; message: string; sticker?: string } | null
+) => {
+  try {
+    const updates = status
+      ? {
+          happening_now_title: status.title,
+          happening_now_message: status.message,
+          happening_now_sticker: status.sticker || null,
+          happening_now_expires_at: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(), // 4 hours
+        }
+      : {
+          happening_now_title: null,
+          happening_now_message: null,
+          happening_now_sticker: null,
+          happening_now_expires_at: null,
+        };
+
+    const { error } = await supabase
+      .from("shops")
+      .update(updates)
+      .eq("id", shopId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating Happening Now:", error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Update Now Brewing menu
+ */
+export const updateNowBrewing = async (
+  shopId: string,
+  menu: Array<{ id: string; type: 'Espresso' | 'Pour Over' | 'Drip' | 'Cold Brew'; roaster: string; beanName: string; notes: string }>
+) => {
+  try {
+    const { error } = await supabase
+      .from("shops")
+      .update({ current_menu: menu })
+      .eq("id", shopId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating Now Brewing menu:", error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Update Coffee Tech info
+ */
+export const updateCoffeeTech = async (
+  shopId: string,
+  data: {
+    sourcingInfo?: string;
+    espressoMachine?: string;
+    grinderDetails?: string;
+    brewingMethods?: string[];
+  }
+) => {
+  try {
+    const { error } = await supabase
+      .from("shops")
+      .update({
+        sourcing_info: data.sourcingInfo || null,
+        espresso_machine: data.espressoMachine || null,
+        grinder_details: data.grinderDetails || null,
+        brewing_methods: data.brewingMethods || [],
+      })
+      .eq("id", shopId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating Coffee Tech:", error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Update Barista Profiles
+ */
+export const updateBaristaProfiles = async (
+  shopId: string,
+  baristas: Array<{ name: string; role: string; bio: string; favoriteOrder: string }>
+) => {
+  try {
+    const { error } = await supabase
+      .from("shops")
+      .update({ baristas })
+      .eq("id", shopId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating Barista Profiles:", error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Update Specialty Menu
+ */
+export const updateSpecialtyMenu = async (
+  shopId: string,
+  drinks: Array<{ name: string; desc: string }>
+) => {
+  try {
+    const { error } = await supabase
+      .from("shops")
+      .update({ specialty_drinks: drinks })
+      .eq("id", shopId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating Specialty Menu:", error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Update Vegan Options
+ */
+export const updateVeganOptions = async (
+  shopId: string,
+  data: {
+    veganFoodOptions: boolean;
+    plantMilks: Array<{ name: string; upcharge: string }>;
+  }
+) => {
+  try {
+    const { error } = await supabase
+      .from("shops")
+      .update({
+        vegan_food_options: data.veganFoodOptions,
+        plant_milks: data.plantMilks,
+      })
+      .eq("id", shopId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating Vegan Options:", error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Update Premium Links
+ */
+export const updatePremiumLinks = async (
+  shopId: string,
+  links: {
+    websiteUrl?: string;
+    mapsUrl?: string;
+    onlineOrderUrl?: string;
+    spotifyPlaylistUrl?: string;
+  }
+) => {
+  try {
+    const { error } = await supabase
+      .from("shops")
+      .update({
+        website_url: links.websiteUrl || null,
+        maps_url: links.mapsUrl || null,
+        online_order_url: links.onlineOrderUrl || null,
+        spotify_playlist_url: links.spotifyPlaylistUrl || null,
+      })
+      .eq("id", shopId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating Premium Links:", error);
+    return { success: false, error };
+  }
+};
+
 // ==================== REVIEWS ====================
 
 export const addReview = async (
@@ -431,8 +680,6 @@ export const addReview = async (
   comment: string
 ) => {
   try {
-    console.log("Adding review:", { shopId, userId, rating, comment });
-
     const { data, error } = await supabase
       .from("reviews")
       .insert({
@@ -445,59 +692,43 @@ export const addReview = async (
       .single();
 
     if (error) {
-      console.error("Error inserting review:", error);
+      console.error("[addReview] Error inserting review:", error);
       throw error;
     }
 
-    console.log("Review inserted successfully:", data);
+    // Manually update shop rating and review_count (fallback if DB trigger doesn't exist)
+    try {
+      // Fetch all reviews for this shop to calculate new average
+      const { data: reviews, error: reviewsError } = await supabase
+        .from("reviews")
+        .select("rating")
+        .eq("shop_id", shopId);
 
-    // Calculate new average rating
-    const { data: allReviews, error: reviewsError } = await supabase
-      .from("reviews")
-      .select("rating")
-      .eq("shop_id", shopId);
+      if (reviewsError) {
+        console.error("[addReview] Error fetching reviews for rating calc:", reviewsError);
+      } else if (reviews && reviews.length > 0) {
+        const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+        const reviewCount = reviews.length;
 
-    if (reviewsError) {
-      console.error(
-        "Error fetching reviews for rating calculation:",
-        reviewsError
-      );
-      throw reviewsError;
-    }
+        const { error: updateError } = await supabase
+          .from("shops")
+          .update({
+            rating: parseFloat(avgRating.toFixed(2)),
+            review_count: reviewCount
+          })
+          .eq("id", shopId);
 
-    console.log("All reviews for shop:", allReviews);
-
-    if (allReviews && allReviews.length > 0) {
-      const avgRating =
-        allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
-      console.log(
-        "Calculated average rating:",
-        avgRating,
-        "from",
-        allReviews.length,
-        "reviews"
-      );
-
-      // Update shop's rating and review count
-      const { error: updateError } = await supabase
-        .from("shops")
-        .update({
-          rating: avgRating,
-          review_count: allReviews.length,
-        })
-        .eq("id", shopId);
-
-      if (updateError) {
-        console.error("Error updating shop rating:", updateError);
-        throw updateError;
+        if (updateError) {
+          console.error("[addReview] Error updating shop rating/count (RLS may block this):", updateError);
+        }
       }
-
-      console.log("Shop rating updated successfully");
+    } catch (calcError) {
+      console.error("[addReview] Error in rating calculation:", calcError);
     }
 
     return { success: true, review: data };
   } catch (error) {
-    console.error("Error adding review:", error);
+    console.error("[addReview] Error adding review:", error);
     return { success: false, error };
   }
 };
@@ -542,6 +773,7 @@ export const toggleVisitedShop = async (
   isVisited: boolean
 ) => {
   try {
+
     if (isVisited) {
       // Remove from visited
       const { error } = await supabase
@@ -550,14 +782,66 @@ export const toggleVisitedShop = async (
         .eq("user_id", userId)
         .eq("shop_id", shopId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("[toggleVisitedShop] Error deleting from visited_shops:", error);
+        throw error;
+      }
+
+      // Decrement stamp_count on the shop
+      const { data: shop, error: fetchError } = await supabase
+        .from("shops")
+        .select("stamp_count")
+        .eq("id", shopId)
+        .single();
+
+      if (fetchError) {
+        console.error("[toggleVisitedShop] Error fetching shop stamp_count:", fetchError);
+      }
+
+      if (shop) {
+        const newCount = Math.max(0, (shop.stamp_count || 0) - 1);
+        const { error: updateError } = await supabase
+          .from("shops")
+          .update({ stamp_count: newCount })
+          .eq("id", shopId);
+
+        if (updateError) {
+          console.error("[toggleVisitedShop] Error updating stamp_count (RLS may block this):", updateError);
+        }
+      }
     } else {
       // Add to visited
       const { error } = await supabase
         .from("visited_shops")
         .insert({ user_id: userId, shop_id: shopId });
 
-      if (error) throw error;
+      if (error) {
+        console.error("[toggleVisitedShop] Error inserting to visited_shops:", error);
+        throw error;
+      }
+
+      // Increment stamp_count on the shop
+      const { data: shop, error: fetchError } = await supabase
+        .from("shops")
+        .select("stamp_count")
+        .eq("id", shopId)
+        .single();
+
+      if (fetchError) {
+        console.error("[toggleVisitedShop] Error fetching shop stamp_count:", fetchError);
+      }
+
+      if (shop) {
+        const newCount = (shop.stamp_count || 0) + 1;
+        const { error: updateError } = await supabase
+          .from("shops")
+          .update({ stamp_count: newCount })
+          .eq("id", shopId);
+
+        if (updateError) {
+          console.error("[toggleVisitedShop] Error updating stamp_count (RLS may block this):", updateError);
+        }
+      }
     }
     return { success: true };
   } catch (error) {
@@ -607,6 +891,22 @@ export const fetchClaimRequests = async () => {
     return data || [];
   } catch (error) {
     console.error("Error fetching claim requests:", error);
+    return [];
+  }
+};
+
+export const fetchUserClaimRequests = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("claim_requests")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching user claim requests:", error);
     return [];
   }
 };

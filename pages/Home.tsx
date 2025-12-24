@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import Map from '../components/Map';
@@ -7,10 +7,128 @@ import TagChip from '../components/TagChip';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { ALL_VIBES } from '../constants';
 
+// Calculate distance between two points in miles (Haversine formula)
+const getDistanceMiles = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+  const R = 3959; // Earth's radius in miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+};
+
 const Home: React.FC = () => {
   const { shops, searchQuery, setSearchQuery, selectedVibes, toggleVibe, loading } = useApp();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'map' | 'list'>('list'); // Mobile view toggle
+  const [nearMeActive, setNearMeActive] = useState(false);
+  const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  const handleNearMe = () => {
+    if (nearMeActive) {
+      // Turn off near me filter
+      setNearMeActive(false);
+      return;
+    }
+
+    if (userLocation) {
+      // Already have location, just activate filter
+      setNearMeActive(true);
+      return;
+    }
+
+    // Request location
+    setLocationLoading(true);
+    setLocationError(null);
+
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation not supported');
+      setLocationLoading(false);
+      return;
+    }
+
+    // Try with high accuracy first
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        });
+        setNearMeActive(true);
+        setLocationLoading(false);
+      },
+      (error) => {
+        // If high accuracy fails, try again with lower accuracy
+        if (error.code === error.TIMEOUT) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              setUserLocation({
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              });
+              setNearMeActive(true);
+              setLocationLoading(false);
+            },
+            (fallbackError) => {
+              let errorMessage = 'Unable to get location';
+
+              switch(fallbackError.code) {
+                case fallbackError.PERMISSION_DENIED:
+                  errorMessage = 'Location access denied. Please enable location permissions in your browser settings.';
+                  break;
+                case fallbackError.POSITION_UNAVAILABLE:
+                  errorMessage = 'Location information unavailable. Please try again.';
+                  break;
+                case fallbackError.TIMEOUT:
+                  errorMessage = 'Location request timed out. Check your GPS signal and try again.';
+                  break;
+                default:
+                  errorMessage = 'Unable to get your location. Please try again.';
+              }
+
+              setLocationError(errorMessage);
+              setLocationLoading(false);
+            },
+            { enableHighAccuracy: false, timeout: 15000, maximumAge: 30000 }
+          );
+          return;
+        }
+
+        // Handle other errors
+        let errorMessage = 'Unable to get location';
+
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Location access denied. Please enable location permissions in your browser settings.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information unavailable. Please try again.';
+            break;
+          default:
+            errorMessage = 'Unable to get your location. Please try again.';
+        }
+
+        setLocationError(errorMessage);
+        setLocationLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+  // Filter shops by distance if nearMe is active
+  const filteredShops = nearMeActive && userLocation
+    ? shops.filter(shop => {
+        const distance = getDistanceMiles(
+          userLocation.lat, userLocation.lng,
+          shop.location.lat, shop.location.lng
+        );
+        return distance <= 100; // 100 mile radius
+      })
+    : shops;
 
   const handleShopClick = (id: string) => {
     navigate(`/shop/${id}`);
@@ -51,27 +169,49 @@ const Home: React.FC = () => {
           </div>
           
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+             {/* Near Me Button */}
+             <button
+               onClick={handleNearMe}
+               disabled={locationLoading}
+               className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 ${
+                 nearMeActive
+                   ? 'bg-volt-400 text-coffee-900'
+                   : 'bg-coffee-100 text-coffee-700 hover:bg-coffee-200'
+               } ${locationLoading ? 'opacity-50 cursor-wait' : ''}`}
+             >
+               <i className={`fas ${locationLoading ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'}`}></i>
+               Near Me
+             </button>
              {ALL_VIBES.map(vibe => (
-                <TagChip 
-                    key={vibe} 
-                    label={vibe} 
+                <TagChip
+                    key={vibe}
+                    label={vibe}
                     isSelected={selectedVibes.includes(vibe)}
                     onClick={() => toggleVibe(vibe)}
                 />
              ))}
           </div>
+          {locationError && (
+            <p className="text-xs text-red-500 mt-1">{locationError}</p>
+          )}
+          {nearMeActive && (
+            <p className="text-xs text-volt-600 mt-1">
+              <i className="fas fa-check-circle mr-1"></i>
+              Showing spots within 100 miles
+            </p>
+          )}
         </div>
 
         {/* Shop List */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-           {shops.length === 0 ? (
+           {filteredShops.length === 0 ? (
                <div className="text-center py-10 text-coffee-800/60">
                    <i className="fas fa-globe-americas text-4xl mb-4"></i>
-                   <p>No spots found in this area.</p>
-                   <button onClick={() => setSearchQuery('')} className="mt-2 text-volt-500 font-bold text-sm hover:underline">Clear Search</button>
+                   <p>{nearMeActive ? 'No spots found within 100 miles.' : 'No spots found in this area.'}</p>
+                   <button onClick={() => { setSearchQuery(''); setNearMeActive(false); }} className="mt-2 text-volt-500 font-bold text-sm hover:underline">Clear Filters</button>
                </div>
            ) : (
-               shops.map(shop => (
+               filteredShops.map(shop => (
                    <Link 
                      key={shop.id} 
                      to={`/shop/${shop.id}`}
@@ -133,7 +273,7 @@ const Home: React.FC = () => {
             </div>
          </div>
 
-         <Map shops={shops} onShopClick={handleShopClick} />
+         <Map shops={filteredShops} onShopClick={handleShopClick} userLocation={userLocation} />
       </div>
 
       {/* Mobile View Toggle */}
