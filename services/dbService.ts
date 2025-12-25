@@ -926,35 +926,44 @@ export const markClaimRequest = async (
     if (fetchError) throw fetchError;
 
     // Update request status
-    const { error: updateError } = await supabase
+    const { data: updateData, error: updateError } = await supabase
       .from("claim_requests")
       .update({ status: status })
-      .eq("id", requestId);
+      .eq("id", requestId)
+      .select();
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error("Error updating claim request status:", updateError);
+      throw updateError;
+    }
 
-    // Update shop to mark as claimed
-    const { error: shopError } = await supabase
-      .from("shops")
-      .update({
-        is_claimed: true,
-        claimed_by: request.user_id,
-      })
-      .eq("id", request.shop_id);
+    console.log("Claim request updated:", updateData);
 
-    if (shopError) throw shopError;
+    // Only update shop and user if approved
+    if (status === "approved") {
+      // Update shop to mark as claimed
+      const { error: shopError } = await supabase
+        .from("shops")
+        .update({
+          is_claimed: true,
+          claimed_by: request.user_id,
+        })
+        .eq("id", request.shop_id);
 
-    // Update user to business owner
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .update({ is_business_owner: true })
-      .eq("id", request.user_id);
+      if (shopError) throw shopError;
 
-    if (profileError) throw profileError;
+      // Update user to business owner
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ is_business_owner: true })
+        .eq("id", request.user_id);
+
+      if (profileError) throw profileError;
+    }
 
     return { success: true };
   } catch (error) {
-    console.error("Error approving claim request:", error);
+    console.error("Error marking claim request:", error);
     return { success: false, error };
   }
 };
