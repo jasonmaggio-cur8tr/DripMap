@@ -4,11 +4,15 @@ import { useApp } from '../context/AppContext';
 import { CalendarEvent } from '../types';
 import EventCard from '../components/EventCard';
 import { useToast } from '../context/ToastContext';
+import EventCreateModal from '../components/EventCreateModal';
 
 const AdminEvents: React.FC = () => {
   const { events, shops, deleteEvent, updateEvent } = useApp();
   const { toast } = useToast();
   const [filterShop, setFilterShop] = useState('All');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedShopId, setSelectedShopId] = useState('');
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
 
   const filteredEvents = filterShop === 'All' 
     ? events 
@@ -26,20 +30,37 @@ const AdminEvents: React.FC = () => {
       toast.success(event.isPublished ? 'Event unpublished' : 'Event published');
   };
 
+  const openCreateModal = () => {
+    if (shops.length > 0) {
+      setSelectedShopId(filterShop === 'All' ? shops[0].id : filterShop);
+      setShowCreateModal(true);
+    } else {
+      toast.error('No shops available');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-coffee-50 pt-20 px-4 pb-20">
       <div className="container mx-auto max-w-6xl">
         <div className="flex justify-between items-center mb-8">
             <h1 className="text-2xl font-serif font-bold text-coffee-900">Admin Event Manager</h1>
-            
-            <select 
-                className="p-2 border border-coffee-200 rounded-lg"
-                value={filterShop}
-                onChange={e => setFilterShop(e.target.value)}
-            >
-                <option value="All">All Shops</option>
-                {shops.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
+
+            <div className="flex items-center gap-3">
+              <select
+                  className="p-2 border border-coffee-200 rounded-lg"
+                  value={filterShop}
+                  onChange={e => setFilterShop(e.target.value)}
+              >
+                  <option value="All">All Shops</option>
+                  {shops.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <button
+                onClick={openCreateModal}
+                className="px-4 py-2 bg-volt-400 text-coffee-900 font-bold rounded-lg hover:bg-volt-500 transition-colors flex items-center gap-2"
+              >
+                <i className="fas fa-plus"></i> Create Event
+              </button>
+            </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-coffee-100 overflow-hidden">
@@ -81,12 +102,22 @@ const AdminEvents: React.FC = () => {
                                     </button>
                                 </td>
                                 <td className="p-4 text-right">
-                                    <button 
-                                        onClick={() => handleDelete(event.id)}
-                                        className="text-red-500 hover:bg-red-50 p-2 rounded"
-                                    >
-                                        <i className="fas fa-trash"></i>
-                                    </button>
+                                    <div className="flex gap-2 justify-end">
+                                        <button
+                                            onClick={() => setEditingEvent(event)}
+                                            className="text-blue-500 hover:bg-blue-50 p-2 rounded"
+                                            title="Edit event"
+                                        >
+                                            <i className="fas fa-edit"></i>
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(event.id)}
+                                            className="text-red-500 hover:bg-red-50 p-2 rounded"
+                                            title="Delete event"
+                                        >
+                                            <i className="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         );
@@ -97,6 +128,22 @@ const AdminEvents: React.FC = () => {
                 <div className="p-8 text-center text-coffee-400">No events found.</div>
             )}
         </div>
+
+        {/* Create/Edit Event Modal */}
+        {(showCreateModal || editingEvent) && (
+          <EventCreateModal
+            shopId={editingEvent?.shopId || selectedShopId}
+            event={editingEvent || undefined}
+            onClose={() => {
+              setShowCreateModal(false);
+              setEditingEvent(null);
+            }}
+            onSuccess={() => {
+              toast.success(editingEvent ? 'Event updated successfully!' : 'Event created successfully!');
+              setEditingEvent(null);
+            }}
+          />
+        )}
       </div>
     </div>
   );

@@ -109,7 +109,7 @@ const EventsFeed: React.FC = () => {
                       <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
                       <h2 className="text-xl font-bold uppercase tracking-widest text-coffee-900">Happening Today</h2>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                       {sections.today.map(e => (
                           <EventCard key={e.id} event={e} shop={shops.find(s => s.id === e.shopId)} />
                       ))}

@@ -967,3 +967,81 @@ export const markClaimRequest = async (
     return { success: false, error };
   }
 };
+
+// ============================================
+// EVENTS
+// ============================================
+
+export const fetchEvents = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("calendar_events")
+      .select("*")
+      .order("start_date_time", { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching events:", error);
+    return [];
+  }
+};
+
+export const createEvent = async (eventData: {
+  shop_id: string;
+  title: string;
+  description?: string;
+  event_type: string;
+  start_date_time: string;
+  end_date_time: string;
+  location?: string;
+  ticket_link?: string;
+  cover_image_url?: string;
+  is_published?: boolean;
+}) => {
+  try {
+    const { data, error } = await supabase
+      .from("calendar_events")
+      .insert([eventData])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error("Error creating event:", error);
+    return { success: false, error };
+  }
+};
+
+export const updateEvent = async (eventId: string, updates: any) => {
+  try {
+    const { data, error } = await supabase
+      .from("calendar_events")
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq("id", eventId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error("Error updating event:", error);
+    return { success: false, error };
+  }
+};
+
+export const deleteEvent = async (eventId: string) => {
+  try {
+    const { error } = await supabase
+      .from("calendar_events")
+      .delete()
+      .eq("id", eventId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting event:", error);
+    return { success: false, error };
+  }
+};

@@ -163,6 +163,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         );
         setShops(INITIAL_SHOPS);
       }
+
+      // Fetch events
+      const fetchedEvents = await db.fetchEvents();
+      const mappedEvents: CalendarEvent[] = fetchedEvents.map((e: any) => ({
+        id: e.id,
+        shopId: e.shop_id,
+        title: e.title,
+        description: e.description,
+        eventType: e.event_type,
+        startDateTime: e.start_date_time,
+        endDateTime: e.end_date_time,
+        allDay: false,
+        locationName: e.location,
+        ticketUrl: e.ticket_link,
+        coverImage: e.cover_image_url ? {
+          url: e.cover_image_url,
+          fileName: '',
+          mimeType: ''
+        } : undefined,
+        isPublished: e.is_published,
+        createdBy: 'owner',
+        createdAt: e.created_at,
+      }));
+      setEvents(mappedEvents);
+      console.log(`[AppContext] Loaded ${fetchedEvents.length} events from database`);
     } catch (error) {
       console.error("[AppContext] Failed to refresh shops:", error);
       // Fall back to initial shops on error
@@ -729,22 +754,80 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     return matchesSearch && matchesVibes;
   });
 
-  // Event functions (PRO Feature - placeholder until DB integration)
-  const addEvent = (eventData: Omit<CalendarEvent, "id" | "createdAt">) => {
-    const newEvent: CalendarEvent = {
-      ...eventData,
-      id: `event-${Date.now()}`,
-      createdAt: new Date().toISOString(),
+  // Event functions (PRO Feature)
+  const addEvent = async (eventData: Omit<CalendarEvent, "id" | "createdAt">) => {
+    const dbEventData = {
+      shop_id: eventData.shopId,
+      title: eventData.title,
+      description: eventData.description,
+      event_type: eventData.eventType,
+      start_date_time: eventData.startDateTime,
+      end_date_time: eventData.endDateTime,
+      location: eventData.locationName,
+      ticket_link: eventData.ticketUrl,
+      cover_image_url: eventData.coverImage?.url,
+      is_published: eventData.isPublished ?? false,
     };
-    setEvents(prev => [...prev, newEvent]);
+
+    console.log('Creating event with data:', dbEventData);
+    const result = await db.createEvent(dbEventData);
+
+    if (result.success && result.data) {
+      const newEvent: CalendarEvent = {
+        id: result.data.id,
+        shopId: result.data.shop_id,
+        title: result.data.title,
+        description: result.data.description,
+        eventType: result.data.event_type,
+        startDateTime: result.data.start_date_time,
+        endDateTime: result.data.end_date_time,
+        allDay: false,
+        locationName: result.data.location,
+        ticketUrl: result.data.ticket_link,
+        coverImage: result.data.cover_image_url ? {
+          url: result.data.cover_image_url,
+          fileName: '',
+          mimeType: ''
+        } : undefined,
+        isPublished: result.data.is_published,
+        createdBy: 'owner',
+        createdAt: result.data.created_at,
+      };
+      setEvents((prev: CalendarEvent[]) => [...prev, newEvent]);
+    } else {
+      console.error('Failed to create event:', result.error);
+      throw new Error(result.error?.message || 'Failed to create event');
+    }
+
+    return result;
   };
 
-  const updateEvent = (updatedEvent: CalendarEvent) => {
-    setEvents(prev => prev.map(e => e.id === updatedEvent.id ? updatedEvent : e));
+  const updateEvent = async (updatedEvent: CalendarEvent) => {
+    const updates = {
+      title: updatedEvent.title,
+      description: updatedEvent.description,
+      event_type: updatedEvent.eventType,
+      start_date_time: updatedEvent.startDateTime,
+      end_date_time: updatedEvent.endDateTime,
+      location: updatedEvent.locationName,
+      ticket_link: updatedEvent.ticketUrl,
+      cover_image_url: updatedEvent.coverImage?.url,
+      is_published: updatedEvent.isPublished,
+    };
+
+    const result = await db.updateEvent(updatedEvent.id, updates);
+
+    if (result.success) {
+      setEvents((prev: CalendarEvent[]) => prev.map((e: CalendarEvent) => e.id === updatedEvent.id ? updatedEvent : e));
+    }
   };
 
-  const deleteEvent = (eventId: string) => {
-    setEvents(prev => prev.filter(e => e.id !== eventId));
+  const deleteEvent = async (eventId: string) => {
+    const result = await db.deleteEvent(eventId);
+
+    if (result.success) {
+      setEvents((prev: CalendarEvent[]) => prev.filter((e: CalendarEvent) => e.id !== eventId));
+    }
   };
 
   // Brands

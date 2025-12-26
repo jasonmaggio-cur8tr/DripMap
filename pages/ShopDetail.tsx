@@ -24,6 +24,7 @@ import {
   VeganInfoEditor,
   EditableField,
 } from "../components/OwnerTools";
+import EventsSection from "../components/EventsSection";
 
 const ShopDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -859,6 +860,15 @@ const ShopDetail: React.FC = () => {
               onUpgrade={() => setShowPricing(true)}
               onUpdate={(items) => handleUpdateShop({ baristas: items })}
             />
+
+            {/* Events - PRO Feature */}
+            {isOwner && (
+              <EventsSection
+                shopId={shop.id}
+                isPro={isPro}
+                onUpgrade={() => setShowPricing(true)}
+              />
+            )}
 
             {/* Reviews */}
             <section className="bg-white p-8 rounded-3xl shadow-sm border border-coffee-100">
