@@ -353,7 +353,20 @@ const Profile: React.FC = () => {
     colorClass: string = "text-coffee-900"
   ) => {
     if (!url) return null;
-    const safeUrl = url.startsWith("http") ? url : `https://${url}`;
+
+    // Build proper URL based on platform
+    let safeUrl = url;
+    const cleanValue = url.replace(/^@/, '').trim(); // Remove @ if present
+
+    if (!url.startsWith("http")) {
+      if (label === "Instagram") {
+        safeUrl = `https://instagram.com/${cleanValue}`;
+      } else if (label === "X") {
+        safeUrl = `https://x.com/${cleanValue}`;
+      } else {
+        safeUrl = `https://${url}`;
+      }
+    }
     return (
       <a
         href={safeUrl}
@@ -439,7 +452,7 @@ const Profile: React.FC = () => {
                       <i className="fab fa-instagram absolute left-3 top-1/2 -translate-y-1/2 text-coffee-400"></i>
                       <input
                         type="text"
-                        placeholder="Instagram URL"
+                        placeholder="Instagram username"
                         value={editData.socialLinks.instagram}
                         onChange={e =>
                           handleSocialChange("instagram", e.target.value)
@@ -451,7 +464,7 @@ const Profile: React.FC = () => {
                       <i className="fab fa-x-twitter absolute left-3 top-1/2 -translate-y-1/2 text-coffee-400"></i>
                       <input
                         type="text"
-                        placeholder="X (Twitter) URL"
+                        placeholder="X username"
                         value={editData.socialLinks.x}
                         onChange={e => handleSocialChange("x", e.target.value)}
                         className="w-full pl-9 pr-3 py-2 text-sm bg-coffee-50 border border-coffee-200 rounded-lg focus:ring-1 focus:ring-volt-400 outline-none"

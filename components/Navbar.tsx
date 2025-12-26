@@ -26,6 +26,12 @@ const Navbar: React.FC = () => {
         </Link>
 
         <div className="flex items-center gap-2 sm:gap-4">
+          <Link
+            to="/events"
+            className="hidden sm:block text-xs font-bold text-coffee-400 hover:text-coffee-900 uppercase tracking-wider"
+          >
+            Events
+          </Link>
           {user ? (
             <>
               {(user.isAdmin || user.isBusinessOwner) && (

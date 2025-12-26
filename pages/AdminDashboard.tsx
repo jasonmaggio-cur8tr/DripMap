@@ -41,8 +41,16 @@ const AdminDashboard: React.FC = () => {
           <h1 className="text-3xl font-serif font-bold text-coffee-900">
             Admin Dashboard
           </h1>
-          <div className="bg-white px-4 py-2 rounded-full shadow-sm text-sm font-bold border border-coffee-200">
-            Admin Mode
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/admin/events")}
+            >
+              <i className="fas fa-calendar mr-2"></i> Manage Events
+            </Button>
+            <div className="bg-white px-4 py-2 rounded-full shadow-sm text-sm font-bold border border-coffee-200">
+              Admin Mode
+            </div>
           </div>
         </div>
 

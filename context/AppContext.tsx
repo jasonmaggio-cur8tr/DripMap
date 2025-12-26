@@ -5,7 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { Shop, User, Vibe, ClaimRequest, Review } from "../types";
+import { Shop, User, Vibe, ClaimRequest, Review, CalendarEvent, Brand } from "../types";
 import { INITIAL_SHOPS } from "../constants";
 import { supabase } from "../lib/supabase";
 import { resetSupabaseAuthState } from "../lib/authUtils";
@@ -62,6 +62,16 @@ interface AppContextType {
   getProfileById: (userId: string) => Promise<User | null>;
   getProfileByUsername: (username: string) => Promise<User | null>;
   toggleFollow: (targetUserId: string) => void;
+
+  // Events (PRO Feature)
+  events: CalendarEvent[];
+  addEvent: (event: Omit<CalendarEvent, "id" | "createdAt">) => void;
+  updateEvent: (event: CalendarEvent) => void;
+  deleteEvent: (eventId: string) => void;
+
+  // Brands
+  brands: Brand[];
+  addBrand: (brand: Brand) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -75,6 +85,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedVibes, setSelectedVibes] = useState<Vibe[]>([]);
   const [claimRequests, setClaimRequests] = useState<ClaimRequest[]>([]);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
 
   // Initialize app - load shops and set up auth listener
   useEffect(() => {
@@ -109,9 +121,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     if (profile) {
       setUser(profile);
 
-      // Load claim requests if user is admin or business owner
+      // Load claim requests - all for admin/business owner, own requests for regular users
+      let requests: any[] = [];
       if (profile.isAdmin || profile.isBusinessOwner) {
-        const requests = await db.fetchClaimRequests();
+        requests = await db.fetchClaimRequests();
+      } else {
+        // Regular users: fetch their own claim requests so they can see pending status
+        requests = await db.fetchUserClaimRequests(userId);
+      }
+
+      if (requests.length > 0) {
         setClaimRequests(
           requests.map(r => ({
             id: r.id,
@@ -144,6 +163,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         );
         setShops(INITIAL_SHOPS);
       }
+
+      // Fetch events
+      const fetchedEvents = await db.fetchEvents();
+      const mappedEvents: CalendarEvent[] = fetchedEvents.map((e: any) => ({
+        id: e.id,
+        shopId: e.shop_id,
+        title: e.title,
+        description: e.description,
+        eventType: e.event_type,
+        startDateTime: e.start_date_time,
+        endDateTime: e.end_date_time,
+        allDay: false,
+        locationName: e.location,
+        ticketUrl: e.ticket_link,
+        coverImage: e.cover_image_url ? {
+          url: e.cover_image_url,
+          fileName: '',
+          mimeType: ''
+        } : undefined,
+        isPublished: e.is_published,
+        createdBy: 'owner',
+        createdAt: e.created_at,
+      }));
+      setEvents(mappedEvents);
+      console.log(`[AppContext] Loaded ${fetchedEvents.length} events from database`);
     } catch (error) {
       console.error("[AppContext] Failed to refresh shops:", error);
       // Fall back to initial shops on error
@@ -381,6 +425,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     if (!user) return;
 
     const isVisited = user.visitedShops.includes(shopId);
+    const previousVisitedShops = [...user.visitedShops];
 
     // Optimistic update
     setUser(prev => {
@@ -409,7 +454,33 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     );
 
     // Sync with database
-    await db.toggleVisitedShop(user.id, shopId, isVisited);
+    const result = await db.toggleVisitedShop(user.id, shopId, isVisited);
+
+    // If DB operation failed, rollback optimistic update
+    if (!result.success) {
+      console.error("[toggleVisitedShop] DB operation failed, rolling back:", result.error);
+      setUser(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          visitedShops: previousVisitedShops,
+        };
+      });
+      setShops(prevShops =>
+        prevShops.map(shop => {
+          if (shop.id === shopId) {
+            return {
+              ...shop,
+              stampCount: isVisited
+                ? (shop.stampCount || 0) + 1
+                : Math.max(0, (shop.stampCount || 0) - 1),
+            };
+          }
+          return shop;
+        })
+      );
+      throw new Error(result.error?.message || "Failed to update visited status");
+    }
   };
 
   const addReview = async (
@@ -458,8 +529,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       });
 
       if (result.success) {
-        // Refresh claim requests
-        const requests = await db.fetchClaimRequests();
+        // Refresh claim requests - fetch user's own requests (works for all users)
+        const requests = await db.fetchUserClaimRequests(requestData.userId);
         setClaimRequests(
           requests.map(r => ({
             id: r.id,
@@ -683,6 +754,87 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     return matchesSearch && matchesVibes;
   });
 
+  // Event functions (PRO Feature)
+  const addEvent = async (eventData: Omit<CalendarEvent, "id" | "createdAt">) => {
+    const dbEventData = {
+      shop_id: eventData.shopId,
+      title: eventData.title,
+      description: eventData.description,
+      event_type: eventData.eventType,
+      start_date_time: eventData.startDateTime,
+      end_date_time: eventData.endDateTime,
+      location: eventData.locationName,
+      ticket_link: eventData.ticketUrl,
+      cover_image_url: eventData.coverImage?.url,
+      is_published: eventData.isPublished ?? false,
+    };
+
+    console.log('Creating event with data:', dbEventData);
+    const result = await db.createEvent(dbEventData);
+
+    if (result.success && result.data) {
+      const newEvent: CalendarEvent = {
+        id: result.data.id,
+        shopId: result.data.shop_id,
+        title: result.data.title,
+        description: result.data.description,
+        eventType: result.data.event_type,
+        startDateTime: result.data.start_date_time,
+        endDateTime: result.data.end_date_time,
+        allDay: false,
+        locationName: result.data.location,
+        ticketUrl: result.data.ticket_link,
+        coverImage: result.data.cover_image_url ? {
+          url: result.data.cover_image_url,
+          fileName: '',
+          mimeType: ''
+        } : undefined,
+        isPublished: result.data.is_published,
+        createdBy: 'owner',
+        createdAt: result.data.created_at,
+      };
+      setEvents((prev: CalendarEvent[]) => [...prev, newEvent]);
+    } else {
+      console.error('Failed to create event:', result.error);
+      throw new Error(result.error?.message || 'Failed to create event');
+    }
+
+    return result;
+  };
+
+  const updateEvent = async (updatedEvent: CalendarEvent) => {
+    const updates = {
+      title: updatedEvent.title,
+      description: updatedEvent.description,
+      event_type: updatedEvent.eventType,
+      start_date_time: updatedEvent.startDateTime,
+      end_date_time: updatedEvent.endDateTime,
+      location: updatedEvent.locationName,
+      ticket_link: updatedEvent.ticketUrl,
+      cover_image_url: updatedEvent.coverImage?.url,
+      is_published: updatedEvent.isPublished,
+    };
+
+    const result = await db.updateEvent(updatedEvent.id, updates);
+
+    if (result.success) {
+      setEvents((prev: CalendarEvent[]) => prev.map((e: CalendarEvent) => e.id === updatedEvent.id ? updatedEvent : e));
+    }
+  };
+
+  const deleteEvent = async (eventId: string) => {
+    const result = await db.deleteEvent(eventId);
+
+    if (result.success) {
+      setEvents((prev: CalendarEvent[]) => prev.filter((e: CalendarEvent) => e.id !== eventId));
+    }
+  };
+
+  // Brands
+  const addBrand = (newBrand: Brand) => {
+    setBrands(prev => [...prev, newBrand]);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -710,6 +862,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         getProfileById,
         getProfileByUsername,
         toggleFollow,
+        events,
+        addEvent,
+        updateEvent,
+        deleteEvent,
+        brands,
+        addBrand,
       }}
     >
       {children}

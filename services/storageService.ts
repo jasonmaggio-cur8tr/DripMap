@@ -125,18 +125,18 @@ export const uploadImage = async (
     console.log(`Uploading to bucket: ${BUCKET_NAME}...`);
 
     // Upload to Supabase Storage with retries & per-attempt timeouts
-    const doUpload = async () => {
+    const doUpload = async (useUpsert: boolean = false) => {
       return supabase.storage
         .from(BUCKET_NAME)
         .upload(fileName, processedFile, {
           cacheControl: '3600',
-          upsert: false
+          upsert: useUpsert
         });
     };
 
     // Helper to attempt a single upload with a per-attempt timeout
-    const attemptUploadWithTimeout = async (timeoutMs: number) => {
-      const uploadPromise = doUpload();
+    const attemptUploadWithTimeout = async (timeoutMs: number, useUpsert: boolean = false) => {
+      const uploadPromise = doUpload(useUpsert);
       uploadPromise.then((res: any) => console.log('uploadPromise resolved for', fileName, res)).catch((err: any) => console.error('uploadPromise rejected for', fileName, err));
 
       const timeoutPromise = new Promise<never>((_, reject) =>
@@ -158,12 +158,21 @@ export const uploadImage = async (
       console.log(`Attempt ${attempt}/${maxAttempts} for upload ${fileName} (timeout ${timeoutForAttempt}ms)`);
 
       try {
-        const result = await attemptUploadWithTimeout(timeoutForAttempt);
+        // On retry attempts, use upsert to overwrite if file already exists from failed previous attempt
+        const useUpsert = attempt > 1;
+        const result = await attemptUploadWithTimeout(timeoutForAttempt, useUpsert);
         data = result.data;
         error = result.error;
 
         // If success, break out
         if (!error) break;
+
+        // Check if it's a "resource already exists" error
+        const isAlreadyExistsError = error && (error.message?.toLowerCase?.().includes('already exists') || error.statusCode === '409');
+        if (isAlreadyExistsError) {
+          console.warn('File already exists, will use upsert on next attempt:', error);
+          // Continue to next attempt with upsert enabled
+        }
 
         // If it's an auth-related error, try refreshing the session once and continue retries
         const isAuthError = error && (error.message?.toLowerCase?.().includes('jwt') || error.message?.toLowerCase?.().includes('expired') || error.status === 401 || error.status === 403 || error.message?.toLowerCase?.().includes('unauthorized'));
@@ -173,19 +182,19 @@ export const uploadImage = async (
             const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
             if (refreshError || !refreshedSession) {
               console.error('Session refresh failed during upload retry:', refreshError);
-              
+
               // Reset auth state to clear corrupted/stale tokens
               await resetSupabaseAuthState();
-              
+
               throw new Error('Your session is invalid and could not be refreshed. Please log in again.');
             }
             console.log('Session refreshed successfully during upload retry');
           } catch (refreshErr) {
             console.error('Error while attempting session refresh during upload retry:', refreshErr);
-            
+
             // Reset auth state before re-throwing
             await resetSupabaseAuthState();
-            
+
             break;
           }
         }

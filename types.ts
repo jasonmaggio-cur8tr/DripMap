@@ -13,6 +13,94 @@ export enum Vibe {
   QUIET = 'Quiet',
 }
 
+// PRO Feature Types
+export enum EventType {
+  TASTING = 'Tasting',
+  MUSIC = 'Music',
+  WORKSHOP = 'Workshop',
+  POPUP = 'Pop-up',
+  COMMUNITY = 'Community',
+  ACTIVE = 'Active',
+  OTHER = 'Other',
+}
+
+export interface CalendarEvent {
+  id: string;
+  shopId: string;
+  title: string;
+  description?: string;
+  startDateTime: string;
+  endDateTime?: string;
+  allDay: boolean;
+  locationName?: string;
+  addressOverride?: string;
+  eventType: EventType;
+  coverImage?: {
+    url: string;
+    fileName: string;
+    mimeType: string;
+  };
+  ticketUrl?: string;
+  isPublished: boolean;
+  createdBy: 'admin' | 'owner';
+  createdAt: string;
+}
+
+export interface BrewItem {
+  id: string;
+  type: 'Espresso' | 'Pour Over' | 'Drip' | 'Cold Brew';
+  roaster: string;
+  beanName: string;
+  notes: string;
+}
+
+export interface HappeningNowStatus {
+  id: string;
+  title: string;
+  message: string;
+  sticker?: string;
+  expiresAt: string;
+  createdAt: string;
+}
+
+export interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  logoUrl?: string;
+  websiteUrl?: string;
+}
+
+export interface Barista {
+  id: string;
+  name: string;
+  role: string;
+  bio: string;
+  imageUrl: string;
+}
+
+export interface PlantMilkInfo {
+  type: 'Almond' | 'Oat' | 'Soy' | 'Cashew' | 'Hemp' | 'Watermelon' | 'Other';
+  customType?: string;
+  brand?: string;
+}
+
+export interface Campaign {
+  id: string;
+  shopId: string;
+  shopName: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  startDate: string;
+  endDate: string;
+  days: number;
+  totalCost: number;
+  status: 'pending' | 'approved' | 'rejected' | 'active' | 'completed';
+  createdAt: string;
+}
+
 export interface Review {
   id: string;
   userId: string;
@@ -52,16 +140,36 @@ export interface Shop {
   name: string;
   description: string;
   location: Location;
-  gallery: ShopImage[]; // Replaces simple string[]
+  gallery: ShopImage[];
   vibes: Vibe[];
-  cheekyVibes: string[]; // New "Vibe Check" list
+  cheekyVibes: string[];
   rating: number;
   reviewCount: number;
   reviews: Review[];
-  isClaimed: boolean; 
+  isClaimed: boolean;
   claimedBy?: string;
-  stampCount: number; // New: How many users have this in their passport
-  openHours?: OpenHours; // New: Opening hours
+  stampCount: number;
+  openHours?: OpenHours;
+
+  // PRO Feature Fields
+  brandId?: string;
+  locationName?: string;
+  customVibes?: string[];
+  spotifyPlaylistUrl?: string;
+  websiteUrl?: string;
+  mapsUrl?: string;
+  onlineOrderUrl?: string;
+  happeningNow?: HappeningNowStatus;
+  currentMenu?: BrewItem[];
+  sourcingInfo?: string;
+  espressoMachine?: string;
+  grinderDetails?: string;
+  brewingMethods?: string[];
+  baristas?: Barista[];
+  specialtyDrinks?: { name: string; desc: string }[];
+  veganFoodOptions?: boolean;
+  plantMilks?: PlantMilkInfo[];
+  subscriptionTier?: 'free' | 'pro';
 }
 
 export interface SocialLinks {
@@ -74,14 +182,15 @@ export interface User {
   username: string;
   email: string;
   avatarUrl: string;
-  bio?: string; // New bio field
-  socialLinks?: SocialLinks; // New social links
+  bio?: string;
+  socialLinks?: SocialLinks;
   isBusinessOwner: boolean;
-  isAdmin?: boolean; // Platform admin role
+  isAdmin?: boolean;
+  isPro?: boolean;
   savedShops: string[];
-  visitedShops: string[]; // New field for tracking check-ins
-  followerIds?: string[]; // IDs of users who follow this user
-  followingIds?: string[]; // IDs of users this user follows
+  visitedShops: string[];
+  followerIds?: string[];
+  followingIds?: string[];
 }
 
 export interface ClaimRequest {

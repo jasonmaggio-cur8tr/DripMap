@@ -11,6 +11,8 @@ import Auth from './pages/Auth';
 import Profile from './pages/Profile';
 import ClaimShop from './pages/ClaimShop';
 import AdminDashboard from './pages/AdminDashboard';
+import EventsFeed from './pages/EventsFeed';
+import AdminEvents from './pages/AdminEvents';
 
 const App: React.FC = () => {
   return (
@@ -27,6 +29,8 @@ const App: React.FC = () => {
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="/claim/:id" element={<ClaimShop />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/events" element={<EventsFeed />} />
+          <Route path="/admin/events" element={<AdminEvents />} />
         </Routes>
       </Router>
     </AppProvider>
