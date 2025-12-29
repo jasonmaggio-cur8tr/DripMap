@@ -23,6 +23,7 @@ const EditShop: React.FC = () => {
     name: '',
     city: '',
     state: '',
+    country: '',
     address: '',
     description: '',
   });
@@ -79,6 +80,7 @@ const EditShop: React.FC = () => {
         name: shopToEdit.name,
         city: shopToEdit.location.city,
         state: shopToEdit.location.state,
+        country: shopToEdit.location.country || '',
         address: shopToEdit.location.address,
         description: shopToEdit.description
     });
@@ -234,7 +236,8 @@ const EditShop: React.FC = () => {
           lng: location.lng,
           address: formData.address,
           city: formData.city,
-          state: formData.state
+          state: formData.state,
+          country: formData.country
         },
         gallery: finalGallery,
         vibes: selectedVibes,
@@ -292,6 +295,24 @@ const EditShop: React.FC = () => {
                         value={formData.city}
                         onChange={e => setFormData({...formData, city: e.target.value})}
                     />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-bold text-coffee-900 mb-2">State</label>
+                        <input
+                            className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                            value={formData.state}
+                            onChange={e => setFormData({...formData, state: e.target.value})}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-coffee-900 mb-2">Country</label>
+                        <input
+                            className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                            value={formData.country}
+                            onChange={e => setFormData({...formData, country: e.target.value})}
+                        />
+                    </div>
                 </div>
              </div>
           </section>

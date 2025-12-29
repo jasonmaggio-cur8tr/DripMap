@@ -11,8 +11,17 @@ interface EventCardProps {
 }
 
 const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) => {
-  const startDate = new Date(event.startDateTime);
-  
+  // Parse datetime without timezone conversion
+  // datetime-local gives "YYYY-MM-DDTHH:MM" format - parse as local time
+  const parseLocalDateTime = (dateTimeStr: string) => {
+    const [datePart, timePart] = dateTimeStr.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hours, minutes] = (timePart || '00:00').split(':').map(Number);
+    return new Date(year, month - 1, day, hours, minutes);
+  };
+
+  const startDate = parseLocalDateTime(event.startDateTime);
+
   // Format Date: "Mon, Oct 14"
   const dateStr = startDate.toLocaleDateString(undefined, {
     weekday: 'short',

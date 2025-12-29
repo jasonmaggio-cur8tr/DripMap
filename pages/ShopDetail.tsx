@@ -93,7 +93,7 @@ const ShopDetail: React.FC = () => {
   const isSaved = user?.savedShops.includes(shop.id);
   const isVisited = user?.visitedShops.includes(shop.id);
   const isOwner = user && (shop.claimedBy === user.id || user.isAdmin);
-  const isPro = user?.isPro || shop.subscriptionTier === 'pro';
+  const isPro = shop.subscriptionTier === 'pro';
   const hasAlreadyReviewed = user && shop.reviews?.some(r => r.userId === user.id);
 
   // Handler for updating shop PRO fields - saves immediately for features with explicit save buttons
@@ -590,8 +590,7 @@ const ShopDetail: React.FC = () => {
               {shop.name}
             </h1>
             <p className="text-white/90 text-lg flex items-center gap-2">
-              <i className="fas fa-map-marker-alt"></i> {shop.location.city},{" "}
-              {shop.location.state}
+              <i className="fas fa-map-marker-alt"></i> {[shop.location.city, shop.location.state, shop.location.country].filter(Boolean).join(', ')}
             </p>
           </div>
         </div>
@@ -1004,7 +1003,7 @@ const ShopDetail: React.FC = () => {
                   </p>
                   <p className="text-coffee-900">{shop.location.address}</p>
                   <p className="text-coffee-900">
-                    {shop.location.city}, {shop.location.state}
+                    {[shop.location.city, shop.location.state, shop.location.country].filter(Boolean).join(', ')}
                   </p>
                 </div>
                 <div className="mb-8">
