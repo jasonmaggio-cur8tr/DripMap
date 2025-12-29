@@ -5,6 +5,14 @@ import EventCard from '../components/EventCard';
 import { EventType } from '../types';
 import { Link } from 'react-router-dom';
 
+// Parse datetime without timezone conversion
+const parseLocalDateTime = (dateTimeStr: string) => {
+  const [datePart, timePart] = dateTimeStr.split('T');
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hours, minutes] = (timePart || '00:00').split(':').map(Number);
+  return new Date(year, month - 1, day, hours, minutes);
+};
+
 const EventsFeed: React.FC = () => {
   const { events, shops } = useApp();
   const [filterType, setFilterType] = useState<EventType | 'All'>('All');
@@ -16,8 +24,8 @@ const EventsFeed: React.FC = () => {
     // Only future or today's events, sorted by date
     let filtered = events
         .filter(e => e.isPublished)
-        .filter(e => new Date(e.startDateTime) >= new Date(now.setHours(0,0,0,0)))
-        .sort((a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime());
+        .filter(e => parseLocalDateTime(e.startDateTime) >= new Date(now.setHours(0,0,0,0)))
+        .sort((a, b) => parseLocalDateTime(a.startDateTime).getTime() - parseLocalDateTime(b.startDateTime).getTime());
 
     if (filterType !== 'All') {
         filtered = filtered.filter(e => e.eventType === filterType);
@@ -50,7 +58,7 @@ const EventsFeed: React.FC = () => {
       };
 
       processedEvents.forEach(e => {
-          const eDate = new Date(e.startDateTime);
+          const eDate = parseLocalDateTime(e.startDateTime);
           if (isSameDay(eDate, today)) {
               grouped.today.push(e);
           } else {

@@ -288,6 +288,7 @@ export const fetchShops = async (): Promise<Shop[]> => {
             address: shop.address,
             city: shop.city,
             state: shop.state,
+            country: shop.country || '',
           },
           gallery:
             shop.shop_images?.map((img: any) => ({

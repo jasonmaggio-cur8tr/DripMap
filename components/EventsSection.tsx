@@ -3,6 +3,14 @@ import { useApp } from '../context/AppContext';
 import EventCreateModal from './EventCreateModal';
 import { LockedOverlay } from './OwnerTools';
 
+// Parse datetime without timezone conversion
+const parseLocalDateTime = (dateTimeStr: string) => {
+  const [datePart, timePart] = dateTimeStr.split('T');
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hours, minutes] = (timePart || '00:00').split(':').map(Number);
+  return new Date(year, month - 1, day, hours, minutes);
+};
+
 interface EventsSectionProps {
   shopId: string;
   isPro: boolean;
@@ -14,7 +22,7 @@ const EventsSection: React.FC<EventsSectionProps> = ({ shopId, isPro, onUpgrade 
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const shopEvents = events.filter(e => e.shopId === shopId);
-  const upcomingEvents = shopEvents.filter(e => new Date(e.startDateTime) >= new Date());
+  const upcomingEvents = shopEvents.filter(e => parseLocalDateTime(e.startDateTime) >= new Date());
 
   return (
     <div className="relative bg-white rounded-3xl shadow-sm border border-coffee-100 overflow-hidden">
@@ -80,11 +88,11 @@ const EventsSection: React.FC<EventsSectionProps> = ({ shopId, isPro, onUpgrade 
                     <div className="flex items-center gap-4 text-sm text-coffee-600">
                       <span className="flex items-center gap-1">
                         <i className="fas fa-calendar text-xs"></i>
-                        {new Date(event.startDateTime).toLocaleDateString()}
+                        {parseLocalDateTime(event.startDateTime).toLocaleDateString()}
                       </span>
                       <span className="flex items-center gap-1">
                         <i className="fas fa-clock text-xs"></i>
-                        {new Date(event.startDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {parseLocalDateTime(event.startDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                       <span className="px-2 py-0.5 bg-coffee-50 rounded text-xs font-medium">
                         {event.eventType}

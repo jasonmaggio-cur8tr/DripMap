@@ -6,6 +6,14 @@ import EventCard from '../components/EventCard';
 import { useToast } from '../context/ToastContext';
 import EventCreateModal from '../components/EventCreateModal';
 
+// Parse datetime without timezone conversion
+const parseLocalDateTime = (dateTimeStr: string) => {
+  const [datePart, timePart] = dateTimeStr.split('T');
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hours, minutes] = (timePart || '00:00').split(':').map(Number);
+  return new Date(year, month - 1, day, hours, minutes);
+};
+
 const AdminEvents: React.FC = () => {
   const { events, shops, deleteEvent, updateEvent } = useApp();
   const { toast } = useToast();
@@ -87,7 +95,7 @@ const AdminEvents: React.FC = () => {
                                     {shop?.name || 'Unknown'}
                                 </td>
                                 <td className="p-4 text-sm text-coffee-600">
-                                    {new Date(event.startDateTime).toLocaleDateString()}
+                                    {parseLocalDateTime(event.startDateTime).toLocaleDateString()}
                                 </td>
                                 <td className="p-4">
                                     <button 
