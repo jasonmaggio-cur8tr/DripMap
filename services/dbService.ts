@@ -104,6 +104,8 @@ export const fetchUserProfile = async (
       isBusinessOwner: profile.is_business_owner,
       isAdmin: profile.is_admin || false,
       isPro: profile.is_pro || false,
+      isDripClubMember: profile.dripclub_member || false,
+      dripClubMemberSince: profile.dripclub_member_since,
       savedShops: savedResult.data?.map(s => s.shop_id) || [],
       visitedShops: visitedResult.data?.map(v => v.shop_id) || [],
       followerIds: followersResult.data?.map(f => f.follower_id) || [],
@@ -164,6 +166,8 @@ export const fetchUserProfileByUsername = async (
       isBusinessOwner: profile.is_business_owner,
       isAdmin: profile.is_admin || false,
       isPro: profile.is_pro || false,
+      isDripClubMember: profile.dripclub_member || false,
+      dripClubMemberSince: profile.dripclub_member_since,
       savedShops: savedResult.data?.map(s => s.shop_id) || [],
       visitedShops: visitedResult.data?.map(v => v.shop_id) || [],
       followerIds: followersResult.data?.map(f => f.follower_id) || [],
@@ -318,6 +322,13 @@ export const fetchShops = async (): Promise<Shop[]> => {
           claimedBy: shop.claimed_by,
           stampCount: shop.stamp_count || 0,
           subscriptionTier: shop.subscription_tier || 'free',
+          subscriptionStatus: shop.subscription_status || 'inactive',
+          proPlusDiscountEnabled: shop.pro_plus_discount_enabled || false,
+          subscriptionCurrentPeriodEnd: shop.subscription_current_period_end,
+          cancelAtPeriodEnd: shop.cancel_at_period_end || false,
+          canceledAt: shop.canceled_at,
+          // Note: stripeCustomerId and stripeSubscriptionId are fetched separately
+          // via subscriptionService.getShopSubscription() when needed for billing
 
           // PRO Features
           brandId: shop.brand_id,

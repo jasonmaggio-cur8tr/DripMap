@@ -13,6 +13,7 @@ import ClaimShop from './pages/ClaimShop';
 import AdminDashboard from './pages/AdminDashboard';
 import EventsFeed from './pages/EventsFeed';
 import AdminEvents from './pages/AdminEvents';
+import DripClub from './pages/DripClub';
 
 const App: React.FC = () => {
   return (
@@ -31,6 +32,7 @@ const App: React.FC = () => {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/events" element={<EventsFeed />} />
           <Route path="/admin/events" element={<AdminEvents />} />
+          <Route path="/dripclub" element={<DripClub />} />
         </Routes>
       </Router>
     </AppProvider>

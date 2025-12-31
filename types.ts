@@ -170,7 +170,19 @@ export interface Shop {
   specialtyDrinks?: { name: string; desc: string }[];
   veganFoodOptions?: boolean;
   plantMilks?: PlantMilkInfo[];
-  subscriptionTier?: 'free' | 'pro';
+
+  // Subscription fields (public)
+  subscriptionTier?: SubscriptionTier;
+  subscriptionStatus?: SubscriptionStatus;
+  proPlusDiscountEnabled?: boolean;
+  subscriptionCurrentPeriodEnd?: string;
+  cancelAtPeriodEnd?: boolean;
+  canceledAt?: string;
+
+  // Stripe IDs (internal use only - not sent to general API responses)
+  // These are only populated when specifically needed (e.g., billing management)
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
 }
 
 export interface SocialLinks {
@@ -192,6 +204,10 @@ export interface User {
   visitedShops: string[];
   followerIds?: string[];
   followingIds?: string[];
+
+  // DripClub membership fields
+  isDripClubMember?: boolean;
+  dripClubMemberSince?: string;
 }
 
 export interface ClaimRequest {
@@ -204,3 +220,81 @@ export interface ClaimRequest {
   status: 'pending' | 'approved' | 'rejected';
   date: string;
 }
+
+// =====================================================
+// Subscription Types (FEAT-014 & FEAT-015)
+// =====================================================
+
+export type SubscriptionTier = 'free' | 'pro' | 'pro_plus';
+export type SubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid' | 'inactive';
+export type BillingInterval = 'monthly' | 'annual';
+
+export interface ShopSubscription {
+  tier: SubscriptionTier;
+  status: SubscriptionStatus;
+  proPlusDiscountEnabled: boolean;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  currentPeriodEnd?: string;
+}
+
+export interface DripClubMembership {
+  id: string;
+  userId: string;
+  status: SubscriptionStatus;
+  planType: BillingInterval;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
+  cancelAtPeriodEnd: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SubscriptionPrice {
+  id: string; // Stripe price ID
+  productType: 'shop_pro' | 'shop_pro_plus' | 'dripclub';
+  billingInterval: BillingInterval;
+  amount: number; // in cents
+  currency: string;
+  active: boolean;
+}
+
+export interface CheckoutSessionRequest {
+  priceId: string;
+  shopId?: string; // For shop subscriptions
+  successUrl: string;
+  cancelUrl: string;
+}
+
+export interface SubscriptionPricing {
+  shopPro: {
+    monthly: { amount: number; priceId: string };
+    annual: { amount: number; priceId: string; savings: number };
+  };
+  shopProPlus: {
+    monthly: { amount: number; priceId: string };
+    annual: { amount: number; priceId: string; savings: number };
+  };
+  dripClub: {
+    monthly: { amount: number; priceId: string };
+    annual: { amount: number; priceId: string; savings: number };
+  };
+}
+
+// Default pricing (in cents) - matches the existing PricingModal values
+export const DEFAULT_PRICING: SubscriptionPricing = {
+  shopPro: {
+    monthly: { amount: 2888, priceId: '' }, // $28.88
+    annual: { amount: 29888, priceId: '', savings: 4768 }, // $298.88, saves $47.68
+  },
+  shopProPlus: {
+    monthly: { amount: 4888, priceId: '' }, // $48.88
+    annual: { amount: 49888, priceId: '', savings: 9668 }, // $498.88, saves $96.68
+  },
+  dripClub: {
+    monthly: { amount: 888, priceId: '' }, // $8.88
+    annual: { amount: 8888, priceId: '', savings: 1768 }, // $88.88, saves $17.68
+  },
+};

@@ -86,6 +86,12 @@ const mockClient = {
     }),
     getBucket: async () => ({ data: null, error: { message: 'not found' } }),
     createBucket: async () => ({ error: { message: 'Storage not configured' } })
+  },
+  functions: {
+    invoke: async () => ({
+      data: null,
+      error: { message: 'Supabase not configured. Please add credentials to .env file' }
+    })
   }
 };
 

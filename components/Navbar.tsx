@@ -27,6 +27,12 @@ const Navbar: React.FC = () => {
 
         <div className="flex items-center gap-2 sm:gap-4">
           <Link
+            to="/dripclub"
+            className="hidden sm:block text-xs font-bold text-volt-500 hover:text-volt-600 uppercase tracking-wider"
+          >
+            DripClub
+          </Link>
+          <Link
             to="/events"
             className="hidden sm:block text-xs font-bold text-coffee-400 hover:text-coffee-900 uppercase tracking-wider"
           >

@@ -69,7 +69,8 @@ const EditShop: React.FC = () => {
     }
 
     // Security Check: Ensure user owns this shop or is admin
-    if (shopToEdit.claimedBy !== user.id && !user.isAdmin) {
+    const isActualOwner = shopToEdit.claimedBy && shopToEdit.claimedBy === user.id;
+    if (!isActualOwner && !user.isAdmin) {
         toast.error("You are not authorized to edit this shop.");
         navigate(`/shop/${id}`);
         return;
