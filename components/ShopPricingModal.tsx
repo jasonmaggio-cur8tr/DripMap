@@ -68,7 +68,7 @@ const ShopPricingModal: React.FC<ShopPricingModalProps> = ({
               Upgrade Your Shop
             </h2>
             <p className="text-coffee-100 text-sm max-w-md mx-auto">
-              Unlock powerful tools to grow your coffee shop and connect with more customers
+              Unlock powerful tools to grow your coffee and/or tea shop and connect with more customers
             </p>
 
             {/* Billing Toggle */}

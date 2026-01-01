@@ -15,7 +15,7 @@ const DripClubModal: React.FC<DripClubModalProps> = ({
   onSubscribe,
   isLoading = false,
 }) => {
-  const [billingCycle, setBillingCycle] = useState<BillingInterval>('monthly');
+  const [billingCycle, setBillingCycle] = useState<BillingInterval>('annual');
 
   if (!isOpen) return null;
 
@@ -138,8 +138,8 @@ const DripClubModal: React.FC<DripClubModalProps> = ({
                 },
                 {
                   icon: 'fa-gift',
-                  title: 'Member Surprises',
-                  desc: 'Random perks from our partners',
+                  title: 'Member Exclusives',
+                  desc: 'Merchandise and surprises',
                   color: 'text-rose-600 bg-rose-100',
                 },
               ].map((benefit, i) => (

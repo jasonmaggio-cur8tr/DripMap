@@ -907,7 +907,7 @@ const Profile: React.FC = () => {
                     "10% off at all PRO+ coffee shops",
                     "Exclusive DripClub member badge",
                     "Early access to events & tastings",
-                    "Member-only perks & surprises",
+                    "Member only merchandise and surprises",
                   ].map((perk, i) => (
                     <li
                       key={i}

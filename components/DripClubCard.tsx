@@ -73,7 +73,7 @@ const DripClubCard: React.FC<DripClubCardProps> = ({
             '10% off at all PRO+ coffee shops',
             'Exclusive DripClub member badge',
             'Early access to events & tastings',
-            'Member-only perks & surprises',
+            'Member only merchandise and surprises',
           ].map((perk, i) => (
             <li key={i} className="flex items-center gap-2.5 text-sm text-coffee-800">
               <i className="fas fa-check text-volt-500 text-xs"></i>
