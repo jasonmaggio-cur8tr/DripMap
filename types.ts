@@ -283,15 +283,15 @@ export interface SubscriptionPricing {
   };
 }
 
-// Default pricing (in cents) - matches the existing PricingModal values
+// Default pricing (in cents) - PRO+ is cheaper because shops accept DripClub 10% discount
 export const DEFAULT_PRICING: SubscriptionPricing = {
   shopPro: {
-    monthly: { amount: 2888, priceId: '' }, // $28.88
-    annual: { amount: 29888, priceId: '', savings: 4768 }, // $298.88, saves $47.68
-  },
-  shopProPlus: {
     monthly: { amount: 3998, priceId: '' }, // $39.98
     annual: { amount: 44444, priceId: '', savings: 3532 }, // $444.44, saves $35.32
+  },
+  shopProPlus: {
+    monthly: { amount: 2888, priceId: '' }, // $28.88 (lower - DripClub integration)
+    annual: { amount: 29888, priceId: '', savings: 4768 }, // $298.88, saves $47.68
   },
   dripClub: {
     monthly: { amount: 99, priceId: '' }, // $0.99

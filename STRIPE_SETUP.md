@@ -27,12 +27,12 @@ This guide outlines the steps needed to complete the Stripe subscription integra
 3. **For each product, create 2 Prices:**
 
    **DripMap PRO:**
-   - Monthly: $28.88/month (Recurring)
-   - Annual: $298.88/year (Recurring)
-
-   **DripMap PRO+:**
    - Monthly: $39.98/month (Recurring)
    - Annual: $444.44/year (Recurring)
+
+   **DripMap PRO+:** (Lower price - shops accept DripClub 10% discount)
+   - Monthly: $28.88/month (Recurring)
+   - Annual: $298.88/year (Recurring)
 
    **DripClub Membership:**
    - Monthly: $0.99/month (Recurring)
