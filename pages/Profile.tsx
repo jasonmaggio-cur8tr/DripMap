@@ -13,6 +13,78 @@ import {
   getPricing,
 } from "../services/subscriptionService";
 
+// --- ANIMATED DRIPCLUB BADGE COMPONENT ---
+const DripClubBadge: React.FC<{ username: string; onManage?: () => void }> = ({ username, onManage }) => {
+  return (
+    <div className="relative w-full max-w-sm mx-auto overflow-hidden rounded-[2rem] border-4 border-coffee-900 shadow-2xl group animate-in zoom-in-95 duration-500">
+      {/* Animated Background Layers */}
+      <div className="absolute inset-0 bg-coffee-900"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-volt-400/20 via-transparent to-volt-400/10 animate-pulse"></div>
+
+      {/* Constantly moving scanning line (Prevents screenshots by showing movement) */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-volt-400/40 shadow-[0_0_15px_rgba(204,255,0,0.8)] z-20 animate-scan"></div>
+
+      {/* Animated holographic sheen */}
+      <div className="absolute inset-0 z-10 opacity-30 pointer-events-none bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine bg-[length:200%_100%]"></div>
+
+      <div className="relative z-10 p-8 flex flex-col items-center text-center">
+        <div className="w-20 h-20 bg-volt-400 rounded-3xl flex items-center justify-center text-coffee-900 mb-6 shadow-[0_0_30px_rgba(204,255,0,0.4)] transform group-hover:rotate-12 transition-transform duration-500">
+          <i className="fas fa-droplet text-4xl"></i>
+        </div>
+
+        <h2 className="text-4xl font-serif font-black text-volt-400 tracking-tighter mb-1 uppercase">DripClub</h2>
+        <p className="text-white font-black text-[10px] uppercase tracking-[0.3em] mb-6 opacity-60">Verified Member</p>
+
+        <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 w-full border border-white/10 mb-6">
+          <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mb-1">Account Holder</p>
+          <p className="text-white text-xl font-bold font-serif tracking-tight">@{username}</p>
+        </div>
+
+        <div className="bg-volt-400 text-coffee-900 px-6 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-lg flex items-center gap-2">
+          <i className="fas fa-percent"></i>
+          <span>10% Off All PRO+ Shops</span>
+        </div>
+
+        <div className="mt-8 flex items-center gap-2 opacity-40">
+          <div className="w-1.5 h-1.5 rounded-full bg-volt-400 animate-ping"></div>
+          <span className="text-[8px] text-white font-black uppercase tracking-widest">Active Membership Session</span>
+        </div>
+
+        {/* Manage button */}
+        {onManage && (
+          <button
+            onClick={onManage}
+            className="mt-6 w-full py-3 bg-white/10 text-white/80 rounded-xl font-bold text-sm hover:bg-white/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 border border-white/10"
+          >
+            <i className="fas fa-cog"></i>
+            Manage Membership
+          </button>
+        )}
+      </div>
+
+      {/* Custom Animations */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes scan {
+          0% { top: 0%; opacity: 0; }
+          5% { opacity: 1; }
+          95% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+        .animate-scan {
+          animation: scan 3s linear infinite;
+        }
+        @keyframes shine {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        .animate-shine {
+          animation: shine 3s ease-in-out infinite;
+        }
+      `}} />
+    </div>
+  );
+};
+
 const Profile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const {
@@ -743,29 +815,21 @@ const Profile: React.FC = () => {
             ) : dripClubMembership &&
               (dripClubMembership.status === "active" ||
                 dripClubMembership.status === "trialing") ? (
-              // Active member card
-              <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-lg border-2 border-volt-400 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-volt-400/20 rounded-full blur-[60px] opacity-50"></div>
+              // Active member - Animated Badge + Info Section
+              <div className="space-y-4">
+                {/* Animated DripClub Badge */}
+                <DripClubBadge
+                  username={viewedUser.username}
+                  onManage={handleManageMembership}
+                />
 
-                <div className="relative z-10">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-coffee-900 p-3 rounded-xl shadow-lg">
-                        <i className="fas fa-crown text-volt-400 text-xl"></i>
-                      </div>
-                      <div>
-                        <h3 className="text-coffee-900 font-black text-lg sm:text-xl">
-                          DripClub
-                        </h3>
-                        <p className="text-volt-500 text-xs font-bold uppercase tracking-wider">
-                          {dripClubMembership.planType === "annual"
-                            ? "Annual"
-                            : "Monthly"}{" "}
-                          Member
-                        </p>
-                      </div>
-                    </div>
-
+                {/* Subscription Details Card */}
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-coffee-100">
+                  {/* Status + Plan Type */}
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-coffee-600 text-xs font-bold uppercase tracking-wider">
+                      {dripClubMembership.planType === "annual" ? "Annual" : "Monthly"} Plan
+                    </span>
                     <div
                       className={`text-[10px] font-black px-2.5 py-1 rounded-full flex items-center gap-1 ${
                         dripClubMembership.status === "trialing"
@@ -781,42 +845,18 @@ const Profile: React.FC = () => {
                         }`}
                       ></span>
                       {dripClubMembership.status === "trialing"
-                        ? "Trial"
+                        ? "Free Trial"
                         : getSubscriptionStatusLabel(dripClubMembership.status)}
                     </div>
                   </div>
 
-                  {/* Member Perks */}
-                  <div className="bg-coffee-50 rounded-xl p-4 mb-4">
-                    <p className="text-coffee-800 text-xs mb-2 font-medium">
-                      Your Perks
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        "10% Off PRO+",
-                        "Member Badge",
-                        "Early Access",
-                        "Exclusive Perks",
-                      ].map((perk, i) => (
-                        <span
-                          key={i}
-                          className="bg-white text-coffee-900 text-[10px] font-bold px-2.5 py-1 rounded-full border border-coffee-100"
-                        >
-                          {perk}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Subscription Info */}
-                  <div className="flex items-center justify-between text-xs mb-4 px-1">
+                  {/* Dates */}
+                  <div className="flex items-center justify-between text-xs border-t border-coffee-50 pt-3">
                     <div>
-                      <p className="text-coffee-800">Member Since</p>
+                      <p className="text-coffee-400 text-[10px] uppercase">Member Since</p>
                       <p className="text-coffee-900 font-bold">
                         {dripClubMembership.createdAt
-                          ? new Date(
-                              dripClubMembership.createdAt
-                            ).toLocaleDateString("en-US", {
+                          ? new Date(dripClubMembership.createdAt).toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
                               year: "numeric",
@@ -825,14 +865,12 @@ const Profile: React.FC = () => {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-coffee-800">
-                        {dripClubMembership.cancelAtPeriodEnd ? "Ends" : "Renews"}
+                      <p className="text-coffee-400 text-[10px] uppercase">
+                        {dripClubMembership.cancelAtPeriodEnd ? "Ends On" : "Renews On"}
                       </p>
                       <p className="text-coffee-900 font-bold">
                         {dripClubMembership.currentPeriodEnd
-                          ? new Date(
-                              dripClubMembership.currentPeriodEnd
-                            ).toLocaleDateString("en-US", {
+                          ? new Date(dripClubMembership.currentPeriodEnd).toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
                               year: "numeric",
@@ -844,14 +882,12 @@ const Profile: React.FC = () => {
 
                   {/* Cancel warning */}
                   {dripClubMembership.cancelAtPeriodEnd && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4">
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mt-3">
                       <p className="text-amber-700 text-xs font-medium flex items-center gap-2">
                         <i className="fas fa-exclamation-triangle"></i>
                         Your membership will end on{" "}
                         {dripClubMembership.currentPeriodEnd
-                          ? new Date(
-                              dripClubMembership.currentPeriodEnd
-                            ).toLocaleDateString("en-US", {
+                          ? new Date(dripClubMembership.currentPeriodEnd).toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
                               year: "numeric",
@@ -860,15 +896,6 @@ const Profile: React.FC = () => {
                       </p>
                     </div>
                   )}
-
-                  {/* Manage Button */}
-                  <button
-                    onClick={handleManageMembership}
-                    className="w-full py-3 bg-coffee-100 text-coffee-900 rounded-xl font-bold text-sm hover:bg-coffee-100/80 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                  >
-                    <i className="fas fa-cog"></i>
-                    Manage Membership
-                  </button>
                 </div>
               </div>
             ) : (
