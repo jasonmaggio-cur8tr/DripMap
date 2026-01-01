@@ -891,14 +891,12 @@ const Profile: React.FC = () => {
                 <div className="bg-coffee-50 rounded-xl p-4 mb-4">
                   <div className="flex items-baseline gap-2 mb-1">
                     <span className="text-3xl font-black text-coffee-900">
-                      {formatPrice(getPricing().dripClub.monthly.amount)}
+                      {formatPrice(getPricing().dripClub.annual.amount)}
                     </span>
-                    <span className="text-coffee-800 text-sm">/month</span>
+                    <span className="text-coffee-800 text-sm">/year</span>
                   </div>
-                  <p className="text-coffee-800 text-xs">
-                    Or {formatPrice(getPricing().dripClub.annual.amount)}/year
-                    (save {formatPrice(getPricing().dripClub.annual.savings || 0)}
-                    )
+                  <p className="text-volt-500 text-xs font-bold">
+                    Less than $1 per month!
                   </p>
                 </div>
 

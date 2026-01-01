@@ -294,7 +294,7 @@ export const DEFAULT_PRICING: SubscriptionPricing = {
     annual: { amount: 49888, priceId: '', savings: 9668 }, // $498.88, saves $96.68
   },
   dripClub: {
-    monthly: { amount: 888, priceId: '' }, // $8.88
-    annual: { amount: 8888, priceId: '', savings: 1768 }, // $88.88, saves $17.68
+    monthly: { amount: 99, priceId: '' }, // $0.99
+    annual: { amount: 999, priceId: '', savings: 189 }, // $9.99, saves $1.89
   },
 };
