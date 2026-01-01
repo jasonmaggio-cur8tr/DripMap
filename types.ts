@@ -290,8 +290,8 @@ export const DEFAULT_PRICING: SubscriptionPricing = {
     annual: { amount: 29888, priceId: '', savings: 4768 }, // $298.88, saves $47.68
   },
   shopProPlus: {
-    monthly: { amount: 4888, priceId: '' }, // $48.88
-    annual: { amount: 49888, priceId: '', savings: 9668 }, // $498.88, saves $96.68
+    monthly: { amount: 3998, priceId: '' }, // $39.98
+    annual: { amount: 44444, priceId: '', savings: 3532 }, // $444.44, saves $35.32
   },
   dripClub: {
     monthly: { amount: 99, priceId: '' }, // $0.99
