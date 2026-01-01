@@ -48,12 +48,20 @@ const ShopPricingModal: React.FC<ShopPricingModalProps> = ({
       className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-coffee-900/60 backdrop-blur-sm animate-in fade-in duration-200"
       onClick={onClose}
     >
+      {/* Close Button - Fixed position outside scrollable area */}
+      <button
+        onClick={onClose}
+        className="fixed top-4 right-4 md:absolute md:top-6 md:right-6 bg-coffee-900/80 hover:bg-coffee-900 text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors z-[160] shadow-lg"
+      >
+        <i className="fas fa-times text-lg"></i>
+      </button>
+
       <div
-        className="bg-white w-full max-w-5xl rounded-[2.5rem] shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto border border-white/20"
+        className="bg-white w-full max-w-5xl rounded-[2rem] md:rounded-[2.5rem] shadow-2xl overflow-hidden max-h-[85vh] overflow-y-auto border border-white/20"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-coffee-900 to-coffee-800 p-8 text-center relative overflow-hidden">
+        <div className="bg-gradient-to-r from-coffee-900 to-coffee-800 p-6 md:p-8 text-center relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-volt-400/10 rounded-full blur-[100px] pointer-events-none"></div>
           <div className="relative z-10">
             <h2 className="text-3xl md:text-4xl font-serif font-black text-white mb-2">
@@ -93,7 +101,7 @@ const ShopPricingModal: React.FC<ShopPricingModalProps> = ({
         </div>
 
         {/* Pricing Cards */}
-        <div className="p-6 md:p-10">
+        <div className="p-4 md:p-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Basic (Free) Tier */}
             <div className="border-2 border-coffee-100 rounded-3xl p-6 bg-coffee-50/30 flex flex-col">
@@ -308,7 +316,7 @@ const ShopPricingModal: React.FC<ShopPricingModalProps> = ({
           </div>
 
           {/* Footer Note */}
-          <p className="text-center text-coffee-800 text-xs mt-8">
+          <p className="text-center text-coffee-800 text-xs mt-6 md:mt-8 pb-2">
             All plans include 24/7 support. Cancel anytime.{' '}
             {!stripeReady && (
               <span className="text-amber-500">
@@ -318,14 +326,6 @@ const ShopPricingModal: React.FC<ShopPricingModalProps> = ({
             )}
           </p>
         </div>
-
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-6 right-6 text-white/60 hover:text-white transition-colors z-[160]"
-        >
-          <i className="fas fa-times text-xl"></i>
-        </button>
       </div>
     </div>
   );

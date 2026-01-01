@@ -40,12 +40,21 @@ const DripClubModal: React.FC<DripClubModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden relative"
+        className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden relative max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Coffee theme header */}
-        <div className="bg-coffee-900 px-8 pt-8 pb-12 text-center relative">
+        <div className="bg-coffee-900 px-6 md:px-8 pt-8 pb-12 text-center relative">
           <div className="absolute top-0 right-0 w-32 h-32 bg-volt-400/10 rounded-full blur-[60px]"></div>
+
+          {/* Close Button - Always visible in header */}
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 bg-white/20 hover:bg-white/30 text-white w-8 h-8 rounded-full flex items-center justify-center transition-colors z-10"
+          >
+            <i className="fas fa-times text-sm"></i>
+          </button>
+
           <div className="inline-flex items-center justify-center bg-volt-400 p-4 rounded-2xl mb-4">
             <i className="fas fa-crown text-coffee-900 text-2xl"></i>
           </div>
@@ -53,17 +62,9 @@ const DripClubModal: React.FC<DripClubModalProps> = ({
           <p className="text-coffee-100 text-sm">
             Unlock 10% off at every PRO+ coffee shop
           </p>
-
-          {/* Close Button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-coffee-100 hover:text-white transition-colors"
-          >
-            <i className="fas fa-times text-lg"></i>
-          </button>
         </div>
 
-        <div className="px-8 pb-8 -mt-6 relative z-10">
+        <div className="px-6 md:px-8 pb-6 md:pb-8 -mt-6 relative z-10">
           {/* Billing Toggle */}
           <div className="bg-coffee-100 p-1 rounded-xl flex mb-6">
             <button

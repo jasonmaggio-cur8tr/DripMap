@@ -249,7 +249,40 @@ export const createShopCheckoutSession = async (
       },
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error('[subscriptionService] Edge function error:', error.message);
+
+      // Try to extract error message from multiple possible locations
+      let errorMessage = 'Failed to create checkout session';
+
+      // Check if data contains the error (some versions return data even on error)
+      if (data?.error) {
+        errorMessage = data.error;
+      }
+      // FunctionsHttpError stores response as a Response object in context
+      // We need to read it with .json()
+      else if (error.context && typeof error.context.json === 'function') {
+        try {
+          const responseBody = await error.context.json();
+          if (responseBody?.error) {
+            errorMessage = responseBody.error;
+          }
+        } catch {
+          // Response might already be read or not JSON
+        }
+      }
+      // Last resort: use error message if it's meaningful
+      else if (error.message && !error.message.includes('non-2xx')) {
+        errorMessage = error.message;
+      }
+
+      return { error: errorMessage };
+    }
+
+    if (!data?.url) {
+      return { error: data?.error || 'No checkout URL returned' };
+    }
+
     return { url: data.url };
   } catch (error: any) {
     console.error('[subscriptionService] Error creating shop checkout:', error);
