@@ -15,7 +15,9 @@ import {
 import Button from "../components/Button";
 import TagChip from "../components/TagChip";
 import { useToast } from "../context/ToastContext";
-import PricingModal from "../components/PricingModal";
+import ShopPricingModal from "../components/ShopPricingModal";
+import { createShopCheckoutSession, getCustomerPortalUrl, updateProPlusDiscountEnabled } from "../services/subscriptionService";
+import { BillingInterval } from "../types";
 import {
   HappeningNowEditor,
   NowBrewingEditor,
@@ -67,7 +69,10 @@ const ShopDetail: React.FC = () => {
 
   // PRO Features State
   const [showPricing, setShowPricing] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [coffeeTechEditMode, setCoffeeTechEditMode] = useState(false);
+  const [discountEnabled, setDiscountEnabled] = useState(shop?.proPlusDiscountEnabled ?? true);
+  const [isTogglingDiscount, setIsTogglingDiscount] = useState(false);
 
   const ref = useRef<HTMLDivElement>(null);
 
@@ -92,8 +97,12 @@ const ShopDetail: React.FC = () => {
   }
   const isSaved = user?.savedShops.includes(shop.id);
   const isVisited = user?.visitedShops.includes(shop.id);
-  const isOwner = user && (shop.claimedBy === user.id || user.isAdmin);
-  const isPro = shop.subscriptionTier === 'pro';
+  // Separate actual owner from admin viewing
+  const isActualOwner = user && shop.claimedBy && shop.claimedBy === user.id;
+  const isAdminViewing = user?.isAdmin && !isActualOwner;
+  const isOwner = isActualOwner || isAdminViewing; // Can manage shop (actual owner OR admin)
+  const isPro = shop.subscriptionTier === 'pro' || shop.subscriptionTier === 'pro_plus';
+  const isProPlus = shop.subscriptionTier === 'pro_plus';
   const hasAlreadyReviewed = user && shop.reviews?.some(r => r.userId === user.id);
 
   // Handler for updating shop PRO fields - saves immediately for features with explicit save buttons
@@ -572,7 +581,11 @@ const ShopDetail: React.FC = () => {
                   <i className="fas fa-certificate"></i> VERIFIED
                 </span>
               )}
-              {isPro && (
+              {isProPlus ? (
+                <span className="bg-gradient-to-r from-purple-600 to-volt-400 text-white text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-[0_0_15px_rgba(204,255,0,0.3)]">
+                  <i className="fas fa-crown"></i> PRO+
+                </span>
+              ) : isPro && (
                 <span className="bg-purple-600 text-white text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 border border-purple-400">
                   <i className="fas fa-star"></i> PRO
                 </span>
@@ -981,6 +994,14 @@ const ShopDetail: React.FC = () => {
                   <div className="absolute top-0 left-0 right-0 bg-volt-400 h-1.5"></div>
                 )}
 
+                {/* Admin Viewing Indicator */}
+                {isAdminViewing && (
+                  <div className="mb-4 bg-amber-100 border border-amber-300 rounded-lg p-3 flex items-center gap-2">
+                    <i className="fas fa-shield-alt text-amber-600"></i>
+                    <span className="text-amber-800 text-sm font-medium">Admin View Mode</span>
+                  </div>
+                )}
+
                 {shop.isClaimed && (
                   <div className="mb-6 bg-coffee-900 rounded-xl p-4 flex items-center gap-3 shadow-md">
                     <div className="w-10 h-10 rounded-full bg-volt-400 flex items-center justify-center shrink-0 text-coffee-900 text-lg">
@@ -1139,6 +1160,112 @@ const ShopDetail: React.FC = () => {
                 )}
               </div>
 
+              {/* Owner Subscription Management Card */}
+              {isOwner && (
+                <div className="bg-white p-6 rounded-3xl shadow-lg border border-coffee-100">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={`p-3 rounded-xl ${
+                      isProPlus ? 'bg-volt-400' : isPro ? 'bg-purple-100' : 'bg-coffee-100'
+                    }`}>
+                      <i className={`fas ${isProPlus || isPro ? 'fa-crown' : 'fa-store'} ${
+                        isProPlus ? 'text-coffee-900' : isPro ? 'text-purple-600' : 'text-coffee-800'
+                      }`}></i>
+                    </div>
+                    <div>
+                      <p className="text-xs text-coffee-800 font-medium">Current Plan</p>
+                      <p className={`font-black ${
+                        isProPlus ? 'text-volt-500' : isPro ? 'text-purple-600' : 'text-coffee-900'
+                      }`}>
+                        {isProPlus ? 'PRO+' : isPro ? 'PRO' : 'Basic (Free)'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {(isPro || isProPlus) && (
+                    <div className="bg-coffee-50 rounded-xl p-3 mb-4">
+                      <div className="flex items-center gap-2 text-xs text-coffee-800">
+                        <i className="fas fa-check-circle text-green-500"></i>
+                        <span>Active subscription</span>
+                      </div>
+                      {isProPlus && (
+                        <div className="mt-3 pt-3 border-t border-coffee-100">
+                          <label className="flex items-center justify-between cursor-pointer">
+                            <div className="flex items-center gap-2">
+                              <i className="fas fa-percent text-volt-500"></i>
+                              <div>
+                                <span className="text-xs font-bold text-coffee-900">DripClub 10% Discount</span>
+                                <p className="text-[10px] text-coffee-800">Offer discount to DripClub members</p>
+                              </div>
+                            </div>
+                            <div className="relative">
+                              <input
+                                type="checkbox"
+                                checked={discountEnabled}
+                                disabled={isTogglingDiscount}
+                                onChange={async (e) => {
+                                  const newValue = e.target.checked;
+                                  setIsTogglingDiscount(true);
+                                  try {
+                                    const success = await updateProPlusDiscountEnabled(shop.id, newValue);
+                                    if (success) {
+                                      setDiscountEnabled(newValue);
+                                      toast.success(newValue ? 'Discount enabled for DripClub members' : 'Discount disabled');
+                                      refreshShops();
+                                    } else {
+                                      toast.error('Failed to update discount setting');
+                                    }
+                                  } catch (error) {
+                                    toast.error('Failed to update discount setting');
+                                  } finally {
+                                    setIsTogglingDiscount(false);
+                                  }
+                                }}
+                                className="sr-only peer"
+                              />
+                              <div className={`w-11 h-6 bg-coffee-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-volt-400 ${isTogglingDiscount ? 'opacity-50' : ''}`}></div>
+                            </div>
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    {(isPro || isProPlus) && shop.stripeCustomerId && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            const result = await getCustomerPortalUrl(shop.stripeCustomerId!, window.location.href);
+                            if ('error' in result) {
+                              toast.error(result.error);
+                            } else {
+                              window.location.href = result.url;
+                            }
+                          } catch (error: any) {
+                            toast.error('Failed to open billing portal');
+                          }
+                        }}
+                        className="w-full py-2.5 px-4 bg-coffee-100 text-coffee-900 rounded-xl text-sm font-bold hover:bg-coffee-800 hover:text-white transition-all flex items-center justify-center gap-2"
+                      >
+                        <i className="fas fa-credit-card"></i>
+                        Manage Billing
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setShowPricing(true)}
+                      className={`w-full py-2.5 px-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${
+                        isPro || isProPlus
+                          ? 'bg-coffee-50 text-coffee-800 hover:bg-coffee-100'
+                          : 'bg-volt-400 text-coffee-900 hover:bg-volt-500'
+                      }`}
+                    >
+                      <i className="fas fa-arrow-up"></i>
+                      {isPro || isProPlus ? 'Change Plan' : 'Upgrade to PRO'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Community Section */}
               <div className="bg-white p-6 rounded-3xl shadow-sm border border-coffee-100">
                 <h3 className="text-lg font-serif font-bold text-coffee-900 mb-4 flex items-center gap-2">
@@ -1220,14 +1347,30 @@ const ShopDetail: React.FC = () => {
         </div>
       </div>
 
-      {/* PRO Pricing Modal */}
-      <PricingModal
+      {/* PRO/PRO+ Pricing Modal */}
+      <ShopPricingModal
         isOpen={showPricing}
         onClose={() => setShowPricing(false)}
-        onSubscribe={() => {
-          // In production, this would handle Stripe checkout
-          toast.success("PRO upgrade coming soon!");
-          setShowPricing(false);
+        currentTier={shop.subscriptionTier}
+        isLoading={isCheckingOut}
+        onSubscribe={async (tier: 'pro' | 'pro_plus', billingInterval: BillingInterval) => {
+          if (!user) {
+            toast.error('Please sign in to upgrade');
+            return;
+          }
+          setIsCheckingOut(true);
+          try {
+            const result = await createShopCheckoutSession(shop.id, tier, billingInterval);
+            if ('error' in result) {
+              toast.error(result.error);
+              setIsCheckingOut(false);
+            } else {
+              window.location.href = result.url;
+            }
+          } catch (error: any) {
+            toast.error(error?.message || 'Failed to start checkout');
+            setIsCheckingOut(false);
+          }
         }}
       />
     </div>

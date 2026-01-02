@@ -2,9 +2,88 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import Button from "../components/Button";
-import { Vibe, User, Shop } from "../types";
+import { Vibe, User, Shop, DripClubMembership } from "../types";
 import { useToast } from "../context/ToastContext";
 import { uploadImage } from "../services/storageService";
+import {
+  getDripClubMembership,
+  getCustomerPortalUrl,
+  getSubscriptionStatusLabel,
+  formatPrice,
+  getPricing,
+} from "../services/subscriptionService";
+
+// --- ANIMATED DRIPCLUB BADGE COMPONENT ---
+const DripClubBadge: React.FC<{ username: string; onManage?: () => void }> = ({ username, onManage }) => {
+  return (
+    <div className="relative w-full max-w-sm mx-auto overflow-hidden rounded-[2rem] border-4 border-coffee-900 shadow-2xl group animate-in zoom-in-95 duration-500">
+      {/* Animated Background Layers */}
+      <div className="absolute inset-0 bg-coffee-900"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-volt-400/20 via-transparent to-volt-400/10 animate-pulse"></div>
+
+      {/* Constantly moving scanning line (Prevents screenshots by showing movement) */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-volt-400/40 shadow-[0_0_15px_rgba(204,255,0,0.8)] z-20 animate-scan"></div>
+
+      {/* Animated holographic sheen */}
+      <div className="absolute inset-0 z-10 opacity-30 pointer-events-none bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine bg-[length:200%_100%]"></div>
+
+      <div className="relative z-10 p-8 flex flex-col items-center text-center">
+        <div className="w-20 h-20 bg-volt-400 rounded-3xl flex items-center justify-center text-coffee-900 mb-6 shadow-[0_0_30px_rgba(204,255,0,0.4)] transform group-hover:rotate-12 transition-transform duration-500">
+          <i className="fas fa-droplet text-4xl"></i>
+        </div>
+
+        <h2 className="text-4xl font-serif font-black text-volt-400 tracking-tighter mb-1 uppercase">DripClub</h2>
+        <p className="text-white font-black text-[10px] uppercase tracking-[0.3em] mb-6 opacity-60">Verified Member</p>
+
+        <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 w-full border border-white/10 mb-6">
+          <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mb-1">Account Holder</p>
+          <p className="text-white text-xl font-bold font-serif tracking-tight">@{username}</p>
+        </div>
+
+        <div className="bg-volt-400 text-coffee-900 px-6 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-lg flex items-center gap-2">
+          <i className="fas fa-percent"></i>
+          <span>10% Off All PRO+ Shops</span>
+        </div>
+
+        <div className="mt-8 flex items-center gap-2 opacity-40">
+          <div className="w-1.5 h-1.5 rounded-full bg-volt-400 animate-ping"></div>
+          <span className="text-[8px] text-white font-black uppercase tracking-widest">Active Membership Session</span>
+        </div>
+
+        {/* Manage button */}
+        {onManage && (
+          <button
+            onClick={onManage}
+            className="mt-6 w-full py-3 bg-white/10 text-white/80 rounded-xl font-bold text-sm hover:bg-white/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 border border-white/10"
+          >
+            <i className="fas fa-cog"></i>
+            Manage Membership
+          </button>
+        )}
+      </div>
+
+      {/* Custom Animations */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes scan {
+          0% { top: 0%; opacity: 0; }
+          5% { opacity: 1; }
+          95% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+        .animate-scan {
+          animation: scan 3s linear infinite;
+        }
+        @keyframes shine {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        .animate-shine {
+          animation: shine 3s ease-in-out infinite;
+        }
+      `}} />
+    </div>
+  );
+};
 
 const Profile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,6 +103,10 @@ const Profile: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  // DripClub membership state
+  const [dripClubMembership, setDripClubMembership] = useState<DripClubMembership | null>(null);
+  const [membershipLoading, setMembershipLoading] = useState(false);
 
   // Edit State
   const [editData, setEditData] = useState({
@@ -99,6 +182,46 @@ const Profile: React.FC = () => {
     getProfileById,
     getProfileByUsername,
   ]);
+
+  // Fetch DripClub membership for own profile
+  useEffect(() => {
+    const fetchMembership = async () => {
+      if (!isOwnProfile || !currentUser?.id) return;
+
+      setMembershipLoading(true);
+      try {
+        const membership = await getDripClubMembership(currentUser.id);
+        setDripClubMembership(membership);
+      } catch (error) {
+        console.error("Error fetching DripClub membership:", error);
+      } finally {
+        setMembershipLoading(false);
+      }
+    };
+
+    fetchMembership();
+  }, [isOwnProfile, currentUser?.id]);
+
+  // Handle manage membership click
+  const handleManageMembership = async () => {
+    if (!dripClubMembership?.stripeCustomerId) return;
+
+    try {
+      const config = window.location.origin;
+      const result = await getCustomerPortalUrl(
+        dripClubMembership.stripeCustomerId,
+        `${config}/#/profile`
+      );
+
+      if ("url" in result) {
+        window.location.href = result.url;
+      } else {
+        toast.error(result.error || "Failed to open billing portal");
+      }
+    } catch (error) {
+      toast.error("Failed to open billing portal");
+    }
+  };
 
   if (loading)
     return (
@@ -675,6 +798,163 @@ const Profile: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* DRIPCLUB MEMBERSHIP - Only show on own profile */}
+        {isOwnProfile && (
+          <div className="mb-6 sm:mb-10">
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <h2 className="text-lg sm:text-xl font-serif font-bold text-coffee-900">
+                DripClub Membership
+              </h2>
+            </div>
+
+            {membershipLoading ? (
+              <div className="bg-white p-6 rounded-2xl sm:rounded-3xl shadow-sm border border-coffee-100 text-center">
+                <i className="fas fa-spinner fa-spin text-coffee-800 text-xl"></i>
+              </div>
+            ) : dripClubMembership &&
+              (dripClubMembership.status === "active" ||
+                dripClubMembership.status === "trialing") ? (
+              // Active member - Animated Badge + Info Section
+              <div className="space-y-4">
+                {/* Animated DripClub Badge */}
+                <DripClubBadge
+                  username={viewedUser.username}
+                  onManage={handleManageMembership}
+                />
+
+                {/* Subscription Details Card */}
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-coffee-100">
+                  {/* Status + Plan Type */}
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-coffee-600 text-xs font-bold uppercase tracking-wider">
+                      {dripClubMembership.planType === "annual" ? "Annual" : "Monthly"} Plan
+                    </span>
+                    <div
+                      className={`text-[10px] font-black px-2.5 py-1 rounded-full flex items-center gap-1 ${
+                        dripClubMembership.status === "trialing"
+                          ? "bg-blue-100 text-blue-600"
+                          : "bg-green-100 text-green-600"
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          dripClubMembership.status === "trialing"
+                            ? "bg-blue-500"
+                            : "bg-green-500"
+                        }`}
+                      ></span>
+                      {dripClubMembership.status === "trialing"
+                        ? "Free Trial"
+                        : getSubscriptionStatusLabel(dripClubMembership.status)}
+                    </div>
+                  </div>
+
+                  {/* Dates */}
+                  <div className="flex items-center justify-between text-xs border-t border-coffee-50 pt-3">
+                    <div>
+                      <p className="text-coffee-400 text-[10px] uppercase">Member Since</p>
+                      <p className="text-coffee-900 font-bold">
+                        {dripClubMembership.createdAt
+                          ? new Date(dripClubMembership.createdAt).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })
+                          : "N/A"}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-coffee-400 text-[10px] uppercase">
+                        {dripClubMembership.cancelAtPeriodEnd ? "Ends On" : "Renews On"}
+                      </p>
+                      <p className="text-coffee-900 font-bold">
+                        {dripClubMembership.currentPeriodEnd
+                          ? new Date(dripClubMembership.currentPeriodEnd).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })
+                          : "N/A"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Cancel warning */}
+                  {dripClubMembership.cancelAtPeriodEnd && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mt-3">
+                      <p className="text-amber-700 text-xs font-medium flex items-center gap-2">
+                        <i className="fas fa-exclamation-triangle"></i>
+                        Your membership will end on{" "}
+                        {dripClubMembership.currentPeriodEnd
+                          ? new Date(dripClubMembership.currentPeriodEnd).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })
+                          : "N/A"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              // Non-member CTA card
+              <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-lg border border-coffee-100">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-volt-400 p-3 rounded-xl">
+                    <i className="fas fa-crown text-coffee-900 text-xl"></i>
+                  </div>
+                  <div>
+                    <h3 className="text-coffee-900 font-black text-lg">
+                      Join DripClub
+                    </h3>
+                    <p className="text-coffee-800 text-xs">
+                      Unlock exclusive perks & discounts
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-coffee-50 rounded-xl p-4 mb-4">
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="text-3xl font-black text-coffee-900">
+                      {formatPrice(getPricing().dripClub.annual.amount)}
+                    </span>
+                    <span className="text-coffee-800 text-sm">/year</span>
+                  </div>
+                  <p className="text-volt-500 text-xs font-bold">
+                    Less than $1 per month!
+                  </p>
+                </div>
+
+                <ul className="space-y-2.5 mb-5">
+                  {[
+                    "10% off at all PRO+ coffee shops",
+                    "Exclusive DripClub member badge",
+                    "Early access to events & tastings",
+                    "Member only merchandise and surprises",
+                  ].map((perk, i) => (
+                    <li
+                      key={i}
+                      className="flex items-center gap-2.5 text-sm text-coffee-800"
+                    >
+                      <i className="fas fa-check text-volt-500 text-xs"></i>
+                      {perk}
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  onClick={() => navigate("/dripclub")}
+                  className="w-full py-3 bg-volt-400 text-coffee-900 rounded-xl font-bold text-sm hover:bg-volt-500 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-volt-400/20"
+                >
+                  <i className="fas fa-crown"></i>
+                  Join DripClub
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* PASSPORT BOOK */}
         <div className="mb-6 sm:mb-10">
