@@ -204,6 +204,37 @@ const Home: React.FC = () => {
 
         {/* Shop List */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
+           {/* DripClub Promo Banner */}
+           <Link
+             to="/dripclub"
+             className="block bg-[#1a1a1a] rounded-xl px-3 py-3 shadow-lg hover:shadow-xl transition-all group"
+           >
+             <div className="flex items-center justify-between gap-2">
+               <div className="flex items-center gap-3 min-w-0">
+                 <div className="w-9 h-9 bg-[#2a2a2a] rounded-xl flex items-center justify-center flex-shrink-0">
+                   <i className="fas fa-droplet text-volt-400 text-base"></i>
+                 </div>
+                 <div className="min-w-0">
+                   <p className="font-bold text-[11px] sm:text-xs truncate">
+                     <span className="text-volt-400">JOIN DRIPCLUB</span> <span className="text-volt-400">•</span> <span className="text-volt-400">FIRST MONTH FREE</span>
+                   </p>
+                   <p className="text-gray-400 text-[11px]">
+                     10% OFF PRO+ Shops • Only $0.99/mo
+                   </p>
+                 </div>
+               </div>
+               <div className="flex items-center gap-2 flex-shrink-0">
+                 <div className="text-right">
+                   <p className="text-volt-400 font-bold text-sm">$0.99</p>
+                   <p className="text-gray-500 text-[9px] uppercase tracking-wide">/month</p>
+                 </div>
+                 <div className="w-7 h-7 bg-volt-400 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                   <i className="fas fa-plus text-coffee-900 text-xs font-bold"></i>
+                 </div>
+               </div>
+             </div>
+           </Link>
+
            {filteredShops.length === 0 ? (
                <div className="text-center py-10 text-coffee-800/60">
                    <i className="fas fa-globe-americas text-4xl mb-4"></i>
