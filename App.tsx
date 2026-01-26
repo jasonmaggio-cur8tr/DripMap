@@ -14,6 +14,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import EventsFeed from './pages/EventsFeed';
 import AdminEvents from './pages/AdminEvents';
 import DripClub from './pages/DripClub';
+import ScoutBounty from './pages/ScoutBounty';
 
 const App: React.FC = () => {
   return (
@@ -33,6 +34,7 @@ const App: React.FC = () => {
           <Route path="/events" element={<EventsFeed />} />
           <Route path="/admin/events" element={<AdminEvents />} />
           <Route path="/dripclub" element={<DripClub />} />
+          <Route path="/scout-bounty" element={<ScoutBounty />} />
         </Routes>
       </Router>
     </AppProvider>
