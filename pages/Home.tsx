@@ -27,6 +27,15 @@ const Home: React.FC = () => {
   const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [bannerIndex, setBannerIndex] = useState(0);
+
+  // Banner carousel auto-rotate
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setBannerIndex(prev => (prev === 0 ? 1 : 0));
+    }, 6000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleNearMe = () => {
     if (nearMeActive) {
@@ -204,36 +213,58 @@ const Home: React.FC = () => {
 
         {/* Shop List */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-           {/* DripClub Promo Banner */}
-           <Link
-             to="/dripclub"
-             className="block bg-[#1a1a1a] rounded-xl px-3 py-3 shadow-lg hover:shadow-xl transition-all group"
-           >
-             <div className="flex items-center justify-between gap-2">
-               <div className="flex items-center gap-3 min-w-0">
-                 <div className="w-9 h-9 bg-[#2a2a2a] rounded-xl flex items-center justify-center flex-shrink-0">
-                   <i className="fas fa-droplet text-volt-400 text-base"></i>
+           {/* DUAL CTA CAROUSEL BANNER - Scout Bounty & DripClub */}
+           <div className="relative h-16 overflow-hidden rounded-2xl bg-coffee-900 shadow-sm border border-coffee-800 group">
+             {/* Slide 1: Scout Bounty */}
+             <Link
+               to="/scout-bounty"
+               className={`absolute inset-0 p-4 flex items-center justify-between transition-all duration-1000 ease-in-out ${bannerIndex === 0 ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'}`}
+             >
+               <div className="flex items-center gap-3">
+                 <div className="w-9 h-9 rounded-xl bg-volt-400 flex items-center justify-center text-coffee-900 shrink-0 shadow-lg">
+                   <i className="fas fa-dollar-sign"></i>
                  </div>
-                 <div className="min-w-0">
-                   <p className="font-bold text-[11px] sm:text-xs truncate">
-                     <span className="text-volt-400">JOIN DRIPCLUB</span> <span className="text-volt-400">•</span> <span className="text-volt-400">FIRST MONTH FREE</span>
-                   </p>
-                   <p className="text-gray-400 text-[11px]">
-                     10% OFF PRO+ Shops • Only $0.99/mo
-                   </p>
+                 <div>
+                   <p className="text-volt-400 font-black text-[11px] uppercase tracking-wider">Scout Bounty Program</p>
+                   <p className="text-white/60 text-[10px] font-bold">Earn $10.00 for every spot you map</p>
                  </div>
                </div>
-               <div className="flex items-center gap-2 flex-shrink-0">
-                 <div className="text-right">
-                   <p className="text-volt-400 font-bold text-sm">$0.99</p>
-                   <p className="text-gray-500 text-[9px] uppercase tracking-wide">/month</p>
+               <div className="bg-white/5 w-7 h-7 rounded-full flex items-center justify-center group-hover:bg-volt-400 group-hover:text-coffee-900 transition-all border border-white/10">
+                 <i className="fas fa-chevron-right text-[10px] text-white group-hover:text-coffee-900"></i>
+               </div>
+             </Link>
+
+             {/* Slide 2: DripClub Membership */}
+             <Link
+               to="/dripclub"
+               className={`absolute inset-0 p-4 flex items-center justify-between transition-all duration-1000 ease-in-out ${bannerIndex === 1 ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}
+             >
+               <div className="flex items-center gap-3">
+                 <div className="w-9 h-9 rounded-xl bg-coffee-100 flex items-center justify-center text-coffee-900 shrink-0 shadow-lg">
+                   <i className="fas fa-droplet text-coffee-900"></i>
                  </div>
-                 <div className="w-7 h-7 bg-volt-400 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                   <i className="fas fa-plus text-coffee-900 text-xs font-bold"></i>
+                 <div>
+                   <p className="text-volt-400 font-black text-[11px] uppercase tracking-wider">Join DripClub • First Month Free</p>
+                   <p className="text-white/60 text-[10px] font-bold">10% OFF PRO+ Shops • Only $0.99/mo</p>
                  </div>
                </div>
+               <div className="flex items-center gap-3">
+                 <div className="text-right hidden sm:block">
+                   <p className="text-white font-black text-[10px] leading-none">$0.99</p>
+                   <p className="text-white/40 text-[8px] font-bold uppercase">/month</p>
+                 </div>
+                 <div className="bg-volt-400 w-7 h-7 rounded-full flex items-center justify-center group-hover:bg-white group-hover:scale-110 transition-all shadow-lg">
+                   <i className="fas fa-plus text-[10px] text-coffee-900"></i>
+                 </div>
+               </div>
+             </Link>
+
+             {/* Progress Indicators */}
+             <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+               <div className={`h-1 rounded-full transition-all duration-500 ${bannerIndex === 0 ? 'w-6 bg-volt-400' : 'w-1.5 bg-white/20'}`}></div>
+               <div className={`h-1 rounded-full transition-all duration-500 ${bannerIndex === 1 ? 'w-6 bg-volt-400' : 'w-1.5 bg-white/20'}`}></div>
              </div>
-           </Link>
+           </div>
 
            {filteredShops.length === 0 ? (
                <div className="text-center py-10 text-coffee-800/60">
