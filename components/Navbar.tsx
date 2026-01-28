@@ -13,7 +13,7 @@ const Navbar: React.FC = () => {
       <div className="container mx-auto h-full px-3 sm:px-4 flex items-center justify-between">
         <Link to="/" className="flex items-center group">
           <img
-            src="/public/logo.jpg"
+            src="/logo.jpg"
             alt="DripMap"
             className="h-8 sm:h-10 w-auto group-hover:scale-105 transition-transform duration-300"
           />
