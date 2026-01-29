@@ -11,6 +11,7 @@ const Auth: React.FC = () => {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showVerifyEmail, setShowVerifyEmail] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { login, signup, user } = useApp();
@@ -46,8 +47,7 @@ const Auth: React.FC = () => {
       if (mode === 'signup') {
         const result = await signup(email, password, username);
         if (result.success) {
-          toast.success('Account created! Please check your email to verify.');
-          setMode('login');
+          setShowVerifyEmail(true);
         } else {
           toast.error(result.error || 'Failed to create account');
         }
@@ -66,6 +66,39 @@ const Auth: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Show verify email screen after successful signup
+  if (showVerifyEmail) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-coffee-50 px-4">
+        <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl border border-coffee-100 text-center">
+          <div className="w-20 h-20 bg-volt-400 rounded-full flex items-center justify-center mx-auto mb-6">
+            <i className="fas fa-envelope text-coffee-900 text-3xl"></i>
+          </div>
+          <h1 className="text-3xl font-serif font-black text-coffee-900 mb-4">
+            Check Your Email
+          </h1>
+          <p className="text-coffee-600 mb-6">
+            We've sent a verification link to <span className="font-bold text-coffee-900">{email}</span>.
+            Please check your inbox and click the link to verify your account.
+          </p>
+          <p className="text-sm text-coffee-400 mb-6">
+            Don't see it? Check your spam folder.
+          </p>
+          <button
+            onClick={() => {
+              setShowVerifyEmail(false);
+              setMode('login');
+              setPassword('');
+            }}
+            className="text-coffee-900 font-bold hover:underline"
+          >
+            Back to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-coffee-50 px-4">
