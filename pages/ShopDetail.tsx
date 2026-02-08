@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { CHEEKY_VIBES_OPTIONS } from "../constants";
+import LazyImage from "../components/LazyImage";
 import { uploadImages } from "../services/storageService";
 import {
   addShopImages,
@@ -671,10 +672,9 @@ const ShopDetail: React.FC = () => {
                       onClick={() => setLightboxIndex(idx)}
                       className="break-inside-avoid relative rounded-2xl overflow-hidden bg-coffee-200 cursor-zoom-in group shadow-sm hover:shadow-md transition-all"
                     >
-                      <img
+                      <LazyImage
                         src={img.url}
                         alt={`Gallery ${idx}`}
-                        loading="lazy"
                         className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
@@ -905,7 +905,7 @@ const ShopDetail: React.FC = () => {
                           to={`/profile/${review.userId}`}
                           className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden hover:opacity-80 transition-opacity"
                         >
-                          <img
+                          <LazyImage
                             src={review.avatarUrl}
                             alt={review.username}
                             className="w-full h-full object-cover"
@@ -1307,7 +1307,7 @@ const ShopDetail: React.FC = () => {
                           title={person.username}
                           className="w-10 h-10 rounded-full border-2 border-white shadow-sm overflow-hidden hover:scale-110 transition-transform hover:border-volt-400 -ml-2 first:ml-0 relative z-0 hover:z-10"
                         >
-                          <img
+                          <LazyImage
                             src={person.avatarUrl}
                             alt={person.username}
                             className="w-full h-full object-cover"
