@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useToast } from '../context/ToastContext';
 import DripClubCard from '../components/DripClubCard';
+import LazyImage from '../components/LazyImage';
 import DripClubModal from '../components/DripClubModal';
 import {
   getDripClubMembership,
@@ -282,7 +283,7 @@ const DripClub: React.FC = () => {
                   >
                     <div className="h-32 bg-coffee-100 relative overflow-hidden">
                       {shop.gallery?.[0]?.url ? (
-                        <img
+                        <LazyImage
                           src={shop.gallery[0].url}
                           alt={shop.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"

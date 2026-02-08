@@ -5,6 +5,7 @@ import { useApp } from '../context/AppContext';
 import Map from '../components/Map';
 import TagChip from '../components/TagChip';
 import LoadingSpinner from '../components/LoadingSpinner';
+import LazyImage from '../components/LazyImage';
 import { ALL_VIBES } from '../constants';
 
 // Calculate distance between two points in miles (Haversine formula)
@@ -281,10 +282,11 @@ const Home: React.FC = () => {
                 <div className="relative aspect-[4/5] overflow-x-auto flex snap-x snap-mandatory no-scrollbar">
                   {shop.gallery.map((image, index) => (
                     <div key={index} className="w-full flex-shrink-0 snap-center relative h-full">
-                      <img
+                      <LazyImage
                         src={image.url}
                         alt={`${shop.name} - Photo ${index + 1}`}
                         className="w-full h-full object-cover"
+                        eager={index === 0}
                       />
                       {/* Overlay only on first image */}
                       {index === 0 && (
