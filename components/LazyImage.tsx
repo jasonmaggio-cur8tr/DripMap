@@ -8,14 +8,24 @@ interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
 const supportsNativeLazy =
   typeof HTMLImageElement !== 'undefined' && 'loading' in HTMLImageElement.prototype;
 
+const hasIntersectionObserver = typeof IntersectionObserver !== 'undefined';
+
+/** 1×1 transparent GIF – prevents older Safari from fetching the page URL when src is empty */
+const PLACEHOLDER =
+  'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
 const LazyImage: React.FC<LazyImageProps> = ({ eager = false, src, style, ...props }) => {
   const imgRef = useRef<HTMLImageElement>(null);
-  const [shouldLoad, setShouldLoad] = useState(eager || supportsNativeLazy);
+
+  // If neither native lazy nor IntersectionObserver is available, just load
+  // eagerly (graceful degradation — same behaviour as a plain <img>).
+  const canLazy = supportsNativeLazy || hasIntersectionObserver;
+  const [shouldLoad, setShouldLoad] = useState(eager || !canLazy || supportsNativeLazy);
   const [loaded, setLoaded] = useState(false);
 
   // IntersectionObserver fallback for browsers without native lazy loading
   useEffect(() => {
-    if (eager || supportsNativeLazy || !imgRef.current) return;
+    if (eager || supportsNativeLazy || !hasIntersectionObserver || !imgRef.current) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -43,7 +53,7 @@ const LazyImage: React.FC<LazyImageProps> = ({ eager = false, src, style, ...pro
   return (
     <img
       ref={imgRef}
-      src={shouldLoad ? src : undefined}
+      src={shouldLoad ? src : PLACEHOLDER}
       loading={eager ? undefined : 'lazy'}
       decoding={eager ? undefined : 'async'}
       onLoad={handleLoad}
