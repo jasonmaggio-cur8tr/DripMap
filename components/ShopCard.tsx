@@ -61,7 +61,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
         >
             <div
                 ref={scrollContainerRef}
-                className="relative aspect-[4/5] overflow-x-auto flex snap-x snap-mandatory no-scrollbar touch-pan-y"
+                className="relative aspect-[4/5] overflow-x-auto flex snap-x snap-mandatory no-scrollbar"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onClick={(e) => {
