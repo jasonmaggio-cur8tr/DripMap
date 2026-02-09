@@ -3,6 +3,7 @@ import React from 'react';
 import { CalendarEvent, Shop } from '../types';
 import { Link } from 'react-router-dom';
 import AddToCalendar from './AddToCalendar';
+import LazyImage from './LazyImage';
 
 interface EventCardProps {
   event: CalendarEvent;
@@ -51,7 +52,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
       {/* Image Header (if exists) */}
       {event.coverImage && (
         <div className="relative w-full aspect-[2/1] overflow-hidden">
-          <img src={event.coverImage.url} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <LazyImage src={event.coverImage.url} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           <div className="absolute top-2 right-2">
              <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full shadow-sm ${typeColors[event.eventType] || typeColors['Other']}`}>
                {event.eventType}

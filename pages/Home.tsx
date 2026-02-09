@@ -274,9 +274,7 @@ const Home: React.FC = () => {
             </div>
           ) : (
             filteredShops.map(shop => (
-              filteredShops.map(shop => (
-                <ShopCard key={shop.id} shop={shop} />
-              ))
+              <ShopCard key={shop.id} shop={shop} />
             ))
           )}
         </div>

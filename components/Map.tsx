@@ -83,7 +83,7 @@ const Map: React.FC<MapProps> = ({ shops, onShopClick, userLocation }) => {
       const popupContent = `
         <div class="cursor-pointer" onclick="window.location.hash = '#/shop/${shop.id}'">
             <div class="h-24 w-full relative overflow-hidden bg-gray-100">
-                <img src="${shop.gallery[0]?.url}" class="w-full h-full object-cover" />
+                <img src="${shop.gallery[0]?.url}" class="w-full h-full object-cover" loading="lazy" decoding="async" />
                 <div class="absolute bottom-2 right-2 bg-white px-1.5 rounded shadow text-[10px] font-bold">
                     ★ ${shop.rating}
                 </div>
