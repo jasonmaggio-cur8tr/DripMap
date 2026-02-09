@@ -11,6 +11,7 @@ import { supabase } from "../lib/supabase";
 import { resetSupabaseAuthState } from "../lib/authUtils";
 import * as db from "../services/dbService";
 import { initializeStorage } from "../services/storageService";
+import * as loops from "../services/loopsService";
 
 interface AppContextType {
   shops: Shop[];
@@ -259,6 +260,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       console.log("Signup successful:", data);
+
+      // Add user to Loops.so for email marketing
+      loops.onUserSignup(email, username).catch(err => {
+        console.error("Loops.so signup sync failed:", err);
+      });
+
       return { success: true };
     } catch (error: any) {
       console.error("Signup error details:", error);
@@ -511,6 +518,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       console.log("AppContext: Refreshing shops...");
       await refreshShops();
       console.log("AppContext: Shops refreshed");
+
+      // FEAT-025: Notify shop owner of new review via Loops.so
+      const shop = shops.find((s: Shop) => s.id === shopId);
+      if (shop?.claimedBy) {
+        // Fetch owner's email to send notification
+        const ownerProfile = await db.fetchUserProfile(shop.claimedBy);
+        if (ownerProfile?.email) {
+          loops.onNewReview(
+            ownerProfile.email,
+            shop.name,
+            user.username,
+            reviewData.rating.toString()
+          ).catch(err => {
+            console.error("Loops.so review notification failed:", err);
+          });
+        }
+      }
     } else {
       console.error("AppContext: Failed to add review:", result.error);
     }
@@ -585,6 +609,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
           date: r.created_at,
         }))
       );
+
+      // Notify owner via Loops.so when claim is approved
+      if (status === "approved") {
+        const claimRequest = claimRequests.find((r: ClaimRequest) => r.id === requestId);
+        if (claimRequest) {
+          const shop = shops.find((s: Shop) => s.id === claimRequest.shopId);
+          if (shop && claimRequest.businessEmail) {
+            loops.onShopClaimed(claimRequest.businessEmail, shop.name).catch(err => {
+              console.error("Loops.so shop claimed notification failed:", err);
+            });
+          }
+        }
+      }
     }
   };
 
