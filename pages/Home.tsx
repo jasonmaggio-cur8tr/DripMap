@@ -5,6 +5,7 @@ import { useApp } from '../context/AppContext';
 import Map from '../components/Map';
 import TagChip from '../components/TagChip';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ShopCard from '../components/ShopCard';
 import { ALL_VIBES } from '../constants';
 
 // Calculate distance between two points in miles (Haversine formula)
@@ -183,8 +184,8 @@ const Home: React.FC = () => {
               onClick={handleNearMe}
               disabled={locationLoading}
               className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 ${nearMeActive
-                  ? 'bg-volt-400 text-coffee-900'
-                  : 'bg-coffee-100 text-coffee-700 hover:bg-coffee-200'
+                ? 'bg-volt-400 text-coffee-900'
+                : 'bg-coffee-100 text-coffee-700 hover:bg-coffee-200'
                 } ${locationLoading ? 'opacity-50 cursor-wait' : ''}`}
             >
               <i className={`fas ${locationLoading ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'}`}></i>
@@ -273,52 +274,9 @@ const Home: React.FC = () => {
             </div>
           ) : (
             filteredShops.map(shop => (
-              <Link
-                key={shop.id}
-                to={`/shop/${shop.id}`}
-                className="block group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-coffee-100 hover:border-volt-400/50"
-              >
-                <div className="relative aspect-[4/5] overflow-x-auto flex snap-x snap-mandatory no-scrollbar">
-                  {shop.gallery.map((image, index) => (
-                    <div key={index} className="w-full flex-shrink-0 snap-center relative h-full">
-                      <img
-                        src={image.url}
-                        alt={`${shop.name} - Photo ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      {/* Overlay only on first image */}
-                      {index === 0 && (
-                        <>
-                          {shop.isClaimed && (
-                            <div className="absolute top-3 right-3 bg-volt-400 text-coffee-900 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-sm z-10">
-                              <i className="fas fa-check-circle"></i> CLAIMED
-                            </div>
-                          )}
-                          <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center z-10">
-                            <i className="fas fa-star text-volt-400 mr-1"></i> {shop.rating.toFixed(1)}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <div className="p-4">
-                  <div className="flex justify-between items-start">
-                    <h3 className="text-lg font-bold font-serif text-coffee-900 mb-1 group-hover:text-coffee-800">{shop.name}</h3>
-                    <span className="text-[10px] font-bold bg-coffee-100 text-coffee-600 px-2 py-1 rounded uppercase tracking-wider">{shop.location.city}</span>
-                  </div>
-                  <p className="text-xs text-coffee-800/70 mb-3 flex items-center">
-                    <i className="fas fa-map-marker-alt mr-1.5"></i> {shop.location.address}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {shop.vibes.slice(0, 3).map(v => (
-                      <span key={v} className="text-[10px] bg-coffee-50 text-coffee-800 px-2 py-0.5 rounded-md border border-coffee-200">
-                        {v}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </Link>
+              filteredShops.map(shop => (
+                <ShopCard key={shop.id} shop={shop} />
+              ))
             ))
           )}
         </div>
