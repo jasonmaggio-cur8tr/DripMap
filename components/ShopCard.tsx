@@ -11,6 +11,10 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
     const [isHovered, setIsHovered] = useState(false);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+    const touchStartX = useRef<number>(0);
+    const touchStartY = useRef<number>(0);
+    const isSwiping = useRef<boolean>(false);
+
     // We only render the full gallery if the user has interacted (hovered/touched)
     // or if there's only one image (no need to defer)
     const shouldLoadGallery = isHovered || shop.gallery.length <= 1;
@@ -21,17 +25,52 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
         }
     };
 
+    const handleTouchStart = (e: React.TouchEvent) => {
+        handleInteraction();
+        isSwiping.current = false;
+        touchStartX.current = e.touches[0].clientX;
+        touchStartY.current = e.touches[0].clientY;
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (!touchStartX.current || !touchStartY.current) return;
+
+        const deltaX = Math.abs(e.touches[0].clientX - touchStartX.current);
+        const deltaY = Math.abs(e.touches[0].clientY - touchStartY.current);
+
+        // If moved more than 10px, treat as swipe/scroll
+        if (deltaX > 10 || deltaY > 10) {
+            isSwiping.current = true;
+        }
+    };
+
+    const handleClick = (e: React.MouseEvent) => {
+        if (isSwiping.current) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    };
+
     return (
         <Link
             to={`/shop/${shop.id}`}
             className="block group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-coffee-100 hover:border-volt-400/50"
             onMouseEnter={handleInteraction}
-            onTouchStart={handleInteraction}
             onFocus={handleInteraction}
+            onClick={handleClick}
         >
             <div
                 ref={scrollContainerRef}
-                className="relative aspect-[4/5] overflow-x-auto flex snap-x snap-mandatory no-scrollbar"
+                className="relative aspect-[4/5] overflow-x-auto flex snap-x snap-mandatory no-scrollbar touch-pan-y"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onClick={(e) => {
+                    // Prevent click propagation from gallery if swiping, but allow if it's a tap
+                    if (isSwiping.current) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                }}
             >
                 {/* Always render the first image (Featured) */}
                 <div className="w-full flex-shrink-0 snap-center relative h-full">
