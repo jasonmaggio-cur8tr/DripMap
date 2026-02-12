@@ -492,14 +492,7 @@ const EditShop: React.FC = () => {
           </div>
         </form>
 
-        {/* DEBUG OVERLAY */}
-        <div className="mt-8 p-4 bg-gray-100 rounded text-xs font-mono overflow-auto max-h-40 border border-gray-300">
-          <p className="font-bold">Debug Info:</p>
-          <p>Total Images: {uploadedImages.length}</p>
-          <p>Image IDs: {uploadedImages.map(img => img.id ? img.id.substring(0, 8) + '...' : 'MISSING').join(', ')}</p>
-          <p>User Admin: {user?.isAdmin ? 'Yes' : 'No'}</p>
-          <p>User ID: {user?.id}</p>
-        </div>
+
       </div>
     </div>
   );

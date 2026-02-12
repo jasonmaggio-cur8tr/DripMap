@@ -23,6 +23,7 @@ const AdminLayout: React.FC = () => {
         { label: 'Dashboard', path: '/admin', icon: 'fa-chart-line' },
         { label: 'Curator', path: '/admin/curator', icon: 'fa-robot' },
         { label: 'Shop Drafts', path: '/admin/drafts', icon: 'fa-file-alt' },
+        { label: 'Events', path: '/admin/events', icon: 'fa-calendar-alt' },
         { label: 'Users', path: '/admin/users', icon: 'fa-users' },
     ];
 

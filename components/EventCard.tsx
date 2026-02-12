@@ -39,20 +39,30 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
     setIsJoining(true);
     try {
       if (hasJoined) {
-        await leaveEvent(event.id, user.id);
-        setHasJoined(false);
-        setAttendeeCount(prev => Math.max(0, prev - 1));
-        setRecentAttendees(prev => prev.filter(a => a.userId !== user.id));
-        toast.success("You are no longer going");
+        const result = await leaveEvent(event.id, user.id);
+        if (result.success) {
+          setHasJoined(false);
+          setAttendeeCount(prev => Math.max(0, prev - 1));
+          setRecentAttendees(prev => prev.filter(a => a.userId !== user.id));
+          toast.success("You are no longer going");
+        } else {
+          console.error('Leave event failed:', result.error);
+          toast.error("Failed to update status");
+        }
       } else {
-        await joinEvent(event.id, user.id);
-        setHasJoined(true);
-        setAttendeeCount(prev => prev + 1);
-        setRecentAttendees(prev => [
-          { userId: user.id, avatarUrl: user.avatarUrl },
-          ...prev
-        ].slice(0, 3));
-        toast.success("You are going!");
+        const result = await joinEvent(event.id, user.id);
+        if (result.success) {
+          setHasJoined(true);
+          setAttendeeCount(prev => prev + 1);
+          setRecentAttendees(prev => [
+            { userId: user.id, avatarUrl: user.avatarUrl },
+            ...prev
+          ].slice(0, 3));
+          toast.success("You are going!");
+        } else {
+          console.error('Join event failed:', result.error);
+          toast.error("Failed to join event");
+        }
       }
     } catch (error) {
       console.error("Error toggling join:", error);

@@ -14,6 +14,7 @@ import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import Curator from './pages/admin/Curator';
 import ShopDrafts from './pages/admin/ShopDrafts';
+import AdminEvents from './pages/admin/AdminEvents';
 import EventsFeed from './pages/EventsFeed';
 import DripClub from './pages/DripClub';
 import ScoutBounty from './pages/ScoutBounty';
@@ -38,7 +39,7 @@ const App: React.FC = () => {
             <Route index element={<AdminDashboard />} />
             <Route path="curator" element={<Curator />} />
             <Route path="drafts" element={<ShopDrafts />} />
-            {/* Legacy admin routes or others can be added here */}
+            <Route path="events" element={<AdminEvents />} />
           </Route>
 
           <Route path="/events" element={<EventsFeed />} />
