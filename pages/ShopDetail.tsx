@@ -12,6 +12,8 @@ import {
   updateBaristaProfiles,
   updateSpecialtyMenu,
   updateVeganOptions,
+  deleteShopImage,
+  reorderShopImages,
 } from "../services/dbService";
 import Button from "../components/Button";
 import TagChip from "../components/TagChip";
@@ -50,6 +52,14 @@ const ShopDetail: React.FC = () => {
     "all" | "owner" | "community"
   >("all");
   const [isGalleryExpanded, setIsGalleryExpanded] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [localGallery, setLocalGallery] = useState(shop?.gallery || []);
+
+  useEffect(() => {
+    if (shop?.gallery) {
+      setLocalGallery(shop.gallery.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)));
+    }
+  }, [shop]);
 
   // Lightbox State
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -182,9 +192,9 @@ const ShopDetail: React.FC = () => {
 
   const pendingRequest = user
     ? claimRequests.find(
-        r =>
-          r.shopId === shop.id && r.userId === user.id && r.status === "pending"
-      )
+      r =>
+        r.shopId === shop.id && r.userId === user.id && r.status === "pending"
+    )
     : null;
 
   // Get Social Data
@@ -192,7 +202,7 @@ const ShopDetail: React.FC = () => {
   const communityList = communityTab === "visited" ? visitors : savers;
 
   // Filter Logic
-  const filteredImages = shop.gallery.filter(
+  const filteredImages = localGallery.filter(
     img => galleryFilter === "all" || img.type === galleryFilter
   );
 
@@ -376,6 +386,61 @@ const ShopDetail: React.FC = () => {
     }
   };
 
+  const handleDeleteImage = async (imageId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this image?")) return;
+
+    // Optimistic update
+    const newGallery = localGallery.filter(img => img.id !== imageId);
+    setLocalGallery(newGallery);
+
+    const result = await deleteShopImage(imageId);
+    if (result.success) {
+      toast.success("Image deleted");
+      refreshShops(); // Background refresh to sync
+    } else {
+      toast.error("Failed to delete image");
+      setLocalGallery(shop.gallery); // Revert
+    }
+  };
+
+  const handleMoveImage = async (index: number, direction: 'left' | 'right', e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (galleryFilter !== 'all') {
+      toast.error("Switch to 'All' view to rearrange images");
+      return;
+    }
+
+    const newIndex = direction === 'left' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= localGallery.length) return;
+
+    // Swap
+    const newGallery = [...localGallery];
+    const temp = newGallery[index];
+    newGallery[index] = newGallery[newIndex];
+    newGallery[newIndex] = temp;
+
+    setLocalGallery(newGallery);
+
+    // Debounced save could be better, but for now explicit save or save on move?
+    // Let's implementation immediate save for simplicity and reliability, 
+    // but maybe we just wait for the user to finish? 
+    // The requirement says "rearrange", usually implies drag-and-drop or move buttons.
+    // Let's triggers the update in background.
+
+    // We need to send the whole list of IDs in the new order
+    const orderedIds = newGallery.map(img => img.id);
+    // Don't await this to keep UI snappy, but maybe show a saving indicator?
+    reorderShopImages(shop.id, orderedIds).then(res => {
+      if (!res.success) {
+        toast.error("Failed to save new order");
+        setLocalGallery(shop.gallery); // Revert
+      } else {
+        // Silent success
+      }
+    });
+  };
+
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (ref.current && e.target === ref.current) {
       setShowReviewModal(false);
@@ -387,32 +452,28 @@ const ShopDetail: React.FC = () => {
     return (
       <label
         key={vibe}
-        className={`group flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 cursor-default ${
-          hasVibe
-            ? "bg-coffee-50 border-coffee-200 shadow-sm"
-            : "bg-white border-transparent hover:bg-coffee-50/50"
-        }`}
+        className={`group flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 cursor-default ${hasVibe
+          ? "bg-coffee-50 border-coffee-200 shadow-sm"
+          : "bg-white border-transparent hover:bg-coffee-50/50"
+          }`}
       >
         <div
-          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
-            hasVibe
-              ? "bg-coffee-900 border-coffee-900"
-              : "border-coffee-300 bg-transparent"
-          }`}
+          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${hasVibe
+            ? "bg-coffee-900 border-coffee-900"
+            : "border-coffee-300 bg-transparent"
+            }`}
         >
           <i
-            className={`fas fa-check text-volt-400 text-[10px] transform transition-transform ${
-              hasVibe ? "scale-100" : "scale-0"
-            }`}
+            className={`fas fa-check text-volt-400 text-[10px] transform transition-transform ${hasVibe ? "scale-100" : "scale-0"
+              }`}
           ></i>
         </div>
         <input type="checkbox" checked={hasVibe} readOnly className="hidden" />
         <span
-          className={`text-sm font-medium transition-colors ${
-            hasVibe
-              ? "text-coffee-900"
-              : "text-coffee-400 group-hover:text-coffee-600"
-          }`}
+          className={`text-sm font-medium transition-colors ${hasVibe
+            ? "text-coffee-900"
+            : "text-coffee-400 group-hover:text-coffee-600"
+            }`}
         >
           {vibe}
         </span>
@@ -494,11 +555,10 @@ const ShopDetail: React.FC = () => {
                   className="text-3xl transition-transform hover:scale-110 focus:outline-none"
                 >
                   <i
-                    className={`fas fa-star ${
-                      star <= newReview.rating
-                        ? "text-yellow-400"
-                        : "text-gray-200"
-                    }`}
+                    className={`fas fa-star ${star <= newReview.rating
+                      ? "text-yellow-400"
+                      : "text-gray-200"
+                      }`}
                   ></i>
                 </button>
               ))}
@@ -644,23 +704,37 @@ const ShopDetail: React.FC = () => {
                   The Aesthetic
                 </h2>
 
-                <div className="flex p-1 bg-coffee-100 rounded-full w-fit shadow-inner">
-                  {(["all", "owner", "community"] as const).map(type => (
+                <div className="flex items-center gap-2">
+                  {isOwner && (
                     <button
-                      key={type}
-                      onClick={() => {
-                        setGalleryFilter(type);
-                        setIsGalleryExpanded(false);
-                      }}
-                      className={`px-5 py-2 rounded-full text-xs font-bold capitalize transition-all duration-300 ${
-                        galleryFilter === type
+                      onClick={() => setIsEditMode(!isEditMode)}
+                      className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${isEditMode
+                        ? "bg-volt-400 text-coffee-900"
+                        : "bg-coffee-100 text-coffee-600 hover:bg-coffee-200"
+                        }`}
+                    >
+                      <i className={`fas ${isEditMode ? "fa-check" : "fa-edit"} mr-1`}></i>
+                      {isEditMode ? "Done" : "Edit"}
+                    </button>
+                  )}
+
+                  <div className="flex p-1 bg-coffee-100 rounded-full w-fit shadow-inner">
+                    {(["all", "owner", "community"] as const).map(type => (
+                      <button
+                        key={type}
+                        onClick={() => {
+                          setGalleryFilter(type);
+                          setIsGalleryExpanded(false);
+                        }}
+                        className={`px-5 py-2 rounded-full text-xs font-bold capitalize transition-all duration-300 ${galleryFilter === type
                           ? "bg-white text-coffee-900 shadow-sm transform scale-105"
                           : "text-coffee-500 hover:text-coffee-800 hover:bg-coffee-50"
-                      }`}
-                    >
-                      {type}
-                    </button>
-                  ))}
+                          }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -681,6 +755,31 @@ const ShopDetail: React.FC = () => {
                       <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase opacity-0 group-hover:opacity-100 transition-opacity">
                         {img.type}
                       </div>
+
+                      {isEditMode && (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-2 opacity-100">
+                          <button
+                            onClick={(e) => handleMoveImage(filteredImages.indexOf(img), 'left', e)}
+                            className="w-8 h-8 rounded-full bg-white text-coffee-900 hover:bg-volt-400 flex items-center justify-center transition-colors shadow-lg disabled:opacity-50"
+                            disabled={filteredImages.indexOf(img) === 0}
+                          >
+                            <i className="fas fa-arrow-left"></i>
+                          </button>
+                          <button
+                            onClick={(e) => handleDeleteImage(img.id, e)}
+                            className="w-8 h-8 rounded-full bg-red-500 text-white hover:bg-red-600 flex items-center justify-center transition-colors shadow-lg"
+                          >
+                            <i className="fas fa-trash-alt"></i>
+                          </button>
+                          <button
+                            onClick={(e) => handleMoveImage(filteredImages.indexOf(img), 'right', e)}
+                            className="w-8 h-8 rounded-full bg-white text-coffee-900 hover:bg-volt-400 flex items-center justify-center transition-colors shadow-lg disabled:opacity-50"
+                            disabled={filteredImages.indexOf(img) === filteredImages.length - 1}
+                          >
+                            <i className="fas fa-arrow-right"></i>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
 
@@ -795,11 +894,10 @@ const ShopDetail: React.FC = () => {
                         }
                         setCoffeeTechEditMode(!coffeeTechEditMode);
                       }}
-                      className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
-                        coffeeTechEditMode
-                          ? 'bg-volt-400 text-coffee-900'
-                          : 'bg-coffee-800 text-white hover:bg-coffee-700'
-                      }`}
+                      className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${coffeeTechEditMode
+                        ? 'bg-volt-400 text-coffee-900'
+                        : 'bg-coffee-800 text-white hover:bg-coffee-700'
+                        }`}
                     >
                       {coffeeTechEditMode ? 'Save Changes' : 'Edit'}
                     </button>
@@ -922,9 +1020,8 @@ const ShopDetail: React.FC = () => {
                             {[...Array(5)].map((_, i) => (
                               <i
                                 key={i}
-                                className={`fas fa-star ${
-                                  i < review.rating ? "" : "text-gray-300"
-                                }`}
+                                className={`fas fa-star ${i < review.rating ? "" : "text-gray-300"
+                                  }`}
                               ></i>
                             ))}
                           </div>
@@ -1032,7 +1129,7 @@ const ShopDetail: React.FC = () => {
                     HOURS
                   </p>
                   {shop.openHours &&
-                  Object.values(shop.openHours).some(v => v) ? (
+                    Object.values(shop.openHours).some(v => v) ? (
                     <div className="space-y-1">
                       {shop.openHours.monday && (
                         <p className="text-coffee-900 text-sm">
@@ -1108,15 +1205,13 @@ const ShopDetail: React.FC = () => {
                       </Button>
                       <Button
                         variant={isVisited ? "secondary" : "outline"}
-                        className={`w-full ${
-                          isVisited ? "border-volt-400" : ""
-                        }`}
+                        className={`w-full ${isVisited ? "border-volt-400" : ""
+                          }`}
                         onClick={handleVisitedClick}
                       >
                         <i
-                          className={`${
-                            isVisited ? "fas fa-check-circle" : "fas fa-stamp"
-                          } mr-2`}
+                          className={`${isVisited ? "fas fa-check-circle" : "fas fa-stamp"
+                            } mr-2`}
                         ></i>
                         {isVisited ? "Visited" : "Stamp My Passport"}
                       </Button>
@@ -1164,18 +1259,15 @@ const ShopDetail: React.FC = () => {
               {isOwner && (
                 <div className="bg-white p-6 rounded-3xl shadow-lg border border-coffee-100">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className={`p-3 rounded-xl ${
-                      isProPlus ? 'bg-volt-400' : isPro ? 'bg-purple-100' : 'bg-coffee-100'
-                    }`}>
-                      <i className={`fas ${isProPlus || isPro ? 'fa-crown' : 'fa-store'} ${
-                        isProPlus ? 'text-coffee-900' : isPro ? 'text-purple-600' : 'text-coffee-800'
-                      }`}></i>
+                    <div className={`p-3 rounded-xl ${isProPlus ? 'bg-volt-400' : isPro ? 'bg-purple-100' : 'bg-coffee-100'
+                      }`}>
+                      <i className={`fas ${isProPlus || isPro ? 'fa-crown' : 'fa-store'} ${isProPlus ? 'text-coffee-900' : isPro ? 'text-purple-600' : 'text-coffee-800'
+                        }`}></i>
                     </div>
                     <div>
                       <p className="text-xs text-coffee-800 font-medium">Current Plan</p>
-                      <p className={`font-black ${
-                        isProPlus ? 'text-volt-500' : isPro ? 'text-purple-600' : 'text-coffee-900'
-                      }`}>
+                      <p className={`font-black ${isProPlus ? 'text-volt-500' : isPro ? 'text-purple-600' : 'text-coffee-900'
+                        }`}>
                         {isProPlus ? 'PRO+' : isPro ? 'PRO' : 'Basic (Free)'}
                       </p>
                     </div>
@@ -1253,11 +1345,10 @@ const ShopDetail: React.FC = () => {
                     )}
                     <button
                       onClick={() => setShowPricing(true)}
-                      className={`w-full py-2.5 px-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-                        isPro || isProPlus
-                          ? 'bg-coffee-50 text-coffee-800 hover:bg-coffee-100'
-                          : 'bg-volt-400 text-coffee-900 hover:bg-volt-500'
-                      }`}
+                      className={`w-full py-2.5 px-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${isPro || isProPlus
+                        ? 'bg-coffee-50 text-coffee-800 hover:bg-coffee-100'
+                        : 'bg-volt-400 text-coffee-900 hover:bg-volt-500'
+                        }`}
                     >
                       <i className="fas fa-arrow-up"></i>
                       {isPro || isProPlus ? 'Change Plan' : 'Upgrade to PRO'}
@@ -1276,21 +1367,19 @@ const ShopDetail: React.FC = () => {
                 <div className="flex p-1 bg-coffee-50 rounded-xl mb-4">
                   <button
                     onClick={() => setCommunityTab("visited")}
-                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                      communityTab === "visited"
-                        ? "bg-white text-coffee-900 shadow-sm"
-                        : "text-coffee-500 hover:text-coffee-800"
-                    }`}
+                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${communityTab === "visited"
+                      ? "bg-white text-coffee-900 shadow-sm"
+                      : "text-coffee-500 hover:text-coffee-800"
+                      }`}
                   >
                     Visited ({shop.stampCount})
                   </button>
                   <button
                     onClick={() => setCommunityTab("saved")}
-                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                      communityTab === "saved"
-                        ? "bg-white text-coffee-900 shadow-sm"
-                        : "text-coffee-500 hover:text-coffee-800"
-                    }`}
+                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${communityTab === "saved"
+                      ? "bg-white text-coffee-900 shadow-sm"
+                      : "text-coffee-500 hover:text-coffee-800"
+                      }`}
                   >
                     Saved
                   </button>

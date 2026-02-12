@@ -48,8 +48,7 @@ const retryWithBackoff = async <T>(
       }
 
       console.warn(
-        `[dbService] ${operationName} failed (attempt ${
-          attempt + 1
+        `[dbService] ${operationName} failed (attempt ${attempt + 1
         }), will retry:`,
         errorMsg
       );
@@ -296,10 +295,12 @@ export const fetchShops = async (): Promise<Shop[]> => {
           },
           gallery:
             shop.shop_images?.map((img: any) => ({
+              id: img.id,
               url: img.url,
               type: img.type,
               caption: img.caption,
-            })) || [],
+              sortOrder: img.sort_order || 0,
+            })).sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0)) || [],
           vibes: shop.vibes || [],
           cheekyVibes: shop.cheeky_vibes || [],
           rating: parseFloat(shop.rating) || 0,
@@ -311,8 +312,7 @@ export const fetchShops = async (): Promise<Shop[]> => {
               username: r.profiles?.username || "Anonymous",
               avatarUrl:
                 r.profiles?.avatar_url ||
-                `https://ui-avatars.com/api/?name=${
-                  r.profiles?.username || "User"
+                `https://ui-avatars.com/api/?name=${r.profiles?.username || "User"
                 }&background=random`,
               rating: r.rating,
               comment: r.comment || "",
@@ -462,6 +462,51 @@ export const addShopImages = async (
 };
 
 /**
+ * Delete a shop image
+ */
+export const deleteShopImage = async (imageId: string) => {
+  try {
+    const { error } = await supabase
+      .from("shop_images")
+      .delete()
+      .eq("id", imageId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting shop image:", error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Reorder shop images
+ */
+export const reorderShopImages = async (
+  shopId: string,
+  orderedImageIds: string[]
+) => {
+  try {
+    // Process updates in batches or individually
+    // Ideally this would be an RPC or a single transaction, but for small lists this is fine
+    const updates = orderedImageIds.map((id, index) =>
+      supabase
+        .from("shop_images")
+        .update({ sort_order: index })
+        .eq("id", id)
+        .eq("shop_id", shopId) // Security check
+    );
+
+    await Promise.all(updates);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error reordering shop images:", error);
+    return { success: false, error };
+  }
+};
+
+/**
  * Update shop details
  */
 export const updateShopInDB = async (
@@ -506,17 +551,17 @@ export const updateHappeningNow = async (
   try {
     const updates = status
       ? {
-          happening_now_title: status.title,
-          happening_now_message: status.message,
-          happening_now_sticker: status.sticker || null,
-          happening_now_expires_at: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(), // 4 hours
-        }
+        happening_now_title: status.title,
+        happening_now_message: status.message,
+        happening_now_sticker: status.sticker || null,
+        happening_now_expires_at: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(), // 4 hours
+      }
       : {
-          happening_now_title: null,
-          happening_now_message: null,
-          happening_now_sticker: null,
-          happening_now_expires_at: null,
-        };
+        happening_now_title: null,
+        happening_now_message: null,
+        happening_now_sticker: null,
+        happening_now_expires_at: null,
+      };
 
     const { error } = await supabase
       .from("shops")

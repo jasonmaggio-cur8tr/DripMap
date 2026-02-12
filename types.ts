@@ -121,9 +121,11 @@ export interface Location {
 }
 
 export interface ShopImage {
+  id: string;
   url: string;
   type: 'owner' | 'community';
   caption?: string;
+  sortOrder?: number;
 }
 
 export interface OpenHours {
