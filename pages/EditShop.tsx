@@ -74,7 +74,7 @@ const EditShop: React.FC = () => {
     if (!shops.length) return;
 
     // Find shop from updated context
-    const shopToEdit = shops.find(s => s.id === id);
+    const shopToEdit = shops.find(s => s.id === id || s.slug === id);
 
     if (!shopToEdit) return;
 
