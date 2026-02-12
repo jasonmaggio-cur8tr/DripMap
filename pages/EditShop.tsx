@@ -6,7 +6,7 @@ import { Shop, Vibe, ShopImage } from '../types';
 import { ALL_VIBES, CHEEKY_VIBES_OPTIONS } from '../constants';
 import { generateShopDescription } from '../services/geminiService';
 import { uploadImages } from '../services/storageService';
-import { updateShopInDB, addShopImages, deleteShopImage } from '../services/dbService';
+import { updateShopInDB, addShopImages, deleteShopImage, fetchShops } from '../services/dbService';
 import Button from '../components/Button';
 import TagChip from '../components/TagChip';
 import LocationPicker from '../components/LocationPicker';
@@ -62,17 +62,25 @@ const EditShop: React.FC = () => {
       return;
     }
 
+    const init = async () => {
+      // Force refresh shops to ensure we have IDs
+      await refreshShops();
+    };
+    init();
+  }, [user, navigate]); // Removed id/toast to minimize re-runs
+
+  // Separate effect to load data once shops are ready/refreshed
+  useEffect(() => {
+    if (!shops.length) return;
+
+    // Find shop from updated context
     const shopToEdit = shops.find(s => s.id === id);
 
-    if (!shopToEdit) {
-      toast.error("Shop not found");
-      navigate('/');
-      return;
-    }
+    if (!shopToEdit) return;
 
     // Security Check: Ensure user owns this shop or is admin
-    const isActualOwner = shopToEdit.claimedBy && shopToEdit.claimedBy === user.id;
-    if (!isActualOwner && !user.isAdmin) {
+    const isActualOwner = shopToEdit.claimedBy && shopToEdit.claimedBy === user?.id;
+    if (!isActualOwner && !user?.isAdmin) {
       toast.error("You are not authorized to edit this shop.");
       navigate(`/shop/${id}`);
       return;
@@ -94,20 +102,13 @@ const EditShop: React.FC = () => {
     setSelectedVibes(shopToEdit.vibes);
     setSelectedCheekyVibes(shopToEdit.cheekyVibes || []);
 
-    // Load opening hours if they exist
+    // Load opening hours
     if (shopToEdit.openHours) {
-      setOpenHours({
-        monday: shopToEdit.openHours.monday || '',
-        tuesday: shopToEdit.openHours.tuesday || '',
-        wednesday: shopToEdit.openHours.wednesday || '',
-        thursday: shopToEdit.openHours.thursday || '',
-        friday: shopToEdit.openHours.friday || '',
-        saturday: shopToEdit.openHours.saturday || '',
-        sunday: shopToEdit.openHours.sunday || ''
-      });
+      setOpenHours(prev => ({ ...prev, ...shopToEdit.openHours }));
     }
 
-    // Map existing gallery to preview format
+    // Map existing gallery to preview format - CRITICAL: Ensure IDs are present
+    console.log('[EditShop] Loading gallery with IDs:', shopToEdit.gallery.map(g => g.id));
     setUploadedImages(shopToEdit.gallery.map(img => ({
       id: img.id, // Keep the ID for deletion tracking
       url: img.url,
@@ -193,8 +194,16 @@ const EditShop: React.FC = () => {
       const currentIds = uploadedImages.filter(img => !img.isNew && img.id).map(img => img.id);
       const deletedIds = originalIds.filter(id => !currentIds.includes(id));
 
+      console.log('[EditShop] Debug Info:', {
+        originalGalleryLength: originalShop.gallery?.length,
+        originalIds,
+        uploadedImagesLength: uploadedImages.length,
+        currentIds,
+        deletedIds
+      });
+
       if (deletedIds.length > 0) {
-        console.log(`Deleting ${deletedIds.length} images...`);
+        console.log(`Deleting ${deletedIds.length} images...Ids:`, deletedIds);
         // Parallel deletion
         await Promise.all(deletedIds.map(id => deleteShopImage(id!)));
       }
@@ -482,6 +491,15 @@ const EditShop: React.FC = () => {
             </Button>
           </div>
         </form>
+
+        {/* DEBUG OVERLAY */}
+        <div className="mt-8 p-4 bg-gray-100 rounded text-xs font-mono overflow-auto max-h-40 border border-gray-300">
+          <p className="font-bold">Debug Info:</p>
+          <p>Total Images: {uploadedImages.length}</p>
+          <p>Image IDs: {uploadedImages.map(img => img.id ? img.id.substring(0, 8) + '...' : 'MISSING').join(', ')}</p>
+          <p>User Admin: {user?.isAdmin ? 'Yes' : 'No'}</p>
+          <p>User ID: {user?.id}</p>
+        </div>
       </div>
     </div>
   );
