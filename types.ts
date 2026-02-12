@@ -44,6 +44,8 @@ export interface CalendarEvent {
   isPublished: boolean;
   createdBy: 'admin' | 'owner';
   createdAt: string;
+  attendees?: { userId: string; avatarUrl?: string }[];
+  attendeeCount?: number;
 }
 
 export interface BrewItem {
@@ -121,7 +123,7 @@ export interface Location {
 }
 
 export interface ShopImage {
-  id: string;
+  id?: string;
   url: string;
   type: 'owner' | 'community';
   caption?: string;

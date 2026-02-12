@@ -1155,15 +1155,92 @@ export const markClaimRequest = async (
 // EVENTS
 // ============================================
 
+
+
+// ==================== EVENT ATTENDEES ====================
+
+export const joinEvent = async (eventId: string, userId: string) => {
+  try {
+    const { error } = await supabase
+      .from("event_attendees")
+      .insert({ event_id: eventId, user_id: userId });
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error joining event:", error);
+    return { success: false, error };
+  }
+};
+
+export const leaveEvent = async (eventId: string, userId: string) => {
+  try {
+    const { error } = await supabase
+      .from("event_attendees")
+      .delete()
+      .eq("event_id", eventId)
+      .eq("user_id", userId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error leaving event:", error);
+    return { success: false, error };
+  }
+};
+
+export const fetchEventAttendees = async (eventId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("event_attendees")
+      .select(`
+        user_id,
+        created_at,
+        profiles (
+          id,
+          username,
+          avatar_url
+        )
+      `)
+      .eq("event_id", eventId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching event attendees:", error);
+    return [];
+  }
+};
+
 export const fetchEvents = async () => {
   try {
     const { data, error } = await supabase
       .from("calendar_events")
-      .select("*")
+      .select(`
+        *,
+        event_attendees (
+          user_id,
+          profiles (
+            avatar_url
+          )
+        )
+      `)
       .order("start_date_time", { ascending: true });
 
     if (error) throw error;
-    return data || [];
+
+    // Process data to include attendee info directly
+    const eventsWithAttendees = data?.map(event => ({
+      ...event,
+      attendees: event.event_attendees?.map((a: any) => ({
+        userId: a.user_id,
+        avatarUrl: a.profiles?.avatar_url
+      })) || [],
+      attendeeCount: event.event_attendees?.length || 0
+    }));
+
+    return eventsWithAttendees || [];
   } catch (error) {
     console.error("Error fetching events:", error);
     return [];
@@ -1181,6 +1258,7 @@ export const createEvent = async (eventData: {
   ticket_link?: string;
   cover_image_url?: string;
   is_published?: boolean;
+  slug?: string;
 }) => {
   try {
     const { data, error } = await supabase
