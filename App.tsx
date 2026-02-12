@@ -10,9 +10,11 @@ import EditShop from './pages/EditShop';
 import Auth from './pages/Auth';
 import Profile from './pages/Profile';
 import ClaimShop from './pages/ClaimShop';
-import AdminDashboard from './pages/AdminDashboard';
+import AdminLayout from './layouts/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import Curator from './pages/admin/Curator';
+import ShopDrafts from './pages/admin/ShopDrafts';
 import EventsFeed from './pages/EventsFeed';
-import AdminEvents from './pages/AdminEvents';
 import DripClub from './pages/DripClub';
 import ScoutBounty from './pages/ScoutBounty';
 
@@ -30,9 +32,16 @@ const App: React.FC = () => {
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="/claim/:id" element={<ClaimShop />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="curator" element={<Curator />} />
+            <Route path="drafts" element={<ShopDrafts />} />
+            {/* Legacy admin routes or others can be added here */}
+          </Route>
+
           <Route path="/events" element={<EventsFeed />} />
-          <Route path="/admin/events" element={<AdminEvents />} />
           <Route path="/dripclub" element={<DripClub />} />
           <Route path="/scout-bounty" element={<ScoutBounty />} />
         </Routes>

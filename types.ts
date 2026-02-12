@@ -303,3 +303,50 @@ export const DEFAULT_PRICING: SubscriptionPricing = {
     annual: { amount: 999, priceId: '', savings: 189 }, // $9.99, saves $1.89
   },
 };
+
+// =====================================================
+// Auto-Listing Agent (Curator) Types
+// =====================================================
+
+export type AgentRunMode = 'INSTAGRAM' | 'CITY_SCOUT';
+export type AgentRunStatus = 'RUNNING' | 'COMPLETED' | 'FAILED';
+
+export interface AgentRun {
+  id: string;
+  mode: AgentRunMode;
+  status: AgentRunStatus;
+  inputParams: any;
+  metrics: {
+    candidates_found: number;
+    drafted: number;
+    rejected: number;
+  };
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ShopDraftStatus = 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED' | 'NEEDS_INFO';
+
+export interface ShopDraft {
+  id: string;
+  runId: string;
+  status: ShopDraftStatus;
+  data: Partial<Shop>; // The proposed shop data
+  score: number;
+  scoreBreakdown: any;
+  sourceUrls: string[];
+  disqualifiers: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DraftImage {
+  id: string;
+  draftId: string;
+  originalUrl: string;
+  source?: string;
+  status: 'CANDIDATE' | 'SELECTED' | 'REJECTED';
+  caption?: string;
+  createdAt: string;
+}

@@ -96,12 +96,12 @@ export const fetchUserProfile = async (
       email: profile.email,
       avatarUrl: profile.avatar_url,
       bio: profile.bio || "",
+      isAdmin: profile.is_admin || false,
       socialLinks: {
         instagram: profile.instagram,
         x: profile.x,
       },
       isBusinessOwner: profile.is_business_owner,
-      isAdmin: profile.is_admin || false,
       isPro: profile.is_pro || false,
       isDripClubMember: profile.dripclub_member || false,
       dripClubMemberSince: profile.dripclub_member_since,
