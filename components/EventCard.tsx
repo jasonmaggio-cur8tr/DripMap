@@ -47,7 +47,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
           toast.success("You are no longer going");
         } else {
           console.error('Leave event failed:', result.error);
-          toast.error("Failed to update status");
+          toast.error(`Failed to leave: ${result.error?.message || result.error?.details || 'Unknown error'}`);
         }
       } else {
         const result = await joinEvent(event.id, user.id);
@@ -61,12 +61,12 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
           toast.success("You are going!");
         } else {
           console.error('Join event failed:', result.error);
-          toast.error("Failed to join event");
+          toast.error(`Failed to join: ${result.error?.message || result.error?.details || 'Unknown error'}`);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error toggling join:", error);
-      toast.error("Something went wrong");
+      toast.error(`Error: ${error.message || 'Something went wrong'}`);
     } finally {
       setIsJoining(false);
     }
