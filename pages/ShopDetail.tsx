@@ -46,7 +46,7 @@ const ShopDetail: React.FC = () => {
   } = useApp();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const shop = shops.find(s => s.id === id);
+  const shop = shops.find(s => s.id === id || s.slug === id);
 
   const [galleryFilter, setGalleryFilter] = useState<
     "all" | "owner" | "community"
@@ -1467,3 +1467,4 @@ const ShopDetail: React.FC = () => {
 };
 
 export default ShopDetail;
+

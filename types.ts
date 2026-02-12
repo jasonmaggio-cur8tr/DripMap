@@ -140,6 +140,7 @@ export interface OpenHours {
 
 export interface Shop {
   id: string;
+  slug?: string; // Friendly URL identifier
   name: string;
   description: string;
   location: Location;

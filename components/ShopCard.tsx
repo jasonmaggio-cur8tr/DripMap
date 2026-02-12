@@ -53,7 +53,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
 
     return (
         <Link
-            to={`/shop/${shop.id}`}
+            to={`/shop/${shop.slug || shop.id}`}
             className="block group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-coffee-100 hover:border-volt-400/50"
             onMouseEnter={handleInteraction}
             onFocus={handleInteraction}

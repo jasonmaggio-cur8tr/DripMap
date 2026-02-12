@@ -382,6 +382,120 @@ export const fetchShops = async (): Promise<Shop[]> => {
   }
 };
 
+/**
+ * Fetch a single shop by Slug (or ID fallback)
+ */
+export const fetchShopBySlug = async (slugOrId: string): Promise<Shop | null> => {
+  try {
+    // Try by slug first
+    let { data, error } = await supabase
+      .from("shops")
+      .select(`
+                *,
+                shop_images(*),
+                reviews(*, profiles(username, avatar_url))
+            `)
+      .eq("slug", slugOrId)
+      .single();
+
+    if (error && error.code === 'PGRST116') {
+      // Not found by slug, try ID
+      const res = await supabase
+        .from("shops")
+        .select(`
+                    *,
+                    shop_images(*),
+                    reviews(*, profiles(username, avatar_url))
+                `)
+        .eq("id", slugOrId)
+        .single();
+      data = res.data;
+      error = res.error;
+    }
+
+    if (error) throw error;
+    if (!data) return null;
+
+    // Map data (reusing fetchShops logic structure)
+    const shop = data;
+    return {
+      id: shop.id,
+      slug: shop.slug,
+      name: shop.name,
+      description: shop.description || "",
+      location: {
+        lat: parseFloat(shop.lat),
+        lng: parseFloat(shop.lng),
+        address: shop.address,
+        city: shop.city,
+        state: shop.state,
+        country: shop.country || '',
+      },
+      gallery:
+        shop.shop_images?.map((img: any) => ({
+          id: img.id,
+          url: img.url,
+          type: img.type,
+          caption: img.caption,
+          sortOrder: img.sort_order || 0,
+        })).sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0)) || [],
+      vibes: shop.vibes || [],
+      cheekyVibes: shop.cheeky_vibes || [],
+      rating: parseFloat(shop.rating) || 0,
+      reviewCount: shop.review_count || 0,
+      reviews:
+        shop.reviews?.map((r: any) => ({
+          id: r.id,
+          userId: r.user_id,
+          username: r.profiles?.username || "Anonymous",
+          avatarUrl: r.profiles?.avatar_url || '',
+          rating: r.rating,
+          comment: r.comment || "",
+          date: new Date(r.created_at).toLocaleDateString(),
+        })) || [],
+      isClaimed: shop.is_claimed,
+      claimedBy: shop.claimed_by,
+      stampCount: shop.stamp_count || 0,
+      subscriptionTier: shop.subscription_tier || 'free',
+      subscriptionStatus: shop.subscription_status || 'inactive',
+      proPlusDiscountEnabled: shop.pro_plus_discount_enabled || false,
+      subscriptionCurrentPeriodEnd: shop.subscription_current_period_end,
+      cancelAtPeriodEnd: shop.cancel_at_period_end || false,
+      canceledAt: shop.canceled_at,
+
+      brandId: shop.brand_id,
+      locationName: shop.location_name,
+      customVibes: shop.custom_vibes || [],
+      spotifyPlaylistUrl: shop.spotify_playlist_url,
+      websiteUrl: shop.website_url,
+      mapsUrl: shop.maps_url,
+      onlineOrderUrl: shop.online_order_url,
+
+      happeningNow: shop.happening_now_title ? {
+        id: shop.id,
+        title: shop.happening_now_title,
+        message: shop.happening_now_message,
+        sticker: shop.happening_now_sticker,
+        expiresAt: shop.happening_now_expires_at,
+        createdAt: shop.updated_at || shop.created_at,
+      } : undefined,
+
+      currentMenu: shop.current_menu || [],
+      sourcingInfo: shop.sourcing_info,
+      espressoMachine: shop.espresso_machine,
+      grinderDetails: shop.grinder_details,
+      brewingMethods: shop.brewing_methods || [],
+      baristas: shop.baristas || [],
+      specialtyDrinks: shop.specialty_drinks || [],
+      veganFoodOptions: shop.vegan_food_options || false,
+      plantMilks: shop.plant_milks || [],
+    };
+  } catch (e) {
+    console.error("Error fetching shop by slug:", e);
+    return null;
+  }
+};
+
 export const createShop = async (shopData: {
   name: string;
   description: string;
@@ -399,6 +513,7 @@ export const createShop = async (shopData: {
       .from("shops")
       .insert({
         name: shopData.name,
+        slug: shopData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''), // Basic Auto-slug
         description: shopData.description,
         lat: shopData.lat,
         lng: shopData.lng,
@@ -466,12 +581,23 @@ export const addShopImages = async (
  */
 export const deleteShopImage = async (imageId: string) => {
   try {
-    const { error } = await supabase
+    console.log(`[dbService] Attempting to delete image: ${imageId}`);
+    const { error, count } = await supabase
       .from("shop_images")
-      .delete()
+      .delete({ count: 'exact' }) // Request count of deleted rows
       .eq("id", imageId);
 
-    if (error) throw error;
+    if (error) {
+      console.error("[dbService] Supabase DELETE error:", error);
+      throw error;
+    }
+
+    if (count === 0) {
+      console.warn(`[dbService] Warning: Delete returned successes but 0 rows were deleted. ID: ${imageId}. RLS may be blocking.`);
+    } else {
+      console.log(`[dbService] Successfully deleted ${count} image(s).`);
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Error deleting shop image:", error);
