@@ -60,8 +60,18 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
           ].slice(0, 3));
           toast.success("You are going!");
         } else {
-          console.error('Join event failed:', result.error);
-          toast.error(`Failed to join: ${result.error?.message || result.error?.details || 'Unknown error'}`);
+          // Self-Healing: If we get a duplicate key error, it means we are already joined!
+          // Update UI to reflect reality.
+          const errorMsg = result.error?.message || result.error?.details || '';
+          if (errorMsg.includes('unique constraint') || errorMsg.includes('duplicate key')) {
+            console.log('Detected existing attendance, syncing state...');
+            setHasJoined(true);
+            // Only increment count if we suspect it wasn't counted (optional, better to stay safe)
+            toast.success("You were already on the list!");
+          } else {
+            console.error('Join event failed:', result.error);
+            toast.error(`Failed to join: ${errorMsg}`);
+          }
         }
       }
     } catch (error: any) {

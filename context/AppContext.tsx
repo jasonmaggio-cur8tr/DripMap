@@ -185,6 +185,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         isPublished: e.is_published,
         createdBy: 'owner',
         createdAt: e.created_at,
+        attendees: e.attendees,
+        attendeeCount: e.attendeeCount,
       }));
       setEvents(mappedEvents);
       console.log(`[AppContext] Loaded ${fetchedEvents.length} events from database`);
