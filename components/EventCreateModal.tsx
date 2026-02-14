@@ -5,7 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { uploadImage } from '../services/storageService';
 
 interface EventCreateModalProps {
-  shopId: string;
+  shopId?: string; // Optional for global create
   event?: CalendarEvent; // Optional: if provided, we're editing
   onClose: () => void;
   onSuccess?: () => void;
@@ -23,7 +23,7 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
   const isEditing = !!event;
 
   const [formData, setFormData] = useState({
-    shopId: event?.shopId || shopId,
+    shopId: event?.shopId || shopId || '',
     title: event?.title || '',
     description: event?.description || '',
     eventType: event?.eventType || EventType.TASTING,
@@ -96,8 +96,8 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.title || !formData.startDateTime) {
-      toast.error('Please fill in required fields');
+    if (!formData.title || !formData.startDateTime || !formData.shopId) {
+      toast.error('Please fill in required fields (Shop, Title, Date)');
       return;
     }
 
