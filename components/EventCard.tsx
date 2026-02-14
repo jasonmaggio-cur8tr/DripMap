@@ -22,7 +22,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
   const [attendeeCount, setAttendeeCount] = useState(event.attendeeCount || 0);
   const [recentAttendees, setRecentAttendees] = useState(event.attendees || []);
   const [showAttendeesModal, setShowAttendeesModal] = useState(false);
-  const [showAttendeesModal, setShowAttendeesModal] = useState(false);
+
 
   useEffect(() => {
     if (user && event.attendees) {

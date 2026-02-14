@@ -198,7 +198,19 @@ const ShopDetail: React.FC = () => {
     : null;
 
   // Get Social Data
-  const { savers, visitors } = getShopCommunity(shop.id);
+  const [communityData, setCommunityData] = useState<{ savers: any[], visitors: any[] }>({ savers: [], visitors: [] });
+
+  useEffect(() => {
+    const fetchCommunity = async () => {
+      if (shop?.id) {
+        const data = await getShopCommunity(shop.id);
+        setCommunityData(data);
+      }
+    };
+    fetchCommunity();
+  }, [shop?.id, getShopCommunity]);
+
+  const { savers, visitors } = communityData;
   const communityList = communityTab === "visited" ? visitors : savers;
 
   // Filter Logic

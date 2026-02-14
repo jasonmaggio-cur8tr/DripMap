@@ -1332,3 +1332,35 @@ export const deleteEvent = async (eventId: string) => {
     return { success: false, error };
   }
 };
+
+export const fetchShopCommunity = async (shopId: string) => {
+  try {
+    const [saversResult, visitorsResult] = await Promise.all([
+      supabase
+        .from("saved_shops")
+        .select("user_id, profiles(id, username, avatar_url)")
+        .eq("shop_id", shopId),
+      supabase
+        .from("visited_shops")
+        .select("user_id, profiles(id, username, avatar_url)")
+        .eq("shop_id", shopId)
+    ]);
+
+    const savers = saversResult.data?.map((r: any) => ({
+      id: r.profiles?.id,
+      username: r.profiles?.username,
+      avatarUrl: r.profiles?.avatar_url
+    })).filter((u: any) => u.id) || [];
+
+    const visitors = visitorsResult.data?.map((r: any) => ({
+      id: r.profiles?.id,
+      username: r.profiles?.username,
+      avatarUrl: r.profiles?.avatar_url
+    })).filter((u: any) => u.id) || [];
+
+    return { savers, visitors };
+  } catch (error) {
+    console.error("Error fetching shop community:", error);
+    return { savers: [], visitors: [] };
+  }
+};
