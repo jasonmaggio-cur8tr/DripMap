@@ -13,13 +13,12 @@ interface EventCreateModalProps {
 }
 
 const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onClose, onSuccess, disableShopSelection = false }) => {
-  const { addEvent, updateEvent, shops } = useApp();
+  const { addEvent, updateEvent, shops, user } = useApp();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
   const [isDragging, setIsDragging] = useState(false);
-  const [searchTerm, setSearchTerm] = useState(''); // For shop filtering
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEditing = !!event;
 
@@ -36,9 +35,13 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
     isPublished: event?.isPublished || false,
   });
 
-  const handleFileSelect = async (file: File) => {
-    console.log('handleFileSelect called with file:', file.name, file.type, file.size);
+  // Determine if user has privileges for this shop
+  const currentShop = shops.find(s => s.id === (formData.shopId || shopId));
+  const isOwner = currentShop?.claimedBy === user?.id;
+  const isAdmin = user?.isAdmin;
+  const isPrivileged = isOwner || isAdmin;
 
+  const handleFileSelect = async (file: File) => {
     if (!file.type.startsWith('image/')) {
       toast.error('Please select an image file');
       return;
@@ -51,18 +54,13 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
       return;
     }
 
-    console.log('Starting upload...');
     setUploadingImage(true);
     try {
-      console.log('Calling uploadImage...');
       const result = await uploadImage(file, 'events');
-      console.log('Upload result:', result);
-
       if (result.success && result.url) {
         setFormData(prev => ({ ...prev, coverImageUrl: result.url }));
         toast.success('Image uploaded successfully!');
       } else {
-        console.error('Upload failed:', result);
         toast.error('Failed to upload image');
       }
     } catch (error: any) {
@@ -74,14 +72,8 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('File input changed, files:', e.target.files);
     const file = e.target.files?.[0];
-    if (file) {
-      console.log('File selected:', file);
-      handleFileSelect(file);
-    } else {
-      console.log('No file selected');
-    }
+    if (file) handleFileSelect(file);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -97,11 +89,8 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-
     const file = e.dataTransfer.files?.[0];
-    if (file) {
-      handleFileSelect(file);
-    }
+    if (file) handleFileSelect(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -118,6 +107,7 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
         // Update existing event
         await updateEvent({
           ...event,
+          shopId: formData.shopId,
           title: formData.title,
           description: formData.description,
           eventType: formData.eventType,
@@ -135,7 +125,7 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
         toast.success('Event updated successfully!');
       } else {
         // Create new event
-        await addEvent({
+        const result = await addEvent({
           shopId: formData.shopId,
           title: formData.title,
           description: formData.description,
@@ -151,16 +141,20 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
             mimeType: ''
           } : undefined,
           isPublished: formData.isPublished,
-          createdBy: 'owner',
         });
-        toast.success('Event created successfully!');
+
+        if (result.success && result.data?.status === 'pending') {
+          toast.success('Event submitted for approval! 🎟️');
+        } else {
+          toast.success('Event created successfully!');
+        }
       }
 
       onSuccess?.();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving event:', error);
-      toast.error(isEditing ? 'Failed to update event' : 'Failed to create event');
+      toast.error(error.message || (isEditing ? 'Failed to update event' : 'Failed to create event'));
     } finally {
       setLoading(false);
     }
@@ -171,7 +165,9 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-coffee-100 p-6 flex justify-between items-center">
-          <h2 className="text-2xl font-serif font-bold text-coffee-900">{isEditing ? 'Edit Event' : 'Create New Event'}</h2>
+          <h2 className="text-2xl font-serif font-bold text-coffee-900">
+            {isEditing ? 'Edit Event' : 'Suggest New Event'}
+          </h2>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full hover:bg-coffee-100 flex items-center justify-center transition-colors"
@@ -248,7 +244,6 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
             <label className="block text-sm font-bold text-coffee-900 mb-2 uppercase tracking-wide">
               Shop *
             </label>
-
             {/* Searchable Shop Input */}
             {!isEditing && !disableShopSelection ? (
               <div className="relative">
@@ -258,7 +253,6 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
                   className="w-full px-4 py-3 border border-coffee-200 rounded-xl focus:outline-none focus:border-volt-400 mb-2"
                   value={formData.shopId ? shops.find(s => s.id === formData.shopId)?.name : ''}
                   onChange={(e) => {
-                    // Clear selection if typing (handled by dropdown below usually, but here we keep it simple)
                     setFormData({ ...formData, shopId: '' });
                   }}
                   list="shop-options"
@@ -268,14 +262,9 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
                     <option key={shop.id} value={shop.name} />
                   ))}
                 </datalist>
-                {/* 
-                   Using datalist is simple but might not map back to ID easily without extra logic. 
-                   Let's use a custom filtered select instead for better UX/logic 
-                 */}
               </div>
             ) : null}
 
-            {/* Fallback/Actual Select (Hidden if we fully implement combobox, but keeping for simplicity with sorted options) */}
             <select
               required
               className={`w-full px-4 py-3 border border-coffee-200 rounded-xl focus:outline-none focus:border-volt-400 ${isEditing || disableShopSelection ? 'bg-gray-50 cursor-not-allowed' : 'bg-white'
@@ -294,7 +283,7 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
 
             {(isEditing || disableShopSelection) && (
               <p className="text-xs text-coffee-400 mt-1">
-                {isEditing ? 'Shop cannot be changed when editing' : 'Creating event for your shop'}
+                {isEditing ? 'Shop cannot be changed when editing' : 'Suggesting event for this shop'}
               </p>
             )}
           </div>
@@ -399,19 +388,31 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
             />
           </div>
 
-          {/* Publish Toggle */}
-          <div className="flex items-center gap-3 p-4 bg-coffee-50 rounded-xl border border-coffee-100">
-            <input
-              type="checkbox"
-              id="publish"
-              className="w-5 h-5 text-volt-400 rounded focus:ring-volt-400"
-              checked={formData.isPublished}
-              onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
-            />
-            <label htmlFor="publish" className="text-sm font-bold text-coffee-900">
-              Publish event immediately
-            </label>
-          </div>
+          {/* Publish Toggle - Only for Privileged Users */}
+          {isPrivileged && (
+            <div className="flex items-center gap-3 p-4 bg-coffee-50 rounded-xl border border-coffee-100">
+              <input
+                type="checkbox"
+                id="publish"
+                className="w-5 h-5 text-volt-400 rounded focus:ring-volt-400"
+                checked={formData.isPublished}
+                onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
+              />
+              <label htmlFor="publish" className="text-sm font-bold text-coffee-900">
+                Publish event immediately
+              </label>
+            </div>
+          )}
+
+          {!isPrivileged && !isEditing && (
+            <div className="p-4 bg-blue-50 text-blue-800 rounded-xl text-sm flex gap-3">
+              <i className="fas fa-info-circle mt-0.5"></i>
+              <div>
+                <p className="font-bold">Pending Review</p>
+                <p>Your event will be reviewed by the shop owner or admin before going live.</p>
+              </div>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">
@@ -427,7 +428,7 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
               disabled={loading}
               className="flex-1 px-6 py-3 bg-volt-400 text-coffee-900 font-bold rounded-xl hover:bg-volt-500 transition-colors disabled:opacity-50"
             >
-              {loading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Event' : 'Create Event')}
+              {loading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Event' : 'Suggest Event')}
             </button>
           </div>
         </form>

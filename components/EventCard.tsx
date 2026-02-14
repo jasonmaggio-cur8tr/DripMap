@@ -6,6 +6,7 @@ import LazyImage from './LazyImage';
 import { useApp } from '../context/AppContext';
 import { joinEvent, leaveEvent } from '../services/dbService';
 import { useToast } from '../context/ToastContext';
+import EventAttendeesModal from './EventAttendeesModal';
 
 interface EventCardProps {
   event: CalendarEvent;
@@ -20,6 +21,8 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
   const [hasJoined, setHasJoined] = useState(false);
   const [attendeeCount, setAttendeeCount] = useState(event.attendeeCount || 0);
   const [recentAttendees, setRecentAttendees] = useState(event.attendees || []);
+  const [showAttendeesModal, setShowAttendeesModal] = useState(false);
+  const [showAttendeesModal, setShowAttendeesModal] = useState(false);
 
   useEffect(() => {
     if (user && event.attendees) {
@@ -55,9 +58,9 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
           setHasJoined(true);
           setAttendeeCount(prev => prev + 1);
           setRecentAttendees(prev => [
-            { userId: user.id, avatarUrl: user.avatarUrl },
+            { userId: user.id, avatarUrl: user.avatarUrl, username: user.username },
             ...prev
-          ].slice(0, 3));
+          ]);
           toast.success("You are going!");
         } else {
           // Self-Healing: If we get a duplicate key error, it means we are already joined!
@@ -209,7 +212,10 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
           </div>
 
           {/* Attendees Stack */}
-          <div className="flex items-center gap-2 pt-1 min-h-[24px]">
+          <div
+            className={`flex items-center gap-2 pt-1 min-h-[24px] ${recentAttendees.length > 0 ? 'cursor-pointer group/attendees' : ''}`}
+            onClick={() => recentAttendees.length > 0 && setShowAttendeesModal(true)}
+          >
             {recentAttendees.length > 0 ? (
               <>
                 <div className="flex -space-x-2">
@@ -222,7 +228,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
                     />
                   ))}
                 </div>
-                <p className="text-[10px] items-center font-bold text-coffee-500">
+                <p className="text-[10px] items-center font-bold text-coffee-500 group-hover/attendees:text-volt-600 transition-colors">
                   {hasJoined && recentAttendees.length === 1 ? 'You are going' :
                     hasJoined ? `You and ${attendeeCount - 1} others` :
                       `${attendeeCount} going`}
@@ -234,6 +240,13 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
           </div>
         </div>
       </div>
+
+      {showAttendeesModal && (
+        <EventAttendeesModal
+          attendees={recentAttendees}
+          onClose={() => setShowAttendeesModal(false)}
+        />
+      )}
     </div>
   );
 };

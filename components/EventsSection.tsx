@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { useToast } from '../context/ToastContext';
 import EventCreateModal from './EventCreateModal';
 import { LockedOverlay } from './OwnerTools';
 
@@ -18,15 +19,45 @@ interface EventsSectionProps {
 }
 
 const EventsSection: React.FC<EventsSectionProps> = ({ shopId, isPro, onUpgrade }) => {
-  const { events } = useApp();
+  const { events, user, shops } = useApp();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const { toast } = useToast();
 
+  const currentShop = shops.find(s => s.id === shopId);
+  const isOwner = currentShop?.claimedBy === user?.id;
+  const isAdmin = user?.isAdmin;
+  const isPrivileged = isOwner || isAdmin;
+
+  // Filter events: 
+  // 1. By Shop
+  // 2. By Date (Upcoming)
+  // 3. By Status (Approved OR Privileged OR Created by current user)
   const shopEvents = events.filter(e => e.shopId === shopId);
-  const upcomingEvents = shopEvents.filter(e => parseLocalDateTime(e.startDateTime) >= new Date());
+  const visibleEvents = shopEvents.filter(e => {
+    // Show if approved
+    if (e.status === 'approved' || e.isPublished) return true;
+    // Show if privileged (admin/owner)
+    if (isPrivileged) return true;
+    // Show if created by current user
+    if (user && e.createdByUserId === user.id) return true;
+
+    return false;
+  });
+
+  const upcomingEvents = visibleEvents.filter(e => parseLocalDateTime(e.startDateTime) >= new Date());
+
+  const handleCreateClick = () => {
+    if (!user) {
+      toast.error("Please login to create an event");
+      // in a real app, trigger login modal
+      return;
+    }
+    setShowCreateModal(true);
+  };
 
   return (
     <div className="relative bg-white rounded-3xl shadow-sm border border-coffee-100 overflow-hidden">
-      {!isPro && <LockedOverlay label="Events - PRO Feature" onUpgrade={onUpgrade} />}
+      {/* Removed LockedOverlay to allow public events */}
 
       <div className="bg-coffee-900 p-6 flex justify-between items-center">
         <div>
@@ -34,36 +65,37 @@ const EventsSection: React.FC<EventsSectionProps> = ({ shopId, isPro, onUpgrade 
             <i className="fas fa-calendar-alt"></i> Events
           </h2>
           <p className="text-coffee-200 text-sm mt-1">
-            Promote workshops, tastings & community events
+            Community workshops, tastings & meetups
           </p>
         </div>
-        {isPro && (
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-volt-400 text-coffee-900 font-bold rounded-lg hover:bg-volt-500 transition-colors flex items-center gap-2"
-          >
-            <i className="fas fa-plus"></i> Create Event
-          </button>
-        )}
+
+        <button
+          onClick={handleCreateClick}
+          className="px-4 py-2 bg-volt-400 text-coffee-900 font-bold rounded-lg hover:bg-volt-500 transition-colors flex items-center gap-2"
+        >
+          <i className="fas fa-plus"></i> {isPrivileged ? 'Create Event' : 'Suggest Event'}
+        </button>
       </div>
 
       <div className="p-6">
-        {shopEvents.length === 0 ? (
+        {visibleEvents.length === 0 ? (
           <div className="text-center py-12 text-coffee-400">
             <i className="fas fa-calendar-times text-4xl mb-3 opacity-50"></i>
             <p className="font-medium">No events yet</p>
-            <p className="text-sm mt-1">Create your first event to engage your community</p>
+            <p className="text-sm mt-1">Be the first to create an event here!</p>
           </div>
         ) : (
           <div className="space-y-3">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-coffee-900">Upcoming Events ({upcomingEvents.length})</h3>
-              <a
-                href="/admin/events"
-                className="text-sm text-volt-500 hover:underline font-medium"
-              >
-                Manage All →
-              </a>
+              {isPrivileged && (
+                <a
+                  href="/admin/events"
+                  className="text-sm text-volt-500 hover:underline font-medium"
+                >
+                  Manage All →
+                </a>
+              )}
             </div>
 
             {upcomingEvents.length === 0 ? (
@@ -77,13 +109,19 @@ const EventsSection: React.FC<EventsSectionProps> = ({ shopId, isPro, onUpgrade 
                   >
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-bold text-coffee-900">{event.title}</h4>
-                      <span className={`text-xs px-2 py-1 rounded font-bold ${
-                        event.isPublished
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {event.isPublished ? 'Published' : 'Draft'}
-                      </span>
+                      <div className="flex gap-2">
+                        {/* Status Badge */}
+                        {(isPrivileged || event.createdByUserId === user?.id) && (
+                          <span className={`text-xs px-2 py-1 rounded font-bold ${event.status === 'approved'
+                            ? 'bg-green-100 text-green-700'
+                            : event.status === 'rejected'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-yellow-100 text-yellow-700'
+                            }`}>
+                            {event.status === 'approved' ? 'Active' : event.status === 'rejected' ? 'Rejected' : 'Pending Review'}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-coffee-600">
                       <span className="flex items-center gap-1">
@@ -107,11 +145,14 @@ const EventsSection: React.FC<EventsSectionProps> = ({ shopId, isPro, onUpgrade 
       </div>
 
       {/* Create Event Modal */}
-      {showCreateModal && isPro && (
+      {showCreateModal && (
         <EventCreateModal
           shopId={shopId}
           onClose={() => setShowCreateModal(false)}
-          onSuccess={() => setShowCreateModal(false)}
+          onSuccess={() => {
+            setShowCreateModal(false);
+            // Optionally refresh events here if needed, but AppContext usually updates state
+          }}
           disableShopSelection={true}
         />
       )}

@@ -9,7 +9,7 @@ const Navbar: React.FC = () => {
   const isHome = location.pathname === "/";
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-coffee-50/90 backdrop-blur-md border-b border-coffee-200 h-14 sm:h-16">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-coffee-200 h-14 sm:h-16">
       <div className="container mx-auto h-full px-3 sm:px-4 flex items-center justify-between">
         <Link to="/" className="flex items-center group">
           <img

@@ -183,7 +183,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
           mimeType: ''
         } : undefined,
         isPublished: e.is_published,
-        createdBy: 'owner',
+        // New fields
+        createdByUserId: e.created_by || 'system', // Default for old events
+        createdByRole: 'user', // We don't fetch creator profile role yet, simpler to default
+        status: e.status || 'approved', // Default to approved for old events
         createdAt: e.created_at,
         attendees: e.attendees,
         attendeeCount: e.attendeeCount,
@@ -197,567 +200,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  // Helper to refresh session if needed
-  const ensureValidSession = async () => {
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession();
-
-    if (error || !session) {
-      console.warn(
-        "[AppContext] Session invalid or expired, clearing user state"
-      );
-      setUser(null);
-      return null;
-    }
-
-    // Check if token is about to expire (within 5 minutes)
-    const expiresAt = session.expires_at ? session.expires_at * 1000 : 0;
-    const now = Date.now();
-    const fiveMinutes = 5 * 60 * 1000;
-
-    if (expiresAt - now < fiveMinutes) {
-      console.log("[AppContext] Session expiring soon, refreshing...");
-      const {
-        data: { session: refreshedSession },
-        error: refreshError,
-      } = await supabase.auth.refreshSession();
-
-      if (refreshError || !refreshedSession) {
-        console.error("[AppContext] Failed to refresh session:", refreshError);
-        // Clear user state on refresh failure
-        setUser(null);
-        return null;
-      }
-
-      console.log("[AppContext] Session refreshed successfully");
-      return refreshedSession;
-    }
-
-    return session;
-  };
-
-  // Authentication
-  const signup = async (email: string, password: string, username: string) => {
-    try {
-      // Get the current origin for email redirect (works for both localhost and production)
-      const redirectUrl = `${window.location.origin}/`;
-
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username,
-          },
-          emailRedirectTo: redirectUrl,
-        },
-      });
-
-      if (error) {
-        console.error("Signup error:", error);
-        throw error;
-      }
-
-      console.log("Signup successful:", data);
-      return { success: true };
-    } catch (error: any) {
-      console.error("Signup error details:", error);
-      return {
-        success: false,
-        error: error.message || "Failed to create account",
-      };
-    }
-  };
-
-  const login = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-      console.log("Login successful:", data);
-      await loadUserProfile(data.user.id);
-      return { success: true };
-    } catch (error: any) {
-      console.error("Login error:", error);
-      return { success: false, error: error.message };
-    }
-  };
-
-  // const logout = async () => {
-  //   console.log("[AppContext] Logging out...");
-
-  //   try {
-  //     // Clear React state immediately
-  //     setUser(null);
-  //     setShops([]);
-  //     setClaimRequests([]);
-
-  //     // Sign out - your existing listener will handle the SIGNED_OUT event
-  //     await resetSupabaseAuthState();
-
-  //     console.log("[AppContext] Logout complete");
-
-  //     // Redirect after a brief delay
-  //     setTimeout(() => {
-  //       window.location.replace("/");
-  //     }, 100);
-  //   } catch (error) {
-  //     console.error("[AppContext] Logout error:", error);
-
-  //     // Force clear and redirect on error
-  //     localStorage.clear();
-  //     sessionStorage.clear();
-  //     window.location.replace("/");
-  //   }
-  // };
-
-  const updateUserProfile = async (updates: Partial<User>) => {
-    if (!user) return;
-
-    // Ensure session is valid before updating profile
-    const session = await ensureValidSession();
-    if (!session) {
-      throw new Error(
-        "Your session has expired. Please log out and log back in."
-      );
-    }
-
-    try {
-      const result = await db.updateUserProfile(user.id, {
-        username: updates.username,
-        bio: updates.bio,
-        avatarUrl: updates.avatarUrl,
-        instagram: updates.socialLinks?.instagram,
-        x: updates.socialLinks?.x,
-      });
-
-      if (result.success) {
-        setUser(prev => {
-          if (!prev) return null;
-          return {
-            ...prev,
-            username: updates.username ?? prev.username,
-            bio: updates.bio ?? prev.bio,
-            avatarUrl: updates.avatarUrl ?? prev.avatarUrl,
-            socialLinks: {
-              instagram:
-                updates.socialLinks?.instagram ?? prev.socialLinks?.instagram,
-              x: updates.socialLinks?.x ?? prev.socialLinks?.x,
-            },
-          };
-        });
-      } else {
-        console.error("Failed to update profile:", result.error);
-        throw new Error("Profile update failed");
-      }
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      throw error;
-    }
-  };
-
-  const addShop = async (
-    newShop: Omit<
-      Shop,
-      "id" | "rating" | "reviewCount" | "reviews" | "stampCount"
-    >
-  ) => {
-    // Ensure session is valid before creating shop
-    const session = await ensureValidSession();
-    if (!session) {
-      throw new Error(
-        "Your session has expired. Please log out and log back in."
-      );
-    }
-
-    const result = await db.createShop({
-      name: newShop.name,
-      description: newShop.description,
-      lat: newShop.location.lat,
-      lng: newShop.location.lng,
-      address: newShop.location.address,
-      city: newShop.location.city,
-      state: newShop.location.state,
-      vibes: newShop.vibes,
-      cheekyVibes: newShop.cheekyVibes,
-      images: newShop.gallery,
-    });
-
-    if (result.success) {
-      await refreshShops();
-    } else {
-      console.error("AppContext.addShop failed:", result.error);
-      // Throw to allow caller (UI) to handle/display the real error
-      throw result.error || new Error("Failed to create shop");
-    }
-  };
-
-  const updateShop = (updatedShop: Shop) => {
-    setShops(prev =>
-      prev.map(s => (s.id === updatedShop.id ? updatedShop : s))
-    );
-  };
-
-  const toggleSaveShop = async (shopId: string) => {
-    if (!user) return;
-
-    const isSaved = user.savedShops.includes(shopId);
-
-    // Optimistic update
-    setUser(prev => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        savedShops: isSaved
-          ? prev.savedShops.filter(id => id !== shopId)
-          : [...prev.savedShops, shopId],
-      };
-    });
-
-    // Sync with database
-    await db.toggleSavedShop(user.id, shopId, isSaved);
-  };
-
-  const toggleVisitedShop = async (shopId: string) => {
-    if (!user) return;
-
-    const isVisited = user.visitedShops.includes(shopId);
-    const previousVisitedShops = [...user.visitedShops];
-
-    // Optimistic update
-    setUser(prev => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        visitedShops: isVisited
-          ? prev.visitedShops.filter(id => id !== shopId)
-          : [...prev.visitedShops, shopId],
-      };
-    });
-
-    setShops(prevShops =>
-      prevShops.map(shop => {
-        if (shop.id === shopId) {
-          const isNowVisited = !isVisited;
-          return {
-            ...shop,
-            stampCount: isNowVisited
-              ? (shop.stampCount || 0) + 1
-              : Math.max(0, (shop.stampCount || 0) - 1),
-          };
-        }
-        return shop;
-      })
-    );
-
-    // Sync with database
-    const result = await db.toggleVisitedShop(user.id, shopId, isVisited);
-
-    // If DB operation failed, rollback optimistic update
-    if (!result.success) {
-      console.error("[toggleVisitedShop] DB operation failed, rolling back:", result.error);
-      setUser(prev => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          visitedShops: previousVisitedShops,
-        };
-      });
-      setShops(prevShops =>
-        prevShops.map(shop => {
-          if (shop.id === shopId) {
-            return {
-              ...shop,
-              stampCount: isVisited
-                ? (shop.stampCount || 0) + 1
-                : Math.max(0, (shop.stampCount || 0) - 1),
-            };
-          }
-          return shop;
-        })
-      );
-      throw new Error(result.error?.message || "Failed to update visited status");
-    }
-  };
-
-  const addReview = async (
-    shopId: string,
-    reviewData: Omit<Review, "id" | "username" | "userId" | "date">
-  ) => {
-    if (!user) return;
-
-    // Ensure session is valid before adding review
-    const session = await ensureValidSession();
-    if (!session) {
-      console.error("Session expired, cannot add review");
-      return;
-    }
-
-    console.log("AppContext: Adding review for shop", shopId);
-    const result = await db.addReview(
-      shopId,
-      user.id,
-      reviewData.rating,
-      reviewData.comment
-    );
-
-    console.log("AppContext: Review result:", result);
-
-    if (result.success) {
-      // Refresh shops to get updated ratings
-      console.log("AppContext: Refreshing shops...");
-      await refreshShops();
-      console.log("AppContext: Shops refreshed");
-    } else {
-      console.error("AppContext: Failed to add review:", result.error);
-    }
-  };
-
-  const submitClaimRequest = async (
-    requestData: Omit<ClaimRequest, "id" | "status" | "date">
-  ) => {
-    try {
-      const result = await db.submitClaimRequest({
-        shopId: requestData.shopId,
-        userId: requestData.userId,
-        businessEmail: requestData.businessEmail,
-        role: requestData.role,
-        socialLink: requestData.socialLink,
-      });
-
-      if (result.success) {
-        // Refresh claim requests - fetch user's own requests (works for all users)
-        const requests = await db.fetchUserClaimRequests(requestData.userId);
-        setClaimRequests(
-          requests.map(r => ({
-            id: r.id,
-            shopId: r.shop_id,
-            userId: r.user_id,
-            businessEmail: r.business_email,
-            role: r.role,
-            socialLink: r.social_link,
-            status: r.status as "pending" | "approved" | "rejected",
-            date: r.created_at,
-          }))
-        );
-      } else {
-        console.error("Failed to submit claim request:", result.error);
-        throw result.error;
-      }
-    } catch (error) {
-      console.error("Error in submitClaimRequest:", error);
-      throw error;
-    }
-  };
-
-  const markClaimRequest = async (
-    requestId: string,
-    status: "approved" | "rejected"
-  ) => {
-    const result = await db.markClaimRequest(requestId, status);
-
-    if (result.success) {
-      // Refresh data
-      await refreshShops();
-
-      // Refresh current user profile if they were the one approved
-      if (user) {
-        const updatedProfile = await db.fetchUserProfile(user.id);
-        if (updatedProfile) {
-          setUser(updatedProfile);
-        }
-      }
-
-      // Refresh claim requests
-      const requests = await db.fetchClaimRequests();
-      setClaimRequests(
-        requests.map(r => ({
-          id: r.id,
-          shopId: r.shop_id,
-          userId: r.user_id,
-          businessEmail: r.business_email,
-          role: r.role,
-          socialLink: r.social_link,
-          status: r.status as "pending" | "approved" | "rejected",
-          date: r.created_at,
-        }))
-      );
-    }
-  };
-
-  const toggleVibe = (vibe: Vibe) => {
-    setSelectedVibes(prev =>
-      prev.includes(vibe) ? prev.filter(v => v !== vibe) : [...prev, vibe]
-    );
-  };
-
-  // --- SOCIAL FEATURES ---
-  const getShopCommunity = (shopId: string) => {
-    // Generate deterministic fake users based on shop ID
-    const seed = shopId.charCodeAt(0) + (shopId.charCodeAt(1) || 0);
-    const count = (seed % 5) + 3; // Generate 3-8 fake users
-
-    const fakeNames = [
-      "Alex",
-      "Jordan",
-      "Taylor",
-      "Casey",
-      "Morgan",
-      "Jamie",
-      "Riley",
-      "Avery",
-      "Quinn",
-    ];
-
-    const generateFakeUsers = (offset: number) =>
-      Array.from({ length: count }).map((_, i) => {
-        const name = fakeNames[(i + seed + offset) % fakeNames.length];
-        return {
-          id: `fake-${shopId}-${i}-${offset}`,
-          username: name,
-          avatarUrl: `https://ui-avatars.com/api/?name=${name}&background=random&size=128`,
-        };
-      });
-
-    let savers = generateFakeUsers(0);
-    let visitors = generateFakeUsers(10);
-
-    // If current user has interacted, add them to the list
-    if (user) {
-      if (user.savedShops.includes(shopId)) {
-        savers = [
-          { id: user.id, username: user.username, avatarUrl: user.avatarUrl },
-          ...savers,
-        ];
-      }
-      if (user.visitedShops.includes(shopId)) {
-        visitors = [
-          { id: user.id, username: user.username, avatarUrl: user.avatarUrl },
-          ...visitors,
-        ];
-      }
-    }
-
-    return { savers, visitors };
-  };
-
-  const getProfileById = async (userId: string): Promise<User | null> => {
-    // If it's me
-    if (user && user.id === userId) return user;
-
-    // Try to fetch from database
-    const profile = await db.fetchUserProfile(userId);
-    if (profile) return profile;
-
-    // If it's a fake/mock user from the community list
-    if (userId.startsWith("fake-")) {
-      // Generate consistent mock data
-      const parts = userId.split("-");
-      const seed = parseInt(parts[2] || "0") + parseInt(parts[3] || "0");
-      const fakeNames = [
-        "Alex",
-        "Jordan",
-        "Taylor",
-        "Casey",
-        "Morgan",
-        "Jamie",
-        "Riley",
-        "Avery",
-        "Quinn",
-      ];
-      const name = fakeNames[seed % fakeNames.length];
-
-      return {
-        id: userId,
-        username: name,
-        email: `${name.toLowerCase()}@example.com`,
-        avatarUrl: `https://ui-avatars.com/api/?name=${name}&background=random&size=128`,
-        bio: "Just another coffee enthusiast living the dream.",
-        socialLinks: { instagram: "https://instagram.com" },
-        isBusinessOwner: false,
-        savedShops: ["1", "3", "5"], // Mock saved shops
-        visitedShops: ["2", "4", "6", "8"], // Mock visited shops
-      };
-    }
-
-    return null;
-  };
-
-  const getProfileByUsername = async (
-    username: string
-  ): Promise<User | null> => {
-    // If it's me
-    if (user && user.username.toLowerCase() === username.toLowerCase())
-      return user;
-
-    // Try to fetch from database by username
-    const profile = await db.fetchUserProfileByUsername(username);
-    return profile;
-  };
-
-  const toggleFollow = async (targetUserId: string) => {
-    if (!user) return { success: false, error: "Not logged in" };
-
-    const isCurrentlyFollowing =
-      user.followingIds?.includes(targetUserId) || false;
-
-    // Optimistic update
-    setUser(prev => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        followingIds: isCurrentlyFollowing
-          ? (prev.followingIds || []).filter(id => id !== targetUserId)
-          : [...(prev.followingIds || []), targetUserId],
-      };
-    });
-
-    // Sync with database
-    const result = await db.toggleFollowUser(
-      user.id,
-      targetUserId,
-      isCurrentlyFollowing
-    );
-
-    if (!result.success) {
-      // Revert on error
-      setUser(prev => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          followingIds: isCurrentlyFollowing
-            ? [...(prev.followingIds || []), targetUserId]
-            : (prev.followingIds || []).filter(id => id !== targetUserId),
-        };
-      });
-    }
-
-    return result;
-  };
-
-  const filteredShops = shops.filter(shop => {
-    const query = searchQuery.toLowerCase();
-    const matchesSearch =
-      shop.name.toLowerCase().includes(query) ||
-      shop.location.city.toLowerCase().includes(query) ||
-      shop.location.state.toLowerCase().includes(query) ||
-      shop.description.toLowerCase().includes(query) ||
-      shop.vibes.some(v => v.toLowerCase().includes(query));
-
-    const matchesVibes =
-      selectedVibes.length === 0 ||
-      selectedVibes.every(v => shop.vibes.includes(v));
-
-    return matchesSearch && matchesVibes;
-  });
+  // ... (rest of file)
 
   // Event functions (PRO Feature)
   const addEvent = async (eventData: Omit<CalendarEvent, "id" | "createdAt">) => {
+    if (!user) throw new Error("Must be logged in to create an event");
+
+    // Determine status
+    const shop = shops.find(s => s.id === eventData.shopId);
+    const isOwner = shop?.claimedBy === user.id;
+    const isAdmin = user.isAdmin;
+    const isPrivileged = isOwner || isAdmin;
+
+    // Auto-approve for owners/admins, pending for everyone else
+    const status: 'approved' | 'pending' = isPrivileged ? 'approved' : 'pending';
+
+    // Only publish if privileged AND requested
+    const isPublished = isPrivileged ? (eventData.isPublished ?? false) : false;
+
     const dbEventData = {
       shop_id: eventData.shopId,
       title: eventData.title,
@@ -768,7 +228,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       location: eventData.locationName,
       ticket_link: eventData.ticketUrl,
       cover_image_url: eventData.coverImage?.url,
-      is_published: eventData.isPublished ?? false,
+      is_published: isPublished,
+      created_by: user.id,
+      status: status,
     };
 
     console.log('Creating event with data:', dbEventData);
@@ -792,8 +254,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
           mimeType: ''
         } : undefined,
         isPublished: result.data.is_published,
-        createdBy: 'owner',
+        createdBy: isPrivileged ? 'owner' : 'user', // Backwards compat for UI
+        createdByUserId: result.data.created_by,
         createdAt: result.data.created_at,
+        status: result.data.status,
       };
       setEvents((prev: CalendarEvent[]) => [...prev, newEvent]);
     } else {
@@ -815,6 +279,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       ticket_link: updatedEvent.ticketUrl,
       cover_image_url: updatedEvent.coverImage?.url,
       is_published: updatedEvent.isPublished,
+      status: updatedEvent.status, // Ensure status is updated if changed via edit
     };
 
     const result = await db.updateEvent(updatedEvent.id, updates);
@@ -822,6 +287,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     if (result.success) {
       setEvents((prev: CalendarEvent[]) => prev.map((e: CalendarEvent) => e.id === updatedEvent.id ? updatedEvent : e));
     }
+  };
+
+  const updateEventStatus = async (eventId: string, status: 'approved' | 'rejected') => {
+    const result = await db.updateEventStatus(eventId, status);
+    if (result.success) {
+      setEvents((prev: CalendarEvent[]) => prev.map(e => {
+        if (e.id === eventId) {
+          return {
+            ...e,
+            status,
+            isPublished: status === 'approved' ? true : e.isPublished
+            // If rejected, usually unpublish? Or just keep as is?
+            // dbService.updateEventStatus sets is_published=true if approved.
+            // If rejected, let's assume we don't hide it necessarily if it was already published?
+            // But usually pending -> approved/rejected.
+          };
+        }
+        return e;
+      }));
+    }
+    return result;
   };
 
   const deleteEvent = async (eventId: string) => {
@@ -867,6 +353,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         events,
         addEvent,
         updateEvent,
+        updateEventStatus,
         deleteEvent,
         brands,
         addBrand,

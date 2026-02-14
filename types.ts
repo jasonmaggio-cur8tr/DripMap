@@ -42,10 +42,13 @@ export interface CalendarEvent {
   };
   ticketUrl?: string;
   isPublished: boolean;
-  createdBy: 'admin' | 'owner';
   createdAt: string;
-  attendees?: { userId: string; avatarUrl?: string }[];
+  attendees?: { userId: string; avatarUrl?: string; username?: string }[];
   attendeeCount?: number;
+  status: 'pending' | 'approved' | 'rejected';
+  createdByUserId?: string; // UUID of creator
+  createdByRole?: 'admin' | 'owner' | 'user'; // For UI logic
+  createdBy?: 'admin' | 'owner' | 'user'; // Deprecated/Legacy support
 }
 
 export interface BrewItem {

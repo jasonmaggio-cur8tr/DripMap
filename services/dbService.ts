@@ -546,6 +546,7 @@ export const createShop = async (shopData: {
   }
 };
 
+
 /**
  * Add images to an existing shop
  */
@@ -1222,6 +1223,8 @@ export const fetchEvents = async () => {
         event_attendees (
           user_id,
           profiles (
+            id,
+            username,
             avatar_url
           )
         )
@@ -1235,7 +1238,8 @@ export const fetchEvents = async () => {
       ...event,
       attendees: event.event_attendees?.map((a: any) => ({
         userId: a.user_id,
-        avatarUrl: a.profiles?.avatar_url
+        avatarUrl: a.profiles?.avatar_url,
+        username: a.profiles?.username
       })) || [],
       attendeeCount: event.event_attendees?.length || 0
     }));
@@ -1259,6 +1263,8 @@ export const createEvent = async (eventData: {
   cover_image_url?: string;
   is_published?: boolean;
   slug?: string;
+  created_by: string;
+  status: 'pending' | 'approved' | 'rejected';
 }) => {
   try {
     const { data, error } = await supabase
@@ -1271,6 +1277,26 @@ export const createEvent = async (eventData: {
     return { success: true, data };
   } catch (error) {
     console.error("Error creating event:", error);
+    return { success: false, error };
+  }
+};
+
+export const updateEventStatus = async (eventId: string, status: 'approved' | 'rejected') => {
+  try {
+    const updates: any = { status };
+    if (status === 'approved') {
+      updates.is_published = true; // Auto-publish on approval
+    }
+
+    const { error } = await supabase
+      .from("calendar_events")
+      .update(updates)
+      .eq("id", eventId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating event status:", error);
     return { success: false, error };
   }
 };
