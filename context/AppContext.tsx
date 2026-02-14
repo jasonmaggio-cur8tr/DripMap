@@ -88,18 +88,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
 
-  // Initialize app - load shops and set up auth listener
-  useEffect(() => {
-    initializeApp();
-  }, []);
-
   const initializeApp = async () => {
     setLoading(true);
 
     await initializeStorage();
     await refreshShops();
 
-    // Just check if there's a session once
+    // Initial session check
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -107,8 +102,69 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       await loadUserProfile(session.user.id);
     }
 
+    // Listen for auth changes (e.g. following email link, logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log(`[AppContext] Auth event: ${event}`, session?.user?.email);
+
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setClaimRequests([]);
+        // Optional: clear other user-specific state
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (session?.user) {
+          // If we already have the user loaded and IDs match, maybe skip?
+          // But profile might have changed, safest to reload.
+          if (user?.id !== session.user.id) {
+            await loadUserProfile(session.user.id);
+          }
+        }
+      }
+    });
+
     setLoading(false);
+
+    // Cleanup subscription on unmount? 
+    // AppContext usually lives forever, but technically good practice.
+    // However, initializeApp is called in useEffect [], so we can't return cleanup from here easily.
+    // We'll rely on AppProvider unmount if we moved this to useEffect.
   };
+
+  // Move initializeApp content to useEffect to handle cleanup
+  useEffect(() => {
+    let authSubscription: any = null;
+
+    const init = async () => {
+      setLoading(true);
+      await initializeStorage();
+      await refreshShops();
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await loadUserProfile(session.user.id);
+      }
+
+      const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log(`[AppContext] Auth event: ${event}`);
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setClaimRequests([]);
+        } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+          // Reload profile if not set or if different user
+          // We check current state in a ref or just rely on async fetch
+          console.log('[AppContext] Reloading profile from auth change');
+          await loadUserProfile(session.user.id);
+        }
+      });
+      authSubscription = data.subscription;
+      setLoading(false);
+    };
+
+    init();
+
+    return () => {
+      authSubscription?.unsubscribe();
+    };
+  }, []);
 
   const logout = async () => {
     setUser(null); // Manually clear user
@@ -213,9 +269,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
 
       if (error) throw error;
 
-      // Profile creation is handled by DB trigger, but we reload profile
-      if (data.user) {
+      // Profile creation is handled by DB trigger.
+      // We only load user profile IF we have a session (auto-login enabled).
+      // If email confirmation is required, session will be null here.
+      if (data.user && data.session) {
+        console.log('[AppContext] Auto-login active, loading profile...');
         await loadUserProfile(data.user.id);
+      } else {
+        console.log('[AppContext] No session returned (email verification likely required).');
       }
 
       return { success: true };

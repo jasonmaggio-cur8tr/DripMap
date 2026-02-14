@@ -18,14 +18,16 @@ const Auth: React.FC = () => {
 
   // Redirect to home if user is already logged in
   useEffect(() => {
-    if (user) {
+    if (user && !showVerifyEmail && !loading) {
+      console.log('[Auth] User logged in, redirecting home...');
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [user, navigate, showVerifyEmail, loading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    console.log('[Auth] Submitting form, mode:', mode);
+
     if (!email.trim() || !password.trim()) {
       toast.error('Please fill in all required fields');
       return;
@@ -42,25 +44,28 @@ const Auth: React.FC = () => {
     }
 
     setLoading(true);
-    
+
     try {
       if (mode === 'signup') {
         const result = await signup(email, password, username);
+        console.log('[Auth] Signup result:', result);
         if (result.success) {
           setShowVerifyEmail(true);
         } else {
-          toast.error(result.error || 'Failed to create account');
+          toast.error(result.error?.message || 'Failed to create account');
         }
       } else {
         const result = await login(email, password);
+        console.log('[Auth] Login result:', result);
         if (result.success) {
           toast.success('Welcome back!');
           navigate('/');
         } else {
-          toast.error(result.error || 'Invalid email or password');
+          toast.error(result.error?.message || 'Invalid email or password');
         }
       }
     } catch (error) {
+      console.error('[Auth] Unexpected error:', error);
       toast.error('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -120,22 +125,20 @@ const Auth: React.FC = () => {
           <button
             type="button"
             onClick={() => setMode('login')}
-            className={`flex-1 py-2 px-4 rounded-lg font-bold text-sm transition-all ${
-              mode === 'login'
-                ? 'bg-white text-coffee-900 shadow-sm'
-                : 'text-coffee-400 hover:text-coffee-600'
-            }`}
+            className={`flex-1 py-2 px-4 rounded-lg font-bold text-sm transition-all ${mode === 'login'
+              ? 'bg-white text-coffee-900 shadow-sm'
+              : 'text-coffee-400 hover:text-coffee-600'
+              }`}
           >
             Login
           </button>
           <button
             type="button"
             onClick={() => setMode('signup')}
-            className={`flex-1 py-2 px-4 rounded-lg font-bold text-sm transition-all ${
-              mode === 'signup'
-                ? 'bg-white text-coffee-900 shadow-sm'
-                : 'text-coffee-400 hover:text-coffee-600'
-            }`}
+            className={`flex-1 py-2 px-4 rounded-lg font-bold text-sm transition-all ${mode === 'signup'
+              ? 'bg-white text-coffee-900 shadow-sm'
+              : 'text-coffee-400 hover:text-coffee-600'
+              }`}
           >
             Sign Up
           </button>
@@ -186,9 +189,9 @@ const Auth: React.FC = () => {
               <p className="text-xs text-coffee-400 mt-1">Minimum 6 characters</p>
             )}
           </div>
-          
+
           <Button type="submit" className="w-full py-4" isLoading={loading}>
-            {loading 
+            {loading
               ? (mode === 'signup' ? 'Creating Account...' : 'Signing In...')
               : (mode === 'signup' ? 'Create Account' : 'Sign In')
             }
