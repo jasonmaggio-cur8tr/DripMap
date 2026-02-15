@@ -20,6 +20,7 @@ const EventsFeed: React.FC = () => {
     const { toast } = useToast();
     const [filterType, setFilterType] = useState<EventType | 'All'>('All');
     const [search, setSearch] = useState('');
+    const [isSearchExpanded, setIsSearchExpanded] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
 
     // Sorting and Filtering Logic
@@ -79,24 +80,34 @@ const EventsFeed: React.FC = () => {
             {/* Sticky Filter Header */}
             <div className="sticky top-16 z-30 bg-coffee-50/95 backdrop-blur-md border-b border-coffee-200 py-4 px-4 shadow-sm">
                 <div className="container mx-auto flex flex-col md:flex-row gap-4 items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <h1 className="text-2xl font-serif font-black text-coffee-900 hidden md:block">Community Events</h1>
+                    <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
+                        <div className="flex items-center gap-4">
+                            <h1 className="text-2xl font-serif font-black text-coffee-900 hidden md:block">Community Events</h1>
+                            <button
+                                onClick={() => {
+                                    if (!user) {
+                                        toast.error("Please login to suggest an event");
+                                        return;
+                                    }
+                                    setShowCreateModal(true);
+                                }}
+                                className="bg-volt-400 text-coffee-900 text-sm font-bold px-4 py-2 rounded-xl hover:bg-white transition-colors flex items-center gap-2 shadow-sm whitespace-nowrap"
+                            >
+                                <i className="fas fa-plus"></i> Suggest Event
+                            </button>
+                        </div>
+
+                        {/* Mobile Search Toggle */}
                         <button
-                            onClick={() => {
-                                if (!user) {
-                                    toast.error("Please login to suggest an event");
-                                    return;
-                                }
-                                setShowCreateModal(true);
-                            }}
-                            className="bg-volt-400 text-coffee-900 text-sm font-bold px-4 py-2 rounded-xl hover:bg-white transition-colors flex items-center gap-2 shadow-sm"
+                            className="md:hidden w-10 h-10 bg-white rounded-xl border border-coffee-200 text-coffee-600 flex items-center justify-center shadow-sm"
+                            onClick={() => setIsSearchExpanded(!isSearchExpanded)}
                         >
-                            <i className="fas fa-plus"></i> Suggest Event
+                            <i className={`fas ${isSearchExpanded ? 'fa-times' : 'fa-search'}`}></i>
                         </button>
                     </div>
 
                     {/* Search */}
-                    <div className="relative w-full md:w-64">
+                    <div className={`${isSearchExpanded ? 'block' : 'hidden'} md:block w-full md:w-64 relative transition-all duration-300`}>
                         <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                         <input
                             type="text"
@@ -104,6 +115,7 @@ const EventsFeed: React.FC = () => {
                             className="w-full pl-9 pr-4 py-2 rounded-xl border border-coffee-200 bg-white focus:outline-none focus:border-volt-400"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
+                            autoFocus={isSearchExpanded}
                         />
                     </div>
 
