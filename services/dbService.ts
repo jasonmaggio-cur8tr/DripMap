@@ -1333,6 +1333,93 @@ export const deleteEvent = async (eventId: string) => {
   }
 };
 
+// ==================== COFFEE DATES ====================
+
+export const createCoffeeDate = async (
+  dateData: {
+    shop_id: string;
+    created_by: string;
+    starts_at: string;
+    duration_minutes: number;
+    timezone: string;
+    tone_preset: string;
+    message: string;
+  },
+  invites: {
+    invite_type: 'user' | 'email' | 'phone';
+    invitee_user_id?: string;
+    invitee_email?: string;
+    invitee_phone?: string;
+  }[]
+) => {
+  try {
+    // 1. Create the Date
+    const { data: date, error: dateError } = await supabase
+      .from('coffee_dates')
+      .insert([dateData])
+      .select()
+      .single();
+
+    if (dateError) throw dateError;
+
+    // 2. Create the Invites
+    if (invites && invites.length > 0) {
+      const invitesWithDateId = invites.map(invite => ({
+        ...invite,
+        coffee_date_id: date.id
+      }));
+
+      const { error: inviteError } = await supabase
+        .from('coffee_date_invites')
+        .insert(invitesWithDateId);
+
+      if (inviteError) throw inviteError;
+    }
+
+    return { success: true, data: date };
+  } catch (error) {
+    console.error("Error creating coffee date:", error);
+    return { success: false, error };
+  }
+};
+
+export const getCoffeeDateByInviteToken = async (token: string) => {
+  try {
+    // Get invite
+    const { data: invite, error: inviteError } = await supabase
+      .from('coffee_date_invites')
+      .select('*, coffee_dates(*, router_shop:shops(*))') // Join date and shop
+      .eq('invite_token', token)
+      .single();
+
+    if (inviteError) throw inviteError;
+    return { success: true, data: invite };
+  } catch (error) {
+    console.error("Error fetching invite:", error);
+    return { success: false, error };
+  }
+};
+
+export const acceptCoffeeDateInvite = async (inviteId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('coffee_date_invites')
+      .update({
+        invite_status: 'accepted',
+        responded_at: new Date().toISOString()
+      })
+      .eq('id', inviteId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error("Error accepting invite:", error);
+    return { success: false, error };
+  }
+};
+
 export const fetchShopCommunity = async (shopId: string) => {
   try {
     const [saversResult, visitorsResult] = await Promise.all([

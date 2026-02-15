@@ -9,6 +9,7 @@ interface ShopCardProps {
 
 const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
     const [isHovered, setIsHovered] = useState(false);
+    const [showCoffeeDateModal, setShowCoffeeDateModal] = useState(false);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     const touchStartX = useRef<number>(0);
@@ -51,6 +52,12 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
         }
     };
 
+    const handleCoffeeDateClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setShowCoffeeDateModal(true);
+    };
+
     return (
         <Link
             to={`/shop/${shop.slug || shop.id}`}
@@ -91,6 +98,15 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
                     <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center z-10">
                         <i className="fas fa-star text-volt-400 mr-1"></i> {shop.rating.toFixed(1)}
                     </div>
+
+                    {/* Coffee Date Button */}
+                    <button
+                        onClick={handleCoffeeDateClick}
+                        className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm text-coffee-900 w-8 h-8 rounded-full flex items-center justify-center shadow-lg hover:bg-volt-400 hover:scale-110 transition-all z-20"
+                        title="Plan a Coffee Date"
+                    >
+                        <i className="fas fa-calendar-plus"></i>
+                    </button>
                 </div>
 
                 {/* Deferred images - only render if interacted */}
@@ -123,8 +139,25 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
                     ))}
                 </div>
             </div>
+
+            {/* Coffee Date Modal */}
+            {showCoffeeDateModal && (
+                <div onClick={e => e.preventDefault()}> {/* Prevent Link navigation */}
+                    <React.Suspense fallback={null}>
+                        <CoffeeDateCreateModal
+                            shopId={shop.id}
+                            shopName={shop.name}
+                            onClose={() => setShowCoffeeDateModal(false)}
+                            onSuccess={() => setShowCoffeeDateModal(false)}
+                        />
+                    </React.Suspense>
+                </div>
+            )}
         </Link>
     );
 };
+
+// Lazy load the modal to keep initial bundle small
+const CoffeeDateCreateModal = React.lazy(() => import('./CoffeeDateCreateModal'));
 
 export default ShopCard;

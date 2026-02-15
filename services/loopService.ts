@@ -78,5 +78,47 @@ export const loopService = {
         } catch (error) {
             console.error('[LoopService] Error sending event:', error);
         }
+    },
+
+    /**
+     * Send a transactional email using Loops.so
+     */
+    async sendTransactionalEmail(
+        email: string,
+        transactionalId: string,
+        dataVariables: any
+    ) {
+        const apiKey = import.meta.env.VITE_LOOPS_API_KEY;
+        if (!apiKey) {
+            console.warn('[LoopService] No API key for transactional email');
+            return { success: false, error: 'No API Key' };
+        }
+
+        try {
+            const response = await fetch(`${LOOPS_API_URL}/transactional/send`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    transactionalId: transactionalId,
+                    dataVariables: dataVariables,
+                    addToAudience: true // Optional: adds them to audience if not present
+                })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                console.error('[LoopService] Transactional email failed:', data);
+                return { success: false, error: data };
+            }
+
+            return { success: true, data };
+        } catch (error) {
+            console.error('[LoopService] Error sending transactional email:', error);
+            return { success: false, error };
+        }
     }
 };

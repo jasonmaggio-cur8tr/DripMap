@@ -85,6 +85,9 @@ const ShopDetail: React.FC = () => {
   const [discountEnabled, setDiscountEnabled] = useState(shop?.proPlusDiscountEnabled ?? true);
   const [isTogglingDiscount, setIsTogglingDiscount] = useState(false);
 
+  // Coffee Date Modal
+  const [showCoffeeDateModal, setShowCoffeeDateModal] = useState(false);
+
   const ref = useRef<HTMLDivElement>(null);
 
   // Lightbox Keyboard Navigation
@@ -695,7 +698,28 @@ const ShopDetail: React.FC = () => {
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-10">
             {/* About */}
-            <section className="bg-white p-8 rounded-3xl shadow-sm border border-coffee-100">
+            <section className="bg-white p-8 rounded-3xl shadow-sm border border-coffee-100 relative">
+              {/* Coffee Date Button (Floating or inline) */}
+              <div className="absolute top-8 right-8 flex flex-col gap-2">
+                <button
+                  onClick={() => setShowCoffeeDateModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-coffee-900 to-coffee-800 text-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all font-bold text-sm"
+                >
+                  <i className="fas fa-mug-hot text-volt-400"></i>
+                  Make a Coffee Date
+                </button>
+
+                <button
+                  onClick={handleSaveClick}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-all font-bold text-sm ${isSaved
+                    ? 'bg-coffee-100 text-coffee-900 border-coffee-200'
+                    : 'bg-white text-coffee-600 border-coffee-200 hover:bg-coffee-50'}`}
+                >
+                  <i className={`fas ${isSaved ? 'fa-bookmark' : 'fa-bookmark'} ${isSaved ? 'text-volt-500' : 'text-coffee-400'}`}></i>
+                  {isSaved ? 'Saved' : 'Save for Later'}
+                </button>
+              </div>
+
               <h2 className="text-2xl font-serif font-bold text-coffee-900 mb-4">
                 The Lowdown
               </h2>
@@ -1474,9 +1498,22 @@ const ShopDetail: React.FC = () => {
           }
         }}
       />
+      {showCoffeeDateModal && (
+        <React.Suspense fallback={null}>
+          <CoffeeDateCreateModal
+            shopId={shop.id}
+            shopName={shop.name}
+            onClose={() => setShowCoffeeDateModal(false)}
+            onSuccess={() => setShowCoffeeDateModal(false)}
+          />
+        </React.Suspense>
+      )}
     </div>
   );
 };
+
+// Lazy load
+const CoffeeDateCreateModal = React.lazy(() => import('../components/CoffeeDateCreateModal'));
 
 export default ShopDetail;
 
