@@ -11,6 +11,15 @@ import { supabase } from "../lib/supabase";
 import { resetSupabaseAuthState } from "../lib/authUtils";
 import * as db from "../services/dbService";
 import { initializeStorage } from "../services/storageService";
+import { loopService } from '../services/loopService';
+
+// Helper to parse username into first/last name
+const parseName = (fullName: string) => {
+  const parts = fullName.trim().split(' ');
+  const firstName = parts[0];
+  const lastName = parts.length > 1 ? parts.slice(1).join(' ') : '';
+  return { firstName, lastName };
+};
 
 interface AppContextType {
   shops: Shop[];
@@ -275,8 +284,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       if (data.user && data.session) {
         console.log('[AppContext] Auto-login active, loading profile...');
         await loadUserProfile(data.user.id);
+
+        // Add to Loops.so (Email Marketing)
+        // We use a fire-and-forget approach here so it doesn't block UI if it fails
+        const { firstName, lastName } = parseName(username); // Helper to split username if possible, or just use username
+        loopService.createContact(email, data.user.id, firstName, lastName, 'user');
+
       } else {
         console.log('[AppContext] No session returned (email verification likely required).');
+        // Still try to add to loops (it might fail if email not verified, but worth a try or move to backend trigger)
+        const { firstName, lastName } = parseName(username);
+        loopService.createContact(email, data.user?.id || 'pending', firstName, lastName, 'user');
       }
 
       return { success: true };
