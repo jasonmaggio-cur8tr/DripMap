@@ -437,8 +437,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const filteredShops = shops.filter(shop => {
-    const matchesSearch = shop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      shop.city.toLowerCase().includes(searchQuery.toLowerCase());
+    const name = shop.name || '';
+    const city = shop.location?.city || shop.city || ''; // Handle nested location or root city
+    // Note: shop type has city at root but dbService maps it to location.city too?
+    // Looking at Shop interface: it has `city` at root AND `location: { city }`.
+    // Let's be safe.
+
+    // Actually Shop interface in `types.ts` has `city`? 
+    // dbService maps `city: shop.city`.
+    // Let's check Shop type def if needed, but safe access is best.
+
+    const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      city.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesVibes = selectedVibes.length === 0 ||
       selectedVibes.every(v => shop.vibes.includes(v.id));
     return matchesSearch && matchesVibes;

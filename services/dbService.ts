@@ -294,13 +294,13 @@ export const fetchShops = async (): Promise<Shop[]> => {
             country: shop.country || '',
           },
           gallery:
-            shop.shop_images?.map((img: any) => ({
+            (shop.shop_images || []).map((img: any) => ({
               id: img.id,
               url: img.url,
               type: img.type,
               caption: img.caption,
               sortOrder: img.sort_order || 0,
-            })).sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0)) || [],
+            })).sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0)),
           vibes: shop.vibes || [],
           cheekyVibes: shop.cheeky_vibes || [],
           rating: parseFloat(shop.rating) || 0,
@@ -432,13 +432,13 @@ export const fetchShopBySlug = async (slugOrId: string): Promise<Shop | null> =>
         country: shop.country || '',
       },
       gallery:
-        shop.shop_images?.map((img: any) => ({
+        (shop.shop_images || []).map((img: any) => ({
           id: img.id,
           url: img.url,
           type: img.type,
           caption: img.caption,
           sortOrder: img.sort_order || 0,
-        })).sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0)) || [],
+        })).sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0)),
       vibes: shop.vibes || [],
       cheekyVibes: shop.cheeky_vibes || [],
       rating: parseFloat(shop.rating) || 0,
