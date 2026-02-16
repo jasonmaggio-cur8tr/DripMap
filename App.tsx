@@ -47,6 +47,9 @@ const App: React.FC = () => {
           <Route path="/events" element={<EventsFeed />} />
           <Route path="/dripclub" element={<DripClub />} />
           <Route path="/scout-bounty" element={<ScoutBounty />} />
+
+          {/* Catch-all for Supabase auth redirects (access_token=...) and 404s */}
+          <Route path="*" element={<div className="min-h-screen flex items-center justify-center bg-coffee-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coffee-900"></div></div>} />
         </Routes>
       </Router>
     </AppProvider>

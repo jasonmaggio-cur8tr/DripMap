@@ -156,12 +156,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
 
       const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
         console.log(`[AppContext] Auth event: ${event}`);
-        if (event === 'SIGNED_OUT') {
+
+        if (event === 'PASSWORD_RECOVERY') {
+          console.log('[AppContext] Password recovery event detected! Redirecting to reset page...');
+          // Delay slightly to ensure Router is ready or processing is done?
+          // Force hash change
+          window.location.hash = '/reset-password';
+          // Force reload if needed? No, hash change should be enough for HashRouter
+        } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setClaimRequests([]);
         } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-          // Reload profile if not set or if different user
-          // We check current state in a ref or just rely on async fetch
+          // If we are in recovery mode (detected via event above or URL), skip profile load?
+          // No, profile load is fine. We just want to ensure we end up on /reset-password
+
           console.log('[AppContext] Reloading profile from auth change');
           await loadUserProfile(session.user.id);
         }
