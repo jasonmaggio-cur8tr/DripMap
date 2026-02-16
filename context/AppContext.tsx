@@ -157,12 +157,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
         console.log(`[AppContext] Auth event: ${event}`);
 
-        if (event === 'PASSWORD_RECOVERY') {
-          console.log('[AppContext] Password recovery event detected! Redirecting to reset page...');
-          // Delay slightly to ensure Router is ready or processing is done?
-          // Force hash change
+        // CHeck for recovery in URL hash as fallback since PASSWORD_RECOVERY event can be flaky
+        const isRecoveryHash = window.location.hash.includes('type=recovery');
+
+        if (event === 'PASSWORD_RECOVERY' || (isRecoveryHash && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED'))) {
+          console.log('[AppContext] Password recovery detected (Event or Hash)! Redirecting to reset page...');
           window.location.hash = '/reset-password';
-          // Force reload if needed? No, hash change should be enough for HashRouter
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setClaimRequests([]);
