@@ -13,6 +13,7 @@ import { resetSupabaseAuthState } from "../lib/authUtils";
 import * as db from "../services/dbService";
 import { initializeStorage } from "../services/storageService";
 import { loopService } from '../services/loopService';
+import { useToast } from './ToastContext';
 
 // Helper to parse username into first/last name
 const parseName = (fullName: string) => {
@@ -93,6 +94,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [shops, setShops] = useState<Shop[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -152,6 +154,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       setLoading(true);
       await initializeStorage();
       await refreshShops();
+
+      // Check for auth errors in URL hash (e.g. expired links)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1)); // strip #
+      const error = hashParams.get('error');
+      const errorDescription = hashParams.get('error_description');
+
+      if (error) {
+        console.error('[AppContext] Auth error detected in hash:', error, errorDescription);
+        // Clean up the URL so the user doesn't see the ugly hash
+        window.history.replaceState(null, '', window.location.pathname);
+        setLoading(false);
+
+        // Show user friendly message
+        // Convert + to spaces if needed (though URLSearchParams handles it usually)
+        toast.error(errorDescription?.replace(/\+/g, ' ') || 'Authentication failed. Please try again.');
+
+        navigate('/auth');
+        return;
+      }
 
       // Check early for recovery intent in URL hash
       const isRecoveryHash = window.location.hash.includes('type=recovery') || window.location.hash.includes('reset-password');
