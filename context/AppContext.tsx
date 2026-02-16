@@ -449,8 +449,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
 
     const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       city.toLowerCase().includes(searchQuery.toLowerCase());
+
     const matchesVibes = selectedVibes.length === 0 ||
-      selectedVibes.every(v => shop.vibes.includes(v.id));
+      selectedVibes.every(v => {
+        // shop.vibes comes from DB as string[] (or specifically Vibe[] if cast correctly)
+        // But let's be safe and compare as strings
+        return shop.vibes?.some(shopVibe => shopVibe === v || shopVibe === v.toString());
+      });
+
     return matchesSearch && matchesVibes;
   });
 
