@@ -332,9 +332,79 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
 
   // Shop Actions
   const addShop = async (shopData: any) => {
-    const result = await db.createShop(shopData);
+    // 1. Flatten data for DB insert
+    // shopData comes from AddSpot form which has strictly typed shape matching Shop interface (mostly)
+    // but dbService expects flat structure.
+    const dbData = {
+      name: shopData.name,
+      description: shopData.description,
+      // specific mapping for location object
+      lat: shopData.location?.lat,
+      lng: shopData.location?.lng,
+      address: shopData.location?.address,
+      city: shopData.location?.city,
+      state: shopData.location?.state,
+      country: shopData.location?.country,
+
+      vibes: shopData.vibes,
+      cheekyVibes: shopData.cheekyVibes,
+      brandId: shopData.brandId,
+      locationName: shopData.locationName,
+      openHours: shopData.openHours,
+
+      // Map gallery to simple structure for DB service
+      images: shopData.gallery?.map((g: any) => ({
+        url: g.url,
+        type: g.type || 'owner'
+      })) || []
+    };
+
+    const result = await db.createShop(dbData);
+
     if (result.success && result.shop) {
-      setShops(prev => [result.shop, ...prev]);
+      // 2. Construct full Shop object for optimistic update
+      // result.shop is the raw DB row. We need to map it to Shop interface.
+      const newShop: Shop = {
+        ...result.shop, // spread raw ID, timestamps, etc.
+
+        // Re-construct the Location object
+        location: {
+          lat: result.shop.lat,
+          lng: result.shop.lng,
+          address: result.shop.address,
+          city: result.shop.city,
+          state: result.shop.state,
+          country: result.shop.country,
+        },
+
+        // Use the gallery we just uploaded (result.shop doesn't have it yet as it's a separate table)
+        gallery: shopData.gallery || [],
+
+        // Default/Empty fields required by Shop interface
+        rating: 0,
+        reviewCount: 0,
+        reviews: [],
+        stampCount: 0,
+        isClaimed: false,
+
+        // Ensure arrays are initialized if DB returns null (though schema says default {})
+        vibes: result.shop.vibes || [],
+        cheekyVibes: result.shop.cheeky_vibes || [],
+        customVibes: [],
+
+        // Map snake_case to camelCase for specific fields if DB returns snake_case
+        // (dbService.createShop returns raw row, so likely snake_case for some fields?)
+        // Actually Supabase client returns what's in DB.
+        // We know brand_id, location_name, open_hours are in DB.
+        brandId: result.shop.brand_id,
+        locationName: result.shop.location_name,
+        openHours: result.shop.open_hours,
+      };
+
+      setShops(prev => [newShop, ...prev]);
+    } else {
+      // Throw error so UI knows it failed
+      throw result.error || new Error("Failed to create shop");
     }
   };
 

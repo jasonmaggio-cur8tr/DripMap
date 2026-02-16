@@ -504,8 +504,12 @@ export const createShop = async (shopData: {
   address: string;
   city: string;
   state: string;
+  country?: string;
   vibes: string[];
   cheekyVibes: string[];
+  brandId?: string;
+  locationName?: string;
+  openHours?: any;
   images: { url: string; type: "owner" | "community" }[];
 }) => {
   try {
@@ -520,8 +524,12 @@ export const createShop = async (shopData: {
         address: shopData.address,
         city: shopData.city,
         state: shopData.state,
+        country: shopData.country,
         vibes: shopData.vibes,
         cheeky_vibes: shopData.cheekyVibes,
+        brand_id: shopData.brandId,
+        location_name: shopData.locationName,
+        open_hours: shopData.openHours,
       })
       .select()
       .single();
