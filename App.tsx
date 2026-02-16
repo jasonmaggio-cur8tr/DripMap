@@ -22,8 +22,8 @@ import ScoutBounty from './pages/ScoutBounty';
 
 const App: React.FC = () => {
   return (
-    <AppProvider>
-      <Router>
+    <Router>
+      <AppProvider>
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
@@ -51,8 +51,8 @@ const App: React.FC = () => {
           {/* Catch-all for Supabase auth redirects (access_token=...) and 404s */}
           <Route path="*" element={<div className="min-h-screen flex items-center justify-center bg-coffee-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coffee-900"></div></div>} />
         </Routes>
-      </Router>
-    </AppProvider>
+      </AppProvider>
+    </Router>
   );
 };
 

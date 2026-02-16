@@ -14,15 +14,15 @@ const Auth: React.FC = () => {
   const [showVerifyEmail, setShowVerifyEmail] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login, signup, resetPassword, user } = useApp();
+  const { login, signup, resetPassword, user, isPasswordResetting } = useApp();
 
   // Redirect to home if user is already logged in
   useEffect(() => {
-    if (user && !showVerifyEmail && !loading) {
+    if (user && !showVerifyEmail && !loading && !isPasswordResetting) {
       console.log('[Auth] User logged in, redirecting home...');
       navigate('/');
     }
-  }, [user, navigate, showVerifyEmail, loading]);
+  }, [user, navigate, showVerifyEmail, loading, isPasswordResetting]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

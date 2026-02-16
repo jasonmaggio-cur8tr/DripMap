@@ -5,6 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
+import { useNavigate } from 'react-router-dom';
 import { Shop, User, Vibe, ClaimRequest, Review, CalendarEvent, Brand } from "../types";
 import { INITIAL_SHOPS } from "../constants";
 import { supabase } from "../lib/supabase";
@@ -61,6 +62,7 @@ interface AppContextType {
 
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  isPasswordResetting: boolean;
   selectedVibes: Vibe[];
   toggleVibe: (vibe: Vibe) => void;
   refreshShops: () => Promise<void>;
@@ -90,9 +92,11 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
+  const navigate = useNavigate();
   const [shops, setShops] = useState<Shop[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPasswordResetting, setIsPasswordResetting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedVibes, setSelectedVibes] = useState<Vibe[]>([]);
   const [claimRequests, setClaimRequests] = useState<ClaimRequest[]>([]);
@@ -149,6 +153,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       await initializeStorage();
       await refreshShops();
 
+      // Check early for recovery intent in URL hash
+      const isRecoveryHash = window.location.hash.includes('type=recovery') || window.location.hash.includes('reset-password');
+      if (isRecoveryHash) {
+        console.log('[AppContext] Detected recovery flow from URL hash.');
+        setIsPasswordResetting(true);
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         await loadUserProfile(session.user.id);
@@ -157,21 +168,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
         console.log(`[AppContext] Auth event: ${event}`);
 
-        // CHeck for recovery in URL hash as fallback since PASSWORD_RECOVERY event can be flaky
-        const isRecoveryHash = window.location.hash.includes('type=recovery');
+        const isRecoveryHashNow = window.location.hash.includes('type=recovery');
 
-        if (event === 'PASSWORD_RECOVERY' || (isRecoveryHash && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED'))) {
-          console.log('[AppContext] Password recovery detected (Event or Hash)! Redirecting to reset page...');
-          window.location.hash = '/reset-password';
+        if (event === 'PASSWORD_RECOVERY' || (isRecoveryHashNow && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED'))) {
+          console.log('[AppContext] Password recovery detected! Enforcing reset state.');
+          setIsPasswordResetting(true);
+          // Use navigate for reliable router integration
+          navigate('/reset-password');
+
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setClaimRequests([]);
+          setIsPasswordResetting(false);
         } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-          // If we are in recovery mode (detected via event above or URL), skip profile load?
-          // No, profile load is fine. We just want to ensure we end up on /reset-password
-
           console.log('[AppContext] Reloading profile from auth change');
           await loadUserProfile(session.user.id);
+          // DO NOT navigate here. Let Auth.tsx handle redirects if needed, 
+          // but effectively blocked if isPasswordResetting is true in Auth.tsx
         }
       });
       authSubscription = data.subscription;
@@ -183,12 +196,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     return () => {
       authSubscription?.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   const logout = async () => {
     setUser(null); // Manually clear user
     await resetSupabaseAuthState();
-    window.location.replace("/");
+    navigate("/");
   };
 
   const loadUserProfile = async (userId: string) => {
@@ -736,6 +749,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         resetPassword,
         updatePassword,
         updateUserProfile,
+        isPasswordResetting,
         addShop,
         updateShop,
         toggleSaveShop,
