@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import Button from '../components/Button';
 import { useToast } from '../context/ToastContext';
@@ -10,8 +10,12 @@ const ResetPassword: React.FC = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
     const { toast } = useToast();
     const { updatePassword } = useApp();
+
+    const returnPath = location.state?.returnPath;
+    const isProfileUpdate = !!returnPath;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -32,7 +36,7 @@ const ResetPassword: React.FC = () => {
             const result = await updatePassword(password);
             if (result.success) {
                 toast.success('Password updated successfully!');
-                navigate('/');
+                navigate(returnPath || '/');
             } else {
                 toast.error(result.error?.message || 'Failed to update password');
             }
@@ -49,13 +53,15 @@ const ResetPassword: React.FC = () => {
             <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl border border-coffee-100">
                 <div className="text-center mb-8">
                     <div className="w-20 h-20 bg-coffee-900 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg rotate-3 transition-transform hover:rotate-6">
-                        <i className="fas fa-key text-volt-400 text-3xl filter drop-shadow-[0_2px_0_rgba(0,0,0,0.2)]"></i>
+                        <i className={`fas ${isProfileUpdate ? 'fa-lock' : 'fa-key'} text-volt-400 text-3xl filter drop-shadow-[0_2px_0_rgba(0,0,0,0.2)]`}></i>
                     </div>
                     <h1 className="text-3xl font-serif font-black text-coffee-900 mb-2">
-                        Set New Password
+                        {isProfileUpdate ? 'Change Password' : 'Set New Password'}
                     </h1>
                     <p className="text-coffee-600 font-medium">
-                        Please enter your new password below.
+                        {isProfileUpdate
+                            ? 'Enter your new password below.'
+                            : 'Please enter your new password below.'}
                     </p>
                 </div>
 
@@ -91,6 +97,16 @@ const ResetPassword: React.FC = () => {
                     <Button type="submit" className="w-full py-4" isLoading={loading}>
                         {loading ? 'Updating Password...' : 'Update Password'}
                     </Button>
+
+                    {isProfileUpdate && (
+                        <button
+                            type="button"
+                            onClick={() => navigate(returnPath)}
+                            className="w-full py-2 text-coffee-500 font-bold text-sm hover:text-coffee-900 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                    )}
                 </form>
             </div>
         </div>

@@ -63,7 +63,8 @@ const DripClubBadge: React.FC<{ username: string; onManage?: () => void }> = ({ 
       </div>
 
       {/* Custom Animations */}
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes scan {
           0% { top: 0%; opacity: 0; }
           5% { opacity: 1; }
@@ -374,12 +375,12 @@ const Profile: React.FC = () => {
       setViewedUser(prev =>
         prev
           ? {
-              ...prev,
-              username: editData.username,
-              bio: editData.bio,
-              avatarUrl: finalAvatarUrl,
-              socialLinks: editData.socialLinks,
-            }
+            ...prev,
+            username: editData.username,
+            bio: editData.bio,
+            avatarUrl: finalAvatarUrl,
+            socialLinks: editData.socialLinks,
+          }
           : null
       );
 
@@ -705,6 +706,14 @@ const Profile: React.FC = () => {
                         <i className="fas fa-edit mr-2"></i> Edit Profile
                       </Button>
                       <Button
+                        variant="outline" // or ghost, consistent with design
+                        size="sm"
+                        onClick={() => navigate('/reset-password', { state: { returnPath: '/profile' } })}
+                        className="text-coffee-700 hover:bg-coffee-50"
+                      >
+                        <i className="fas fa-lock mr-2"></i> Change Password
+                      </Button>
+                      <Button
                         variant="ghost"
                         size="sm"
                         onClick={handleShareProfile}
@@ -729,9 +738,8 @@ const Profile: React.FC = () => {
                         onClick={handleToggleFollow}
                       >
                         <i
-                          className={`fas ${
-                            isFollowing ? "fa-user-check" : "fa-user-plus"
-                          } mr-2`}
+                          className={`fas ${isFollowing ? "fa-user-check" : "fa-user-plus"
+                            } mr-2`}
                         ></i>
                         {isFollowing ? "Following" : "Follow"}
                       </Button>
@@ -766,18 +774,16 @@ const Profile: React.FC = () => {
               {BADGES.map(badge => (
                 <div
                   key={badge.id}
-                  className={`aspect-square rounded-2xl flex flex-col items-center justify-center p-3 text-center border-2 transition-all duration-300 group ${
-                    badge.unlocked
+                  className={`aspect-square rounded-2xl flex flex-col items-center justify-center p-3 text-center border-2 transition-all duration-300 group ${badge.unlocked
                       ? "bg-coffee-50 border-volt-400 shadow-md scale-105"
                       : "bg-gray-50 border-gray-100 grayscale opacity-60"
-                  }`}
+                    }`}
                 >
                   <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 text-xl ${
-                      badge.unlocked
+                    className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 text-xl ${badge.unlocked
                         ? "bg-coffee-900 text-volt-400"
                         : "bg-gray-200 text-gray-400"
-                    }`}
+                      }`}
                   >
                     <i className={badge.icon}></i>
                   </div>
@@ -831,18 +837,16 @@ const Profile: React.FC = () => {
                       {dripClubMembership.planType === "annual" ? "Annual" : "Monthly"} Plan
                     </span>
                     <div
-                      className={`text-[10px] font-black px-2.5 py-1 rounded-full flex items-center gap-1 ${
-                        dripClubMembership.status === "trialing"
+                      className={`text-[10px] font-black px-2.5 py-1 rounded-full flex items-center gap-1 ${dripClubMembership.status === "trialing"
                           ? "bg-blue-100 text-blue-600"
                           : "bg-green-100 text-green-600"
-                      }`}
+                        }`}
                     >
                       <span
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          dripClubMembership.status === "trialing"
+                        className={`w-1.5 h-1.5 rounded-full ${dripClubMembership.status === "trialing"
                             ? "bg-blue-500"
                             : "bg-green-500"
-                        }`}
+                          }`}
                       ></span>
                       {dripClubMembership.status === "trialing"
                         ? "Free Trial"
@@ -857,10 +861,10 @@ const Profile: React.FC = () => {
                       <p className="text-coffee-900 font-bold">
                         {dripClubMembership.createdAt
                           ? new Date(dripClubMembership.createdAt).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })
                           : "N/A"}
                       </p>
                     </div>
@@ -871,10 +875,10 @@ const Profile: React.FC = () => {
                       <p className="text-coffee-900 font-bold">
                         {dripClubMembership.currentPeriodEnd
                           ? new Date(dripClubMembership.currentPeriodEnd).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })
                           : "N/A"}
                       </p>
                     </div>
@@ -888,10 +892,10 @@ const Profile: React.FC = () => {
                         Your membership will end on{" "}
                         {dripClubMembership.currentPeriodEnd
                           ? new Date(dripClubMembership.currentPeriodEnd).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })
                           : "N/A"}
                       </p>
                     </div>
@@ -999,11 +1003,10 @@ const Profile: React.FC = () => {
                               className={`
                                                 relative w-24 h-24 rounded-full border-[3px] flex flex-col items-center justify-center p-2 text-center transform transition-transform duration-300 hover:scale-110 hover:rotate-0
                                                 ${rotationClass}
-                                                ${
-                                                  shop.isClaimed
-                                                    ? "border-yellow-500/60 text-yellow-700 bg-yellow-50/50" // Gold Stamp
-                                                    : "border-coffee-900/40 text-coffee-900/60 hover:border-coffee-900 hover:text-coffee-900" // Standard Ink
-                                                }
+                                                ${shop.isClaimed
+                                  ? "border-yellow-500/60 text-yellow-700 bg-yellow-50/50" // Gold Stamp
+                                  : "border-coffee-900/40 text-coffee-900/60 hover:border-coffee-900 hover:text-coffee-900" // Standard Ink
+                                }
                                             `}
                             >
                               {/* Rough texture overlay for ink effect */}
