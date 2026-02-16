@@ -6,7 +6,7 @@ import Button from '../components/Button';
 import { useToast } from '../context/ToastContext';
 
 const Auth: React.FC = () => {
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
@@ -14,7 +14,7 @@ const Auth: React.FC = () => {
   const [showVerifyEmail, setShowVerifyEmail] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login, signup, user } = useApp();
+  const { login, signup, resetPassword, user } = useApp();
 
   // Redirect to home if user is already logged in
   useEffect(() => {
@@ -28,8 +28,13 @@ const Auth: React.FC = () => {
     e.preventDefault();
     console.log('[Auth] Submitting form, mode:', mode);
 
-    if (!email.trim() || !password.trim()) {
-      toast.error('Please fill in all required fields');
+    if (!email.trim()) {
+      toast.error('Please enter your email address');
+      return;
+    }
+
+    if (mode !== 'forgot' && !password.trim()) {
+      toast.error('Please enter your password');
       return;
     }
 
@@ -38,7 +43,7 @@ const Auth: React.FC = () => {
       return;
     }
 
-    if (password.length < 6) {
+    if (mode === 'signup' && password.length < 6) {
       toast.error('Password must be at least 6 characters');
       return;
     }
@@ -54,7 +59,7 @@ const Auth: React.FC = () => {
         } else {
           toast.error(result.error?.message || 'Failed to create account');
         }
-      } else {
+      } else if (mode === 'login') {
         const result = await login(email, password);
         console.log('[Auth] Login result:', result);
         if (result.success) {
@@ -62,6 +67,15 @@ const Auth: React.FC = () => {
           navigate('/');
         } else {
           toast.error(result.error?.message || 'Invalid email or password');
+        }
+      } else if (mode === 'forgot') {
+        const result = await resetPassword(email);
+        console.log('[Auth] Reset password result:', result);
+        if (result.success) {
+          toast.success('Check your email for the reset link!');
+          setMode('login');
+        } else {
+          toast.error(result.error?.message || 'Failed to send reset email');
         }
       }
     } catch (error) {
@@ -116,33 +130,44 @@ const Auth: React.FC = () => {
             DripMap
           </h1>
           <p className="text-coffee-600 font-medium">
-            {mode === 'signup' ? 'Join the community of coffee explorers' : 'Welcome back!'}
+            {mode === 'signup' ? 'Join the community of coffee explorers' :
+              mode === 'forgot' ? 'Reset your password' : 'Welcome back!'}
           </p>
         </div>
 
-        {/* Mode Toggle */}
-        <div className="flex gap-2 mb-6 p-1 bg-coffee-50 rounded-xl">
-          <button
-            type="button"
-            onClick={() => setMode('login')}
-            className={`flex-1 py-2 px-4 rounded-lg font-bold text-sm transition-all ${mode === 'login'
-              ? 'bg-white text-coffee-900 shadow-sm'
-              : 'text-coffee-400 hover:text-coffee-600'
-              }`}
-          >
-            Login
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('signup')}
-            className={`flex-1 py-2 px-4 rounded-lg font-bold text-sm transition-all ${mode === 'signup'
-              ? 'bg-white text-coffee-900 shadow-sm'
-              : 'text-coffee-400 hover:text-coffee-600'
-              }`}
-          >
-            Sign Up
-          </button>
-        </div>
+        {/* Mode Toggle - Hide in forgot mode */}
+        {mode !== 'forgot' && (
+          <div className="flex gap-2 mb-6 p-1 bg-coffee-50 rounded-xl">
+            <button
+              type="button"
+              onClick={() => setMode('login')}
+              className={`flex-1 py-2 px-4 rounded-lg font-bold text-sm transition-all ${mode === 'login'
+                ? 'bg-white text-coffee-900 shadow-sm'
+                : 'text-coffee-400 hover:text-coffee-600'
+                }`}
+            >
+              Login
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('signup')}
+              className={`flex-1 py-2 px-4 rounded-lg font-bold text-sm transition-all ${mode === 'signup'
+                ? 'bg-white text-coffee-900 shadow-sm'
+                : 'text-coffee-400 hover:text-coffee-600'
+                }`}
+            >
+              Sign Up
+            </button>
+          </div>
+        )}
+
+        {mode === 'forgot' && (
+          <div className="mb-6 text-center">
+            <p className="text-sm text-coffee-600 mb-4">
+              Enter your email address and we'll send you a link to reset your password.
+            </p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'signup' && (
@@ -173,29 +198,52 @@ const Auth: React.FC = () => {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-bold text-coffee-900 mb-2">Password</label>
-            <input
-              type="password"
-              required
-              minLength={6}
-              className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none font-medium"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-            />
-            {mode === 'signup' && (
-              <p className="text-xs text-coffee-400 mt-1">Minimum 6 characters</p>
-            )}
-          </div>
+          {mode !== 'forgot' && (
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-bold text-coffee-900">Password</label>
+                {mode === 'login' && (
+                  <button
+                    type="button"
+                    onClick={() => setMode('forgot')}
+                    className="text-xs font-bold text-volt-500 hover:text-volt-600 hover:underline"
+                  >
+                    Forgot Password?
+                  </button>
+                )}
+              </div>
+              <input
+                type="password"
+                required
+                minLength={6}
+                className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none font-medium"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+              />
+              {mode === 'signup' && (
+                <p className="text-xs text-coffee-400 mt-1">Minimum 6 characters</p>
+              )}
+            </div>
+          )}
 
           <Button type="submit" className="w-full py-4" isLoading={loading}>
             {loading
-              ? (mode === 'signup' ? 'Creating Account...' : 'Signing In...')
-              : (mode === 'signup' ? 'Create Account' : 'Sign In')
+              ? (mode === 'signup' ? 'Creating Account...' : mode === 'forgot' ? 'Sending Link...' : 'Signing In...')
+              : (mode === 'signup' ? 'Create Account' : mode === 'forgot' ? 'Send Reset Link' : 'Sign In')
             }
           </Button>
+
+          {mode === 'forgot' && (
+            <button
+              type="button"
+              onClick={() => setMode('login')}
+              className="w-full py-2 text-sm font-bold text-coffee-500 hover:text-coffee-900"
+            >
+              Back to Login
+            </button>
+          )}
         </form>
 
         <p className="text-center text-xs text-coffee-400 mt-6">

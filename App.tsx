@@ -8,6 +8,7 @@ import ShopDetail from './pages/ShopDetail';
 import AddSpot from './pages/AddSpot';
 import EditShop from './pages/EditShop';
 import Auth from './pages/Auth';
+import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
 import ClaimShop from './pages/ClaimShop';
 import AdminLayout from './layouts/AdminLayout';
@@ -30,6 +31,7 @@ const App: React.FC = () => {
           <Route path="/add" element={<AddSpot />} />
           <Route path="/edit-shop/:id" element={<EditShop />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="/claim/:id" element={<ClaimShop />} />

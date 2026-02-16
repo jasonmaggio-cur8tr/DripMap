@@ -36,6 +36,8 @@ interface AppContextType {
   ) => Promise<{ success: boolean; error?: any }>;
   logout: () => Promise<void>;
   updateUserProfile: (updates: Partial<User>) => Promise<void>;
+  resetPassword: (email: string) => Promise<{ success: boolean; error?: any }>;
+  updatePassword: (password: string) => Promise<{ success: boolean; error?: any }>;
   addShop: (
     shop: Omit<Shop, "id" | "rating" | "reviewCount" | "reviews" | "stampCount">
   ) => Promise<void>;
@@ -318,6 +320,38 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       return { success: true };
     } catch (error) {
       console.error("Login error:", error);
+      return { success: false, error };
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      // Get the base URL for the redirect
+      const redirectTo = `${window.location.origin}/#/reset-password`;
+      console.log('[AppContext] Sending password reset to:', email, 'Redirecting to:', redirectTo);
+
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo,
+      });
+
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      console.error("Reset password error:", error);
+      return { success: false, error };
+    }
+  };
+
+  const updatePassword = async (password: string) => {
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        password
+      });
+
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      console.error("Update password error:", error);
       return { success: false, error };
     }
   };
@@ -690,6 +724,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         signup,
         login,
         logout,
+        resetPassword,
+        updatePassword,
         updateUserProfile,
         addShop,
         updateShop,
