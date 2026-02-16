@@ -326,9 +326,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
 
   const resetPassword = async (email: string) => {
     try {
-      // Get the base URL for the redirect
-      const redirectTo = `${window.location.origin}/#/reset-password`;
-      console.log('[AppContext] Sending password reset to:', email, 'Redirecting to:', redirectTo);
+      // For HashRouter, we redirect to the base URL.
+      // The onAuthStateChange listener will catch 'PASSWORD_RECOVERY' and push to /reset-password
+      const redirectTo = `${window.location.origin}`;
+      console.log('[AppContext] Sending password reset to:', email, 'Redirecting to base:', redirectTo);
 
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo,
