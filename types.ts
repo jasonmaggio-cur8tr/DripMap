@@ -116,6 +116,69 @@ export interface Review {
   date: string;
 }
 
+// Experience Logs (FEAT-014)
+export interface ExperienceLog {
+  id: string;
+  shopId: string;
+  userId: string;
+  userName?: string;
+  userAvatar?: string;
+
+  // Required
+  overallQuality: number; // 0-100
+  bringFriendScore: number; // 0-10 (NPS)
+
+  // Optional Sliders (0-100, null if skipped)
+  vibeEnergy?: number | null;
+  coffeeStyle?: number | null;
+  specialtyDrink?: number | null;
+  matchaProfile?: number | null;
+  pastryCraft?: number | null;
+  parkingEase?: number | null;
+  laptopFriendly?: number | null;
+
+  // Text
+  quickTake?: string; // Max 140 chars
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ShopAggregate {
+  shopId: string;
+  logCount: number;
+
+  // Scores
+  avgOverallQuality?: number;
+  npsScore?: number; // -100 to 100
+  npsNormalized?: number; // 0 to 100
+  dripScore?: number; // 0 to 100 (The main score)
+
+  // Dimension Averages
+  avgVibeEnergy?: number;
+  avgCoffeeStyle?: number;
+  avgSpecialtyDrink?: number;
+  avgMatchaProfile?: number;
+  avgPastryCraft?: number;
+  avgParkingEase?: number;
+  avgLaptopFriendly?: number;
+
+  // Trait tags
+  trait1?: string;
+  trait2?: string;
+
+  updatedAt: string;
+}
+
+export interface PrivateFeedback {
+  id: string;
+  shopId: string;
+  userId: string;
+  experienceLogId?: string;
+  feedback: string;
+  createdAt: string;
+}
+
 export interface Location {
   lat: number;
   lng: number;
@@ -155,6 +218,7 @@ export interface Shop {
   rating: number;
   reviewCount: number;
   reviews: Review[];
+  experienceLogs?: ExperienceLog[]; // New field for real logs
   isClaimed: boolean;
   claimedBy?: string;
   stampCount: number;
@@ -187,8 +251,8 @@ export interface Shop {
   cancelAtPeriodEnd?: boolean;
   canceledAt?: string;
 
-  // Stripe IDs (internal use only - not sent to general API responses)
-  // These are only populated when specifically needed (e.g., billing management)
+  // Drip Score (Aggregated)
+  dripScore?: number; // 0-100, live score
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
 }

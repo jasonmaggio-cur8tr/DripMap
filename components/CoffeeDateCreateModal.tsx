@@ -125,7 +125,7 @@ const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shopId, s
                     if (invite.invite_type === 'email' && invite.invitee_email) {
                         await loopService.sendTransactionalEmail(
                             invite.invitee_email,
-                            "coffee_date_invite", // You need to create this Transaction ID in Loops
+                            "cmlpuhcf700pw0i1nqtlyw75w", // Invite ID from Loops
                             {
                                 organizerName: user.username || "A DripMap User",
                                 shopName,
@@ -180,8 +180,8 @@ const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shopId, s
                                     key={t.id}
                                     onClick={() => handleToneChange(t.id)}
                                     className={`p-3 rounded-xl border text-left transition-all relative overflow-hidden ${tone === t.id
-                                            ? 'bg-coffee-900 text-white border-coffee-900 shadow-lg'
-                                            : 'bg-white text-coffee-600 border-coffee-200 hover:border-coffee-400'
+                                        ? 'bg-coffee-900 text-white border-coffee-900 shadow-lg'
+                                        : 'bg-white text-coffee-600 border-coffee-200 hover:border-coffee-400'
                                         }`}
                                 >
                                     <div className="flex items-center gap-2 mb-1">

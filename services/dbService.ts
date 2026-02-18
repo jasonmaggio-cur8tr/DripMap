@@ -257,29 +257,15 @@ export const fetchShops = async (): Promise<Shop[]> => {
             `
           *,
           shop_images(*),
-          reviews(*, profiles(username, avatar_url))
+          reviews(*, profiles(username, avatar_url)),
+          experience_logs(*, profiles(username, avatar_url)),
+          shop_aggregates(drip_score)
         `
           )
           .order("created_at", { ascending: false });
 
         if (error) throw error;
         if (!shops) return [];
-
-        // Debug: Log raw data to check field values
-        if (shops.length > 0) {
-          // Find shop with reviews to debug
-          const shopWithReview = shops.find(s => s.reviews && s.reviews.length > 0) || shops[0];
-          console.log("[fetchShops] Shop with reviews - raw data:", {
-            id: shopWithReview.id,
-            name: shopWithReview.name,
-            rating: shopWithReview.rating,
-            rating_type: typeof shopWithReview.rating,
-            review_count: shopWithReview.review_count,
-            stamp_count: shopWithReview.stamp_count,
-            reviews_length: shopWithReview.reviews?.length,
-            first_review: shopWithReview.reviews?.[0]
-          });
-        }
 
         return shops.map(shop => ({
           id: shop.id,
@@ -318,6 +304,26 @@ export const fetchShops = async (): Promise<Shop[]> => {
               comment: r.comment || "",
               date: new Date(r.created_at).toLocaleDateString(),
             })) || [],
+          experienceLogs:
+            shop.experience_logs?.map((l: any) => ({
+              id: l.id,
+              shopId: l.shop_id,
+              userId: l.user_id,
+              userName: l.profiles?.username || "Drip Explorer",
+              userAvatar: l.profiles?.avatar_url,
+              overallQuality: l.overall_quality,
+              bringFriendScore: l.bring_friend_score,
+              vibeEnergy: l.vibe_energy,
+              coffeeStyle: l.coffee_style,
+              specialtyDrink: l.specialty_drink,
+              matchaProfile: l.matcha_profile,
+              pastryCraft: l.pastry_craft,
+              parkingEase: l.parking_ease,
+              laptopFriendly: l.laptop_friendly,
+              quickTake: l.quick_take,
+              createdAt: l.created_at,
+              updatedAt: l.updated_at,
+            })).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) || [],
           isClaimed: shop.is_claimed,
           claimedBy: shop.claimed_by,
           stampCount: shop.stamp_count || 0,
@@ -367,7 +373,11 @@ export const fetchShops = async (): Promise<Shop[]> => {
           // Vegan Options
           veganFoodOptions: shop.vegan_food_options || false,
           plantMilks: shop.plant_milks || [],
+          // Map Drip Score
+          dripScore: shop.shop_aggregates?.drip_score,
         }));
+
+
       },
       3,
       1000,
@@ -393,7 +403,9 @@ export const fetchShopBySlug = async (slugOrId: string): Promise<Shop | null> =>
       .select(`
                 *,
                 shop_images(*),
-                reviews(*, profiles(username, avatar_url))
+                reviews(*, profiles(username, avatar_url)),
+                experience_logs(*, profiles(username, avatar_url)),
+                shop_aggregates(drip_score)
             `)
       .eq("slug", slugOrId)
       .single();
@@ -405,7 +417,9 @@ export const fetchShopBySlug = async (slugOrId: string): Promise<Shop | null> =>
         .select(`
                     *,
                     shop_images(*),
-                    reviews(*, profiles(username, avatar_url))
+                    reviews(*, profiles(username, avatar_url)),
+                    experience_logs(*, profiles(username, avatar_url)),
+                    shop_aggregates(drip_score)
                 `)
         .eq("id", slugOrId)
         .single();
@@ -453,16 +467,34 @@ export const fetchShopBySlug = async (slugOrId: string): Promise<Shop | null> =>
           comment: r.comment || "",
           date: new Date(r.created_at).toLocaleDateString(),
         })) || [],
-      isClaimed: shop.is_claimed,
+
+      experienceLogs:
+        shop.experience_logs?.map((l: any) => ({
+          id: l.id,
+          shopId: l.shop_id,
+          userId: l.user_id,
+          userName: l.profiles?.username || "Drip Explorer",
+          userAvatar: l.profiles?.avatar_url,
+          overallQuality: l.overall_quality,
+          bringFriendScore: l.bring_friend_score,
+          vibeEnergy: l.vibe_energy,
+          coffeeStyle: l.coffee_style,
+          specialtyDrink: l.specialty_drink,
+          matchaProfile: l.matcha_profile,
+          pastryCraft: l.pastry_craft,
+          parkingEase: l.parking_ease,
+          laptopFriendly: l.laptop_friendly,
+          quickTake: l.quick_take,
+          createdAt: l.created_at,
+          updatedAt: l.updated_at,
+        })).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) || [],
+
+      isClaimed: shop.is_claimed || false,
       claimedBy: shop.claimed_by,
       stampCount: shop.stamp_count || 0,
-      subscriptionTier: shop.subscription_tier || 'free',
-      subscriptionStatus: shop.subscription_status || 'inactive',
-      proPlusDiscountEnabled: shop.pro_plus_discount_enabled || false,
-      subscriptionCurrentPeriodEnd: shop.subscription_current_period_end,
-      cancelAtPeriodEnd: shop.cancel_at_period_end || false,
-      canceledAt: shop.canceled_at,
+      openHours: shop.open_hours,
 
+      // Pro Fields
       brandId: shop.brand_id,
       locationName: shop.location_name,
       customVibes: shop.custom_vibes || [],
@@ -489,6 +521,17 @@ export const fetchShopBySlug = async (slugOrId: string): Promise<Shop | null> =>
       specialtyDrinks: shop.specialty_drinks || [],
       veganFoodOptions: shop.vegan_food_options || false,
       plantMilks: shop.plant_milks || [],
+
+      // Subscription
+      subscriptionTier: shop.subscription_tier || 'free',
+      subscriptionStatus: shop.subscription_status || 'inactive',
+      proPlusDiscountEnabled: shop.pro_plus_discount_enabled || false,
+      subscriptionCurrentPeriodEnd: shop.subscription_current_period_end,
+      cancelAtPeriodEnd: shop.cancel_at_period_end || false,
+      canceledAt: shop.canceled_at,
+
+      // Drip Score
+      dripScore: shop.shop_aggregates?.drip_score,
     };
   } catch (e) {
     console.error("Error fetching shop by slug:", e);
@@ -1457,5 +1500,117 @@ export const fetchShopCommunity = async (shopId: string) => {
   } catch (error) {
     console.error("Error fetching shop community:", error);
     return { savers: [], visitors: [] };
+  }
+};
+
+// ==================== EXPERIENCE LOGS (FEAT-014) ====================
+
+/**
+ * Submit an Experience Log (+ Private Feedback)
+ */
+export const submitExperienceLog = async (
+  shopId: string,
+  userId: string,
+  data: {
+    overallQuality: number;
+    bringFriendScore: number;
+    vibeEnergy?: number | null;
+    coffeeStyle?: number | null;
+    specialtyDrink?: number | null;
+    matchaProfile?: number | null;
+    pastryCraft?: number | null;
+    parkingEase?: number | null;
+    laptopFriendly?: number | null;
+    quickTake?: string;
+    privateFeedback?: string;
+  }
+) => {
+  try {
+    // 1. Upsert Log
+    const { data: log, error: logError } = await supabase
+      .from("experience_logs")
+      .upsert({
+        shop_id: shopId,
+        user_id: userId,
+        overall_quality: data.overallQuality,
+        bring_friend_score: data.bringFriendScore,
+        vibe_energy: data.vibeEnergy,
+        coffee_style: data.coffeeStyle,
+        specialty_drink: data.specialtyDrink,
+        matcha_profile: data.matchaProfile,
+        pastry_craft: data.pastryCraft,
+        parking_ease: data.parkingEase,
+        laptop_friendly: data.laptopFriendly,
+        quick_take: data.quickTake,
+      }, { onConflict: 'shop_id, user_id' })
+      .select()
+      .single();
+
+    if (logError) throw logError;
+
+    // 2. Insert Private Feedback (if any)
+    if (data.privateFeedback && data.privateFeedback.trim()) {
+      const { error: feedbackError } = await supabase
+        .from("private_shop_feedback")
+        .insert({
+          shop_id: shopId,
+          user_id: userId,
+          experience_log_id: log.id,
+          feedback: data.privateFeedback
+        });
+
+      if (feedbackError) {
+        console.error("Error saving private feedback:", feedbackError);
+        // Don't fail the whole operation if feedback fails, but log it
+      }
+    }
+
+    // 3. Mark as Visited automatically
+    // Use upsert or ignore duplicates safely
+    const { error: visitError } = await supabase
+      .from("visited_shops")
+      .upsert({ user_id: userId, shop_id: shopId }, { onConflict: 'user_id,shop_id', ignoreDuplicates: true });
+
+    if (visitError) {
+      // Non-fatal error, just log it
+    }
+
+    return { success: true, log };
+  } catch (error: any) {
+    console.error("Error submitting experience log:", error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Get Shop Aggregate Data (Drip Score)
+ */
+export const getShopAggregate = async (shopId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("shop_aggregates")
+      .select("*")
+      .eq("shop_id", shopId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error; // Ignore not found
+    if (!data) return null;
+
+    return {
+      shopId: data.shop_id,
+      logCount: data.log_count,
+      avgOverallQuality: data.avg_overall_quality,
+      npsScore: data.nps_score,
+      npsNormalized: data.nps_normalized,
+      dripScore: data.drip_score,
+      avgVibeEnergy: data.avg_vibe_energy,
+      avgCoffeeStyle: data.avg_coffee_style,
+      avgMatchaProfile: data.avg_matcha_profile,
+      avgLaptopFriendly: data.avg_laptop_friendly,
+      // Map other fields as needed
+    };
+  } catch (error) {
+    console.error("Error fetching shop aggregate:", error);
+    return null;
   }
 };

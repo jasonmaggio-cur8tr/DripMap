@@ -95,9 +95,17 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
                             <i className="fas fa-check-circle"></i> CLAIMED
                         </div>
                     )}
-                    <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center z-10">
-                        <i className="fas fa-star text-volt-400 mr-1"></i> {shop.rating.toFixed(1)}
-                    </div>
+                    {/* Drip Score Overlay (Replaces Stars) */}
+                    {shop.dripScore ? (
+                        <div className="absolute bottom-3 left-3 bg-coffee-900/90 backdrop-blur-md text-volt-400 px-3 py-1.5 rounded-xl text-sm font-black flex items-center gap-1.5 z-10 shadow-lg border border-white/10">
+                            <i className="fas fa-tint text-xs"></i>
+                            {shop.dripScore.toFixed(0)}
+                        </div>
+                    ) : (
+                        <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white/80 px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide z-10">
+                            Score Pending
+                        </div>
+                    )}
 
                     {/* Coffee Date Button */}
                     <button

@@ -20,7 +20,9 @@ import TagChip from "../components/TagChip";
 import { useToast } from "../context/ToastContext";
 import ShopPricingModal from "../components/ShopPricingModal";
 import { createShopCheckoutSession, getCustomerPortalUrl, updateProPlusDiscountEnabled } from "../services/subscriptionService";
-import { BillingInterval } from "../types";
+import { BillingInterval, ShopAggregate } from "../types";
+import { getShopAggregate } from "../services/dbService";
+import ExperienceLogModal from "../components/ExperienceLogModal";
 import {
   HappeningNowEditor,
   NowBrewingEditor,
@@ -64,10 +66,21 @@ const ShopDetail: React.FC = () => {
   // Lightbox State
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  // Review Modal State
-  const [showReviewModal, setShowReviewModal] = useState(false);
-  const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  // Experience Log State
+  const [showExperienceLogModal, setShowExperienceLogModal] = useState(false);
+  const [shopAggregate, setShopAggregate] = useState<ShopAggregate | null>(null);
+
+  // Fetch Drip Score Data
+  const fetchAggregate = useCallback(async () => {
+    if (shop?.id) {
+      const agg = await getShopAggregate(shop.id);
+      setShopAggregate(agg);
+    }
+  }, [shop?.id]);
+
+  useEffect(() => {
+    fetchAggregate();
+  }, [fetchAggregate]);
 
   // Community Tabs
   const [communityTab, setCommunityTab] = useState<"visited" | "saved">(
@@ -246,81 +259,15 @@ const ShopDetail: React.FC = () => {
     if (isVisited) {
       toggleVisitedShop(shop.id);
     } else {
-      // If user already reviewed, just stamp passport without opening modal
-      if (hasAlreadyReviewed) {
-        toggleVisitedShop(shop.id);
-        toast.success("Passport stamped!");
-      } else {
-        // First time - open review modal
-        setShowReviewModal(true);
-      }
+      // Open Experience Log Modal instead of simple review
+      setShowExperienceLogModal(true);
     }
   };
 
-  const handleSubmitReview = async () => {
-    if (!shop || isSubmittingReview) return;
-
-    // Check if user already reviewed this shop
-    if (hasAlreadyReviewed) {
-      toast.error("You've already reviewed this shop.");
-      setShowReviewModal(false);
-      return;
-    }
-
-    // Validate review comment
-    if (!newReview.comment.trim()) {
-      toast.error("Please write a review before submitting.");
-      return;
-    }
-
-    setIsSubmittingReview(true);
-    try {
-      // First mark as visited (updates stamp_count in DB) - only if not already visited
-      if (!isVisited) {
-        await toggleVisitedShop(shop.id);
-      }
-      // Then add review (will refresh shops and get updated stamp_count)
-      await addReview(shop.id, {
-        rating: newReview.rating,
-        comment: newReview.comment.trim(),
-      });
-      setShowReviewModal(false);
-      setNewReview({ rating: 5, comment: "" });
-      toast.success("Passport Stamped & Review Posted!");
-    } catch (error: any) {
-      console.error("Error submitting review:", error);
-      // Check for duplicate constraint error
-      if (error?.code === "23505" || error?.message?.includes("duplicate")) {
-        toast.error("You've already reviewed this shop.");
-      } else {
-        toast.error("Failed to submit review. Please try again.");
-      }
-    } finally {
-      setIsSubmittingReview(false);
-    }
-  };
-
-  const handleSkipReview = async () => {
-    if (!shop || isSubmittingReview) return;
-
-    // If already visited, just close modal
-    if (isVisited) {
-      setShowReviewModal(false);
-      toast.success("Already stamped!");
-      return;
-    }
-
-    setIsSubmittingReview(true);
-    try {
-      await toggleVisitedShop(shop.id);
-      setShowReviewModal(false);
-      toast.success("Passport Stamped!");
-    } catch (error) {
-      console.error("Error stamping passport:", error);
-      toast.error("Failed to stamp passport. Please try again.");
-    } finally {
-      setIsSubmittingReview(false);
-    }
+  const handleExperienceLogSuccess = async () => {
+    await fetchAggregate(); // Refresh scores
+    await refreshShops(); // Refresh shop list (stamps etc)
+    toast.success("Passport Stamped!");
   };
 
   // Lightbox Handlers
@@ -456,11 +403,7 @@ const ShopDetail: React.FC = () => {
     });
   };
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (ref.current && e.target === ref.current) {
-      setShowReviewModal(false);
-    }
-  };
+
 
   const renderVibeCheck = (vibe: string) => {
     const hasVibe = shop.cheekyVibes.includes(vibe);
@@ -540,79 +483,15 @@ const ShopDetail: React.FC = () => {
         </div>
       )}
 
-      {/* Review Modal */}
-      {showReviewModal && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-coffee-900/40 backdrop-blur-sm"
-          onClick={handleBackdropClick}
-          ref={ref}
-        >
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-coffee-100 animate-in fade-in zoom-in duration-200 relative overflow-hidden">
-            {/* Decorative Stamp BG */}
-            <div className="absolute -right-10 -top-10 text-coffee-50/80 transform rotate-12 pointer-events-none">
-              <i className="fas fa-stamp text-9xl"></i>
-            </div>
-
-            <div className="text-center mb-6 relative z-10">
-              <h2 className="text-2xl font-serif font-bold text-coffee-900">
-                Stamp Your Passport?
-              </h2>
-              <p className="text-coffee-600 text-sm mt-1">
-                Leave a review to document your visit.
-              </p>
-            </div>
-
-            <div className="flex justify-center gap-2 mb-6 relative z-10">
-              {[1, 2, 3, 4, 5].map(star => (
-                <button
-                  key={star}
-                  onClick={() => setNewReview({ ...newReview, rating: star })}
-                  className="text-3xl transition-transform hover:scale-110 focus:outline-none"
-                >
-                  <i
-                    className={`fas fa-star ${star <= newReview.rating
-                      ? "text-yellow-400"
-                      : "text-gray-200"
-                      }`}
-                  ></i>
-                </button>
-              ))}
-            </div>
-
-            <textarea
-              className="w-full p-4 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none mb-6 text-coffee-900 placeholder-coffee-400 relative z-10"
-              rows={3}
-              placeholder="What's the vibe? How's the coffee?"
-              value={newReview.comment}
-              onChange={e =>
-                setNewReview({ ...newReview, comment: e.target.value })
-              }
-            />
-
-            <div className="flex flex-col gap-3 relative z-10">
-              <Button
-                onClick={handleSubmitReview}
-                className="w-full py-3"
-                disabled={isSubmittingReview}
-              >
-                {isSubmittingReview ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <i className="fas fa-spinner fa-spin"></i> Submitting...
-                  </span>
-                ) : (
-                  "Post Review & Stamp"
-                )}
-              </Button>
-              <button
-                onClick={handleSkipReview}
-                disabled={isSubmittingReview}
-                className={`text-coffee-400 text-xs font-bold hover:text-coffee-900 uppercase tracking-wide ${isSubmittingReview ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                {isSubmittingReview ? "Processing..." : "Just Stamp Passport"}
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Experience Log Modal */}
+      {showExperienceLogModal && (
+        <ExperienceLogModal
+          shopId={shop.id}
+          shopName={shop.name}
+          vibeTags={shop.vibes}
+          onClose={() => setShowExperienceLogModal(false)}
+          onSuccess={handleExperienceLogSuccess}
+        />
       )}
 
       {/* Hero Header */}
@@ -667,8 +546,16 @@ const ShopDetail: React.FC = () => {
                 </span>
               )}
               <div className="flex items-center text-volt-400 font-bold bg-black/30 backdrop-blur-sm px-2 py-1 rounded-lg">
-                <i className="fas fa-star mr-1"></i> {shop.rating.toFixed(1)} (
-                {shop.reviewCount})
+                {/* Show Drip Score if available, else show Score Pending */}
+                {shopAggregate?.dripScore ? (
+                  <>
+                    <i className="fas fa-tint mr-1"></i> {shopAggregate.dripScore.toFixed(0)} <span className="text-[10px] ml-1 opacity-70">DRIP SCORE</span>
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-clock mr-1"></i> <span className="text-xs">SCORE PENDING</span>
+                  </>
+                )}
               </div>
               <div className="flex items-center text-white/80 font-bold text-xs bg-black/30 backdrop-blur-sm px-2 py-1 rounded-lg">
                 <i className="fas fa-stamp mr-1.5"></i> {shop.stampCount}{" "}
@@ -1016,104 +903,195 @@ const ShopDetail: React.FC = () => {
               />
             )}
 
-            {/* Reviews */}
+            {/* Experience Logs */}
             <section className="bg-white p-8 rounded-3xl shadow-sm border border-coffee-100">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-serif font-bold text-coffee-900">
-                  Reviews
-                </h2>
-                <span className="text-coffee-500 text-sm">
-                  {shop.reviews.length}{" "}
-                  {shop.reviews.length === 1 ? "review" : "reviews"}
-                </span>
+                <div>
+                  <h2 className="text-2xl font-serif font-bold text-coffee-900 flex items-center gap-2">
+                    Experience Logs
+                    {(shop.experienceLogs?.length || 0) > 0 ? (
+                      <span className="bg-coffee-100 text-coffee-600 text-xs font-sans font-bold px-2 py-1 rounded-full">
+                        {shop.experienceLogs?.length}
+                      </span>
+                    ) : null}
+                  </h2>
+                </div>
+                {/* Drip Score Mini Badge */}
+                {shopAggregate?.dripScore && (
+                  <div className="flex items-center gap-1 text-volt-500 font-bold bg-coffee-900 px-3 py-1 rounded-lg shadow-sm">
+                    <i className="fas fa-tint"></i>
+                    <span>{shopAggregate.dripScore.toFixed(0)}</span>
+                  </div>
+                )}
               </div>
-              <div className="space-y-6">
-                {shop.reviews.length > 0 ? (
+
+              {/* Mini Dashboard */}
+              {shopAggregate && shopAggregate.logCount > 0 && (() => {
+                // Helper to calculate "Rec" score (Average Bring Friend Score) from logs if not in aggregate
+                const recScore = shop.experienceLogs && shop.experienceLogs.length > 0
+                  ? (shop.experienceLogs.reduce((acc, log) => acc + (log.bringFriendScore || 0), 0) / shop.experienceLogs.length).toFixed(1)
+                  : (shopAggregate.npsNormalized ? (shopAggregate.npsNormalized / 10).toFixed(1) : "--");
+
+                // Helper for Quality Text
+                const getQualityText = (q: number) => {
+                  if (q >= 90) return "Exceptional";
+                  if (q >= 80) return "Excellent";
+                  if (q >= 70) return "Solid";
+                  return "Good";
+                };
+
+                // Helper for Vibe Text
+                const getVibeText = (v: number) => {
+                  if (v >= 65) return "Leans Lively";
+                  if (v <= 35) return "Leans Quiet";
+                  return "Balanced";
+                };
+
+                return (
+                  <div className="bg-coffee-50/50 rounded-2xl p-6 mb-8 border border-coffee-100 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-3 bg-white rounded-xl shadow-sm border border-coffee-50">
+                      <div className="text-xs text-coffee-500 font-bold uppercase tracking-wider mb-1">Drip Score</div>
+                      <div className="text-2xl font-black text-volt-500 flex items-center justify-center gap-1">
+                        <i className="fas fa-tint text-lg"></i>
+                        {shopAggregate.dripScore?.toFixed(0) || "--"}
+                      </div>
+                    </div>
+                    <div className="text-center p-3 bg-white rounded-xl shadow-sm border border-coffee-50">
+                      <div className="text-xs text-coffee-500 font-bold uppercase tracking-wider mb-1">Quality</div>
+                      <div className="text-lg font-black text-coffee-800 flex items-center justify-center h-8">
+                        {shopAggregate.avgOverallQuality ? getQualityText(shopAggregate.avgOverallQuality) : "--"}
+                      </div>
+                    </div>
+                    <div className="text-center p-3 bg-white rounded-xl shadow-sm border border-coffee-50">
+                      <div className="text-xs text-coffee-500 font-bold uppercase tracking-wider mb-1">Vibe</div>
+                      <div className="text-lg font-black text-coffee-800 flex items-center justify-center h-8">
+                        {shopAggregate.avgVibeEnergy ? getVibeText(shopAggregate.avgVibeEnergy) : "--"}
+                      </div>
+                    </div>
+                    <div className="text-center p-3 bg-white rounded-xl shadow-sm border border-coffee-50">
+                      <div className="text-xs text-coffee-500 font-bold uppercase tracking-wider mb-1">Rec.</div>
+                      <div className="text-2xl font-black text-coffee-800 flex items-center justify-center gap-1">
+                        {recScore}<span className="text-sm text-coffee-400 font-bold">/10</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <div className="space-y-4">
+                {/* Experience Logs List - Prioritize new logs */}
+                {(shop.experienceLogs && shop.experienceLogs.length > 0) ? (
+                  shop.experienceLogs.map((log) => (
+                    <div key={log.id} className="p-5 rounded-2xl bg-white border border-coffee-100 hover:border-volt-400 transition-colors shadow-sm">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-3">
+                          <Link to={`/profile/${log.userId}`} className="block shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-coffee-100 overflow-hidden border border-coffee-200">
+                              {log.userAvatar ? (
+                                <img src={log.userAvatar} alt={log.userName} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-coffee-400">
+                                  <i className="fas fa-user"></i>
+                                </div>
+                              )}
+                            </div>
+                          </Link>
+                          <div>
+                            <Link to={`/profile/${log.userId}`} className="font-bold text-coffee-900 text-sm hover:text-volt-600 block">
+                              {log.userName}
+                            </Link>
+                            <div className="text-xs text-coffee-400">
+                              {new Date(log.createdAt).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <div className="flex items-center gap-1 bg-coffee-900 text-volt-400 px-2 py-1 rounded-md">
+                            <i className="fas fa-star text-[10px]"></i>
+                            <span className="text-sm font-bold">{log.overallQuality}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Detailed Ratings Grid */}
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        {log.coffeeStyle && (
+                          <div className="bg-coffee-50 rounded px-2 py-1 text-center">
+                            <div className="text-[10px] text-coffee-500 uppercase">Coffee</div>
+                            <div className="text-xs font-bold text-coffee-800">{log.coffeeStyle}%</div>
+                          </div>
+                        )}
+                        {log.vibeEnergy && (
+                          <div className="bg-coffee-50 rounded px-2 py-1 text-center">
+                            <div className="text-[10px] text-coffee-500 uppercase">Vibe</div>
+                            <div className="text-xs font-bold text-coffee-800">{log.vibeEnergy}%</div>
+                          </div>
+                        )}
+                        {log.bringFriendScore !== undefined && (
+                          <div className="bg-coffee-50 rounded px-2 py-1 text-center">
+                            <div className="text-[10px] text-coffee-500 uppercase">Rec.</div>
+                            <div className="text-xs font-bold text-coffee-800">{log.bringFriendScore}/10</div>
+                          </div>
+                        )}
+                      </div>
+
+                      {log.quickTake && (
+                        <div className="relative pl-3 border-l-2 border-volt-400">
+                          <p className="text-coffee-700 italic text-sm">"{log.quickTake}"</p>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                ) : shop.reviews && shop.reviews.length > 0 ? (
+                  // Fallback to legacy reviews if no new logs
                   shop.reviews.map((review, i) => (
                     <div
                       key={i}
-                      className="border-b border-coffee-100 last:border-0 pb-6 last:pb-0"
+                      className="bg-coffee-50 rounded-2xl p-5 border border-coffee-100 opacity-75"
                     >
-                      <div className="flex items-center gap-3 mb-2">
-                        <Link
-                          to={`/profile/${review.userId}`}
-                          className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden hover:opacity-80 transition-opacity"
-                        >
-                          <LazyImage
-                            src={review.avatarUrl}
-                            alt={review.username}
-                            className="w-full h-full object-cover"
-                          />
-                        </Link>
-                        <div>
-                          <Link
-                            to={`/profile/${review.userId}`}
-                            className="font-bold text-coffee-900 text-sm hover:text-volt-500 transition-colors"
-                          >
-                            {review.username}
-                          </Link>
-                          <div className="flex text-yellow-500 text-xs">
-                            {[...Array(5)].map((_, i) => (
-                              <i
-                                key={i}
-                                className={`fas fa-star ${i < review.rating ? "" : "text-gray-300"
-                                  }`}
-                              ></i>
-                            ))}
+                      <div className="flex items-start gap-4">
+                        {/* Legacy Review Item (Simplified) */}
+                        <div className="flex-1">
+                          <div className="flex justify-between mb-1">
+                            <span className="font-bold text-coffee-900">{review.username}</span>
+                            <span className="text-xs text-coffee-400">{review.date}</span>
                           </div>
+                          <p className="text-sm text-coffee-800">"{review.comment}"</p>
                         </div>
-                        <span className="ml-auto text-xs text-coffee-400">
-                          {review.date}
-                        </span>
                       </div>
-                      <p className="text-coffee-800/80 text-sm">
-                        {review.comment}
-                      </p>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-6 text-coffee-400 italic">
-                    No reviews yet. Be the first!
+                  <div className="text-center py-10 rounded-2xl border-2 border-dashed border-coffee-200 bg-coffee-50/50">
+                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-coffee-100">
+                      <i className="fas fa-feather-alt text-2xl text-volt-500"></i>
+                    </div>
+                    <h3 className="text-lg font-bold text-coffee-900 mb-1">No Logs Yet</h3>
+                    <p className="text-coffee-500 text-sm max-w-xs mx-auto mb-6">
+                      Be the first to verify the vibe. Your deep intel helps the community.
+                    </p>
+
+                    {/* Mock Cards for "What it will look like" */}
+                    <div className="opacity-50 scale-90 pointer-events-none blur-[1px] select-none" aria-hidden="true">
+                      <div className="p-3 rounded-xl bg-white border border-coffee-100 mb-2 text-left">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-6 h-6 rounded-full bg-coffee-200"></div>
+                          <div className="h-2 w-20 bg-coffee-100 rounded"></div>
+                        </div>
+                        <div className="h-3 w-full bg-coffee-50 rounded mb-1"></div>
+                        <div className="h-3 w-2/3 bg-coffee-50 rounded"></div>
+                      </div>
+                    </div>
                   </div>
                 )}
-
-                {/* Hardcoded Examples if empty (for demo purposes) */}
-                {shop.reviews.length === 0 &&
-                  [1, 2].map((_, i) => (
-                    <div
-                      key={`mock-${i}`}
-                      className="border-b border-coffee-100 last:border-0 pb-6 last:pb-0 opacity-50"
-                    >
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-gray-100 rounded-full"></div>
-                        <div>
-                          <p className="font-bold text-coffee-900 text-sm">
-                            CoffeeLover{i + 99}
-                          </p>
-                          <div className="flex text-yellow-500 text-xs">
-                            <i className="fas fa-star"></i>
-                            <i className="fas fa-star"></i>
-                            <i className="fas fa-star"></i>
-                            <i className="fas fa-star"></i>
-                            <i className="fas fa-star"></i>
-                          </div>
-                        </div>
-                      </div>
-                      <p className="text-coffee-800/80 text-sm">
-                        {i === 0
-                          ? "Honestly, the best matcha I've had. The vibes are immaculate."
-                          : "Great spot for working, but can get crowded on weekends."}
-                      </p>
-                    </div>
-                  ))}
               </div>
               {/* Trigger review modal manually if needed */}
               <Button
                 variant="outline"
                 className="w-full mt-6"
-                onClick={() => setShowReviewModal(true)}
+                onClick={() => setShowExperienceLogModal(true)}
               >
-                Write a Review
+                Log Experience
               </Button>
             </section>
           </div>
