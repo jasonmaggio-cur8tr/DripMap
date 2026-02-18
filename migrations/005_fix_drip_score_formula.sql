@@ -3,7 +3,7 @@
 -- Run this in Supabase SQL Editor
 
 CREATE OR REPLACE FUNCTION public.recompute_shop_aggregates(p_shop_id uuid)
-RETURNS void LANGUAGE plpgsql AS $$
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE
   v_log_count int;
   v_promoters numeric;
