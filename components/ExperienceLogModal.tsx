@@ -129,7 +129,7 @@ const ExperienceLogModal: React.FC<ExperienceLogModalProps> = ({
                     {/* Thumb (Visual only, follows value) */}
                     {isSet && (
                         <div
-                            className="absolute h-6 w-6 bg-white border-2 border-coffee-900 rounded-full shadow-lg pointer-events-none transition-all duration-75 flex items-center justify-center transform -translate-x-1/2"
+                            className="absolute h-6 w-6 bg-white border-2 border-coffee-900 rounded-full shadow-lg pointer-events-none flex items-center justify-center transform -translate-x-1/2"
                             style={{ left: `${((value - min) / (max - min)) * 100}%` }}
                         >
                             <div className="w-2 h-2 bg-volt-400 rounded-full"></div>

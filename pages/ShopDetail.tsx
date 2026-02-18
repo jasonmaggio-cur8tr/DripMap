@@ -1007,7 +1007,7 @@ const ShopDetail: React.FC = () => {
                         </div>
                         <div className="flex flex-col items-end">
                           <div className="flex items-center gap-1 bg-coffee-900 text-volt-400 px-2 py-1 rounded-md">
-                            <i className="fas fa-star text-[10px]"></i>
+                            <i className="fas fa-tint text-[10px]"></i>
                             <span className="text-sm font-bold">{log.overallQuality}</span>
                           </div>
                         </div>
@@ -1015,16 +1015,20 @@ const ShopDetail: React.FC = () => {
 
                       {/* Detailed Ratings Grid */}
                       <div className="grid grid-cols-3 gap-2 mb-3">
-                        {log.coffeeStyle && (
+                        {log.coffeeStyle !== null && log.coffeeStyle !== undefined && (
                           <div className="bg-coffee-50 rounded px-2 py-1 text-center">
                             <div className="text-[10px] text-coffee-500 uppercase">Coffee</div>
-                            <div className="text-xs font-bold text-coffee-800">{log.coffeeStyle}%</div>
+                            <div className="text-xs font-bold text-coffee-800">
+                              {log.coffeeStyle >= 70 ? "Modern" : log.coffeeStyle <= 30 ? "Classic" : "Balanced"}
+                            </div>
                           </div>
                         )}
-                        {log.vibeEnergy && (
+                        {log.vibeEnergy !== null && log.vibeEnergy !== undefined && (
                           <div className="bg-coffee-50 rounded px-2 py-1 text-center">
                             <div className="text-[10px] text-coffee-500 uppercase">Vibe</div>
-                            <div className="text-xs font-bold text-coffee-800">{log.vibeEnergy}%</div>
+                            <div className="text-xs font-bold text-coffee-800">
+                              {log.vibeEnergy >= 70 ? "Lively" : log.vibeEnergy <= 30 ? "Quiet" : "Balanced"}
+                            </div>
                           </div>
                         )}
                         {log.bringFriendScore !== undefined && (
