@@ -811,7 +811,7 @@ export const updateCoffeeTech = async (
  */
 export const updateBaristaProfiles = async (
   shopId: string,
-  baristas: Array<{ name: string; role: string; bio: string; favoriteOrder: string }>
+  baristas: Array<{ id: string; name: string; role: string; bio: string; imageUrl: string; favoriteDrink?: string }>
 ) => {
   try {
     const { error } = await supabase

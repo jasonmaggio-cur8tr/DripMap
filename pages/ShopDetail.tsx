@@ -119,6 +119,19 @@ const ShopDetail: React.FC = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
+  // Get Social Data (must be before early return to maintain hooks order)
+  const [communityData, setCommunityData] = useState<{ savers: any[], visitors: any[] }>({ savers: [], visitors: [] });
+
+  useEffect(() => {
+    const fetchCommunity = async () => {
+      if (shop?.id) {
+        const data = await getShopCommunity(shop.id);
+        setCommunityData(data);
+      }
+    };
+    fetchCommunity();
+  }, [shop?.id, getShopCommunity]);
+
   if (!shop) {
     return <div className="p-10 text-center">Shop not found</div>;
   }
@@ -212,19 +225,6 @@ const ShopDetail: React.FC = () => {
         r.shopId === shop.id && r.userId === user.id && r.status === "pending"
     )
     : null;
-
-  // Get Social Data
-  const [communityData, setCommunityData] = useState<{ savers: any[], visitors: any[] }>({ savers: [], visitors: [] });
-
-  useEffect(() => {
-    const fetchCommunity = async () => {
-      if (shop?.id) {
-        const data = await getShopCommunity(shop.id);
-        setCommunityData(data);
-      }
-    };
-    fetchCommunity();
-  }, [shop?.id, getShopCommunity]);
 
   const { savers, visitors } = communityData;
   const communityList = communityTab === "visited" ? visitors : savers;

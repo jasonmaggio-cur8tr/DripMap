@@ -83,6 +83,7 @@ export interface Barista {
   role: string;
   bio: string;
   imageUrl: string;
+  favoriteDrink?: string;
 }
 
 export interface PlantMilkInfo {

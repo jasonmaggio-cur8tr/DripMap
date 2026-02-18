@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from '../context/ToastContext';
 import { HappeningNowStatus, BrewItem, Barista, PlantMilkInfo, Campaign } from '../types';
 import { useApp } from '../context/AppContext';
+import { uploadImage } from '../services/storageService';
 
 /**
  * --------------------------------------------------------------------------
@@ -457,24 +458,49 @@ export const VeganInfoEditor = ({
  * BARISTA EDITOR
  * --------------------------------------------------------------------------
  */
-export const BaristaEditor = ({ 
-    baristas, 
-    isOwner, 
-    isLocked, 
+export const BaristaEditor = ({
+    baristas,
+    isOwner,
+    isLocked,
     onUpgrade,
     onUpdate
-}: { 
-    baristas: Barista[] | undefined, 
-    isOwner: boolean, 
-    isLocked: boolean, 
+}: {
+    baristas: Barista[] | undefined,
+    isOwner: boolean,
+    isLocked: boolean,
     onUpgrade: () => void,
     onUpdate: (list: Barista[]) => void
 }) => {
     const safeBaristas = baristas || [];
     const [isAdding, setIsAdding] = useState(false);
     const [newPerson, setNewPerson] = useState<Partial<Barista>>({});
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const { toast } = useToast();
 
     if (!isOwner && safeBaristas.length === 0) return null;
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            toast.error('Please select an image file');
+            return;
+        }
+        setUploading(true);
+        try {
+            const result = await uploadImage(file, 'baristas');
+            if (result.success && result.url) {
+                setNewPerson(prev => ({ ...prev, imageUrl: result.url }));
+            } else {
+                toast.error('Failed to upload image');
+            }
+        } catch {
+            toast.error('Image upload failed');
+        } finally {
+            setUploading(false);
+        }
+    };
 
     const handleAdd = () => {
         if (newPerson.name && newPerson.role) {
@@ -483,6 +509,7 @@ export const BaristaEditor = ({
                 name: newPerson.name,
                 role: newPerson.role,
                 bio: newPerson.bio || '',
+                favoriteDrink: newPerson.favoriteDrink || '',
                 imageUrl: newPerson.imageUrl || `https://ui-avatars.com/api/?name=${newPerson.name}&background=231b15&color=ccff00`
             }]);
             setNewPerson({});
@@ -493,7 +520,7 @@ export const BaristaEditor = ({
     const handleRemove = (id: string) => {
         onUpdate(safeBaristas.filter(b => b.id !== id));
     };
-  
+
     return (
       <div className="bg-white p-6 rounded-3xl shadow-sm border border-coffee-100 relative mb-8 overflow-hidden">
         <div className="flex items-center justify-between mb-4 border-b border-coffee-100 pb-2">
@@ -501,7 +528,7 @@ export const BaristaEditor = ({
               <Icons.Users /> Meet the Team
           </h3>
           {isOwner && !isLocked && !isAdding && (
-            <button 
+            <button
                 onClick={() => setIsAdding(true)}
                 className="text-xs font-bold bg-coffee-50 text-coffee-900 px-3 py-1.5 rounded hover:bg-volt-400 transition-colors flex items-center gap-1"
             >
@@ -509,20 +536,25 @@ export const BaristaEditor = ({
             </button>
           )}
         </div>
-  
+
         {isLocked && isOwner && <LockedOverlay label="Barista Profiles" onUpgrade={onUpgrade} />}
-  
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {safeBaristas.map((person) => (
             <div key={person.id} className="flex items-center gap-3 bg-[#faf9f6] p-3 rounded-xl border border-gray-100 group">
-              <img src={person.imageUrl} alt={person.name} className="w-10 h-10 rounded-full object-cover border border-coffee-100" />
-              <div className="flex-1">
+              <img src={person.imageUrl} alt={person.name} className="w-12 h-12 rounded-full object-cover border-2 border-coffee-100" />
+              <div className="flex-1 min-w-0">
                 <p className="font-bold text-sm leading-tight text-coffee-900">{person.name}</p>
                 <p className="text-[9px] uppercase font-bold text-volt-500 bg-coffee-900 inline-block px-1.5 rounded-sm my-0.5">{person.role}</p>
-                <p className="text-[10px] text-gray-600 leading-tight line-clamp-2">{person.bio}</p>
+                {person.favoriteDrink && (
+                  <p className="text-[10px] text-coffee-600 leading-tight flex items-center gap-1">
+                    <i className="fas fa-mug-hot text-volt-500 text-[8px]"></i> {person.favoriteDrink}
+                  </p>
+                )}
+                {person.bio && <p className="text-[10px] text-gray-500 leading-tight line-clamp-2">{person.bio}</p>}
               </div>
               {isOwner && !isLocked && (
-                <button 
+                <button
                     onClick={() => handleRemove(person.id)}
                     className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
@@ -531,37 +563,66 @@ export const BaristaEditor = ({
               )}
             </div>
           ))}
-          
+
           {safeBaristas.length === 0 && !isOwner && <p className="text-sm italic text-gray-400">No team profiles listed.</p>}
           {safeBaristas.length === 0 && isOwner && !isAdding && <p className="text-sm italic text-gray-400">Highlight your best baristas.</p>}
         </div>
 
         {isAdding && (
             <div className="mt-4 bg-coffee-50 p-4 rounded-xl border border-coffee-200 animate-in fade-in">
+                {/* Photo Upload */}
+                <div className="flex items-center gap-3 mb-3">
+                    <div
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-16 h-16 rounded-full border-2 border-dashed border-coffee-300 flex items-center justify-center cursor-pointer hover:border-volt-400 transition-colors overflow-hidden flex-shrink-0"
+                    >
+                        {uploading ? (
+                            <i className="fas fa-spinner fa-spin text-coffee-400"></i>
+                        ) : newPerson.imageUrl ? (
+                            <img src={newPerson.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                        ) : (
+                            <i className="fas fa-camera text-coffee-400"></i>
+                        )}
+                    </div>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                    />
+                    <p className="text-xs text-coffee-500">Tap to add photo</p>
+                </div>
                 <div className="grid grid-cols-2 gap-3 mb-3">
-                    <input 
-                        placeholder="Name" 
+                    <input
+                        placeholder="Name"
                         className="p-2 text-sm bg-coffee-900 border border-coffee-800 rounded text-volt-400 font-bold focus:outline-none focus:border-volt-400 placeholder-coffee-600"
                         value={newPerson.name || ''}
                         onChange={e => setNewPerson({...newPerson, name: e.target.value})}
                     />
-                    <input 
-                        placeholder="Role (e.g. Head Roaster)" 
+                    <input
+                        placeholder="Role (e.g. Head Roaster)"
                         className="p-2 text-sm bg-coffee-900 border border-coffee-800 rounded text-volt-400 focus:outline-none focus:border-volt-400 placeholder-coffee-600"
                         value={newPerson.role || ''}
                         onChange={e => setNewPerson({...newPerson, role: e.target.value})}
                     />
                 </div>
-                <textarea 
-                    placeholder="Short Bio" 
+                <input
+                    placeholder="Favorite Drink (e.g. Oat Cortado)"
+                    className="w-full mb-3 p-2 text-sm bg-coffee-900 border border-coffee-800 rounded text-volt-400 focus:outline-none focus:border-volt-400 placeholder-coffee-600"
+                    value={newPerson.favoriteDrink || ''}
+                    onChange={e => setNewPerson({...newPerson, favoriteDrink: e.target.value})}
+                />
+                <textarea
+                    placeholder="Short Bio"
                     className="w-full mb-3 p-2 text-sm bg-coffee-900 border border-coffee-800 rounded text-volt-400 focus:outline-none focus:border-volt-400 placeholder-coffee-600"
                     rows={2}
                     value={newPerson.bio || ''}
                     onChange={e => setNewPerson({...newPerson, bio: e.target.value})}
                 />
                 <div className="flex gap-2">
-                    <button onClick={handleAdd} className="bg-coffee-900 text-volt-400 px-4 py-2 rounded text-xs font-bold hover:bg-black">Save Profile</button>
-                    <button onClick={() => setIsAdding(false)} className="text-gray-500 text-xs font-bold px-2">Cancel</button>
+                    <button onClick={handleAdd} disabled={uploading} className="bg-coffee-900 text-volt-400 px-4 py-2 rounded text-xs font-bold hover:bg-black disabled:opacity-50">Save Profile</button>
+                    <button onClick={() => { setIsAdding(false); setNewPerson({}); }} className="text-gray-500 text-xs font-bold px-2">Cancel</button>
                 </div>
             </div>
         )}

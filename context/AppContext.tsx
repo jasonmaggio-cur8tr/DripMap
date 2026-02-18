@@ -13,6 +13,7 @@ import { resetSupabaseAuthState } from "../lib/authUtils";
 import * as db from "../services/dbService";
 import { initializeStorage } from "../services/storageService";
 import { loopService } from '../services/loopService';
+import * as loops from "../services/loopsService";
 import { useToast } from './ToastContext';
 
 // Helper to parse username into first/last name
@@ -551,8 +552,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     const result = await db.addReview(shopId, user.id, reviewData.rating, reviewData.comment);
     if (result.success) {
       // Refresh shops to get new rating/review count
-      // Or optimistically update
       refreshShops();
+
+      // FEAT-025: Notify shop owner of new review via Loops.so
+      const shop = shops.find((s: Shop) => s.id === shopId);
+      if (shop?.claimedBy) {
+        const ownerProfile = await db.fetchUserProfile(shop.claimedBy);
+        if (ownerProfile?.email) {
+          loops.onNewReview(
+            ownerProfile.email,
+            shop.name,
+            user.username,
+            reviewData.rating.toString()
+          ).catch(err => {
+            console.error("Loops.so review notification failed:", err);
+          });
+        }
+      }
     }
   };
 
@@ -570,7 +586,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     if (result.success) {
       // Update local state
       setClaimRequests(prev => prev.map(r => r.id === requestId ? { ...r, status } : r));
-      if (status === 'approved' && user) loadUserProfile(user.id); // Reload to check if I became owner
+      if (status === 'approved' && user) loadUserProfile(user.id);
+
+      // Notify owner via Loops.so when claim is approved
+      if (status === "approved") {
+        const claimRequest = claimRequests.find((r: ClaimRequest) => r.id === requestId);
+        if (claimRequest) {
+          const shop = shops.find((s: Shop) => s.id === claimRequest.shopId);
+          if (shop && claimRequest.businessEmail) {
+            loops.onShopClaimed(claimRequest.businessEmail, shop.name).catch(err => {
+              console.error("Loops.so shop claimed notification failed:", err);
+            });
+          }
+        }
+      }
     }
   };
 
