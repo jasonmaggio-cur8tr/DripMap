@@ -528,24 +528,24 @@ const ShopDetail: React.FC = () => {
           </div>
         )}
 
-        <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 text-white">
+        <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 text-white bg-gradient-to-t from-black/80 via-black/40 to-transparent">
           <div className="container mx-auto">
-            <div className="flex flex-wrap items-center gap-3 mb-2">
+            <div className="flex flex-wrap items-center gap-2 mb-3">
               {shop.isClaimed && (
-                <span className="bg-volt-400 text-coffee-900 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-[0_0_15px_rgba(204,255,0,0.4)] animate-pulse-slow">
+                <span className="bg-volt-400 text-coffee-900 text-[10px] md:text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-[0_0_15px_rgba(204,255,0,0.4)] animate-pulse-slow">
                   <i className="fas fa-certificate"></i> VERIFIED
                 </span>
               )}
               {isProPlus ? (
-                <span className="bg-gradient-to-r from-purple-600 to-volt-400 text-white text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-[0_0_15px_rgba(204,255,0,0.3)]">
+                <span className="bg-gradient-to-r from-purple-600 to-volt-400 text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-[0_0_15px_rgba(204,255,0,0.3)]">
                   <i className="fas fa-crown"></i> PRO+
                 </span>
               ) : isPro && (
-                <span className="bg-purple-600 text-white text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 border border-purple-400">
+                <span className="bg-purple-600 text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 border border-purple-400">
                   <i className="fas fa-star"></i> PRO
                 </span>
               )}
-              <div className="flex items-center text-volt-400 font-bold bg-black/30 backdrop-blur-sm px-2 py-1 rounded-lg">
+              <div className="flex items-center text-volt-400 font-bold bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-white/10">
                 {/* Show Drip Score if available, else show Score Pending */}
                 {shopAggregate?.dripScore ? (
                   <>
@@ -553,19 +553,19 @@ const ShopDetail: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <i className="fas fa-clock mr-1"></i> <span className="text-xs">SCORE PENDING</span>
+                    <i className="fas fa-clock mr-1"></i> <span className="text-[10px] md:text-xs">SCORE PENDING</span>
                   </>
                 )}
               </div>
-              <div className="flex items-center text-white/80 font-bold text-xs bg-black/30 backdrop-blur-sm px-2 py-1 rounded-lg">
+              <div className="flex items-center text-white/90 font-bold text-[10px] md:text-xs bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-white/10 w-full sm:w-auto mt-1 sm:mt-0">
                 <i className="fas fa-stamp mr-1.5"></i> {shop.stampCount}{" "}
                 Passports Stamped
               </div>
             </div>
-            <h1 className="text-4xl md:text-6xl font-serif font-bold mb-2">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-serif font-bold mb-2 leading-tight drop-shadow-lg">
               {shop.name}
             </h1>
-            <p className="text-white/90 text-lg flex items-center gap-2">
+            <p className="text-white/90 text-sm sm:text-lg flex items-center gap-2 drop-shadow-md">
               <i className="fas fa-map-marker-alt"></i> {[shop.location.city, shop.location.state, shop.location.country].filter(Boolean).join(', ')}
             </p>
           </div>
@@ -574,23 +574,23 @@ const ShopDetail: React.FC = () => {
         <Link
           to="/"
           onClick={e => e.stopPropagation()}
-          className="absolute top-6 left-6 md:top-8 md:left-8 bg-white/20 backdrop-blur-md p-3 rounded-full hover:bg-white hover:text-coffee-900 text-white transition-all"
+          className="absolute top-6 left-6 md:top-8 md:left-8 bg-black/30 backdrop-blur-md p-3 rounded-full hover:bg-white hover:text-coffee-900 text-white transition-all border border-white/20"
         >
           <i className="fas fa-arrow-left text-xl"></i>
         </Link>
       </div>
 
-      <div className="container mx-auto px-4 py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <div className="container mx-auto px-4 py-8 md:py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-10">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-10">
             {/* About */}
             <section className="bg-white p-8 rounded-3xl shadow-sm border border-coffee-100 relative">
-              {/* Coffee Date Button (Floating or inline) */}
-              <div className="absolute top-8 right-8 flex flex-col gap-2">
+              {/* Coffee Date Button & Save Button */}
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-4 lg:mt-0 lg:absolute lg:top-8 lg:right-8 mb-6 lg:mb-0">
                 <button
                   onClick={() => setShowCoffeeDateModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-coffee-900 to-coffee-800 text-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all font-bold text-sm"
+                  className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-gradient-to-r from-coffee-900 to-coffee-800 text-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all font-bold text-sm"
                 >
                   <i className="fas fa-mug-hot text-volt-400"></i>
                   Make a Coffee Date
@@ -598,7 +598,7 @@ const ShopDetail: React.FC = () => {
 
                 <button
                   onClick={handleSaveClick}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-all font-bold text-sm ${isSaved
+                  className={`flex items-center justify-center gap-2 px-4 py-3 sm:py-2 rounded-xl shadow-sm border transition-all font-bold text-sm ${isSaved
                     ? 'bg-coffee-100 text-coffee-900 border-coffee-200'
                     : 'bg-white text-coffee-600 border-coffee-200 hover:bg-coffee-50'}`}
                 >
