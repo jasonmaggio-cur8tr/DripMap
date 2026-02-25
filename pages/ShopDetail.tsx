@@ -627,7 +627,7 @@ const ShopDetail: React.FC = () => {
                   The Aesthetic
                 </h2>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {isOwner && (
                     <button
                       onClick={() => setIsEditMode(!isEditMode)}
@@ -641,7 +641,7 @@ const ShopDetail: React.FC = () => {
                     </button>
                   )}
 
-                  <div className="flex p-1 bg-coffee-100 rounded-full w-fit shadow-inner">
+                  <div className="flex flex-wrap p-1 bg-coffee-100 rounded-2xl md:rounded-full w-full sm:w-fit shadow-inner">
                     {(["all", "owner", "community"] as const).map(type => (
                       <button
                         key={type}
