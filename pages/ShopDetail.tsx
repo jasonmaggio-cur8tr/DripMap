@@ -513,7 +513,7 @@ const ShopDetail: React.FC = () => {
 
         {/* Visited Stamp Overlay */}
         {isVisited && (
-          <div className="absolute top-24 right-8 transform rotate-12 animate-in zoom-in duration-500 pointer-events-none">
+          <div className="absolute top-4 right-4 md:top-24 md:right-8 transform rotate-12 animate-in zoom-in duration-500 pointer-events-none z-10">
             <div className="w-24 h-24 rounded-full border-4 border-volt-400/80 flex items-center justify-center bg-coffee-900/80 backdrop-blur-sm shadow-lg">
               <div className="text-center transform -rotate-12">
                 <p className="text-volt-400 text-[10px] font-bold uppercase tracking-widest">
