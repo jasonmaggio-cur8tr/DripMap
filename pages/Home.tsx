@@ -38,6 +38,25 @@ const Home: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // Fetch user location silently on mount to center the map automatically
+  useEffect(() => {
+    if (navigator.geolocation && !userLocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.warn("Silent geolocation fetch failed:", error);
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleNearMe = () => {
     if (nearMeActive) {
       // Turn off near me filter

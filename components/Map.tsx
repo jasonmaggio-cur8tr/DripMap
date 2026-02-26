@@ -42,6 +42,18 @@ const Map: React.FC<MapProps> = ({ shops, onShopClick, userLocation }) => {
 
   // Removed fitBounds logic to maintain the desired 25-mile radius instead of zooming out to a global view
 
+  // Fly to user location dynamically if it resolves after mount
+  useEffect(() => {
+    if (userLocation && mapRef.current) {
+      mapRef.current.flyTo({
+        center: [userLocation.lng, userLocation.lat],
+        zoom: 12,
+        duration: 2500, // Smooth swooping animation
+        essential: true // This animation is considered essential with respect to prefers-reduced-motion
+      });
+    }
+  }, [userLocation]);
+
   return (
     <div className="absolute inset-0 z-0 overflow-hidden">
       <MapboxMap
