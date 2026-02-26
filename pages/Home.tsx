@@ -159,7 +159,7 @@ const Home: React.FC = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] mt-16 flex flex-col md:flex-row overflow-hidden">
+    <div className="h-[calc(100dvh-4rem)] mt-16 flex flex-col md:flex-row overflow-hidden absolute inset-0 md:static md:mt-16 w-full">
       {/* Filters & List Section */}
       <div className={`
         flex-col bg-coffee-50 w-full md:w-[450px] flex-shrink-0 border-r border-coffee-200 h-full
@@ -282,8 +282,8 @@ const Home: React.FC = () => {
 
       {/* Map Section */}
       <div className={`
-        flex-1 relative bg-coffee-100
-        ${viewMode === 'list' ? 'hidden md:block' : 'block'}
+        flex-1 relative bg-coffee-100 min-h-0 h-full w-full
+        ${viewMode === 'list' ? 'hidden md:block' : 'block absolute inset-0 z-0'}
       `}>
         {/* Floating Search Bar (Mobile Only) */}
         <div className="absolute top-4 left-4 right-16 z-[500] md:hidden pointer-events-auto">
