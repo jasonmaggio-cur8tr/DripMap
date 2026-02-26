@@ -43,7 +43,7 @@ const Map: React.FC<MapProps> = ({ shops, onShopClick, userLocation }) => {
   // Removed fitBounds logic to maintain the desired 25-mile radius instead of zooming out to a global view
 
   return (
-    <div className="relative w-full h-full z-0">
+    <div className="absolute inset-0 z-0 overflow-hidden">
       <MapboxMap
         ref={mapRef}
         initialViewState={initialViewState}

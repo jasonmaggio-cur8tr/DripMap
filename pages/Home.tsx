@@ -162,7 +162,7 @@ const Home: React.FC = () => {
     <div className="h-[calc(100dvh-4rem)] mt-16 flex flex-col md:flex-row overflow-hidden absolute inset-0 md:static md:mt-16 w-full">
       {/* Filters & List Section */}
       <div className={`
-        flex-col bg-coffee-50 w-full md:w-[450px] flex-shrink-0 border-r border-coffee-200 h-full
+        flex-col bg-coffee-50 w-full md:w-[450px] flex-shrink-0 border-r border-coffee-200 h-full relative z-10
         ${viewMode === 'map' ? 'hidden md:flex' : 'flex'}
       `}>
         {/* Search & Filter Header */}
@@ -283,7 +283,7 @@ const Home: React.FC = () => {
       {/* Map Section */}
       <div className={`
         flex-1 relative bg-coffee-100 min-h-0 h-full w-full
-        ${viewMode === 'list' ? 'hidden md:block' : 'block absolute inset-0 z-0'}
+        ${viewMode === 'list' ? 'absolute inset-0 opacity-0 pointer-events-none z-[-10] md:relative md:opacity-100 md:pointer-events-auto md:z-0 md:block' : 'block absolute inset-0 z-0 md:relative'}
       `}>
         {/* Floating Search Bar (Mobile Only) */}
         <div className="absolute top-4 left-4 right-16 z-[500] md:hidden pointer-events-auto">
