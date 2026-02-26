@@ -178,7 +178,7 @@ const Home: React.FC = () => {
   }
 
   return (
-    <div className="h-[calc(100dvh-4rem)] md:mt-16 flex flex-col md:flex-row overflow-hidden relative w-full">
+    <div className="h-[calc(100dvh-4rem)] mt-16 flex flex-col md:flex-row overflow-hidden relative w-full">
       {/* Filters & List Section */}
       <div className={`
         flex-col bg-coffee-50 w-full md:w-[450px] flex-shrink-0 border-r border-coffee-200 h-full relative z-10
