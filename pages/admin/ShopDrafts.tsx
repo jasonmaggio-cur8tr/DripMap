@@ -71,10 +71,11 @@ const ShopDrafts: React.FC = () => {
                 },
                 vibes: draft.data.vibes || [],
                 cheekyVibes: [],
-                gallery: [] // Images need handling in V2
+                gallery: [], // Images need handling in V2
+                isClaimed: false
             };
 
-            await addShop(newShopPayload);
+            await addShop(newShopPayload as any);
 
             // 3. Update Draft Status
             const { error } = await supabase

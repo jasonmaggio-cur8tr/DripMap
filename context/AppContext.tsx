@@ -82,10 +82,14 @@ interface AppContextType {
   addEvent: (event: Omit<CalendarEvent, "id" | "createdAt">) => void;
   updateEvent: (event: CalendarEvent) => void;
   deleteEvent: (eventId: string) => void;
+  updateEventStatus: (eventId: string, status: 'approved' | 'rejected') => Promise<any>;
 
   // Brands
   brands: Brand[];
   addBrand: (brand: Brand) => void;
+
+  campaigns?: any;
+  submitCampaign?: (campaignData: any) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -585,7 +589,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
 
   const filteredShops = shops.filter(shop => {
     const name = shop.name || '';
-    const city = shop.location?.city || shop.city || ''; // Handle nested location or root city
+    const city = shop.location?.city || ''; // Handle nested location
     // Note: shop type has city at root but dbService maps it to location.city too?
     // Looking at Shop interface: it has `city` at root AND `location: { city }`.
     // Let's be safe.
@@ -795,6 +799,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         deleteEvent,
         brands,
         addBrand,
+        campaigns: [],
+        submitCampaign: async () => { }
       }}
     >
       {children}

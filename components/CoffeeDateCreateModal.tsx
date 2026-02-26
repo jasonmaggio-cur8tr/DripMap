@@ -100,7 +100,11 @@ const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shopId, s
             });
 
             // Call DB Service
-            const result = await createCoffeeDate(coffeeDateData, invitesData);
+            const typedInvitesData = invitesData.map(inv => ({
+                invite_type: (inv.invite_type as 'email' | 'user' | 'phone'),
+                invitee_email: inv.invitee_email
+            }));
+            const result = await createCoffeeDate(coffeeDateData, typedInvitesData);
 
             if (result.success) {
                 // Trigger Emails via Loops (MVP: Send to inviter and first invitee if email)

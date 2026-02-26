@@ -83,12 +83,12 @@ export interface Barista {
   role: string;
   bio: string;
   imageUrl: string;
+  favoriteOrder?: string;
 }
 
 export interface PlantMilkInfo {
-  type: 'Almond' | 'Oat' | 'Soy' | 'Cashew' | 'Hemp' | 'Watermelon' | 'Other';
-  customType?: string;
-  brand?: string;
+  name: string;
+  upcharge: string;
 }
 
 export interface Campaign {

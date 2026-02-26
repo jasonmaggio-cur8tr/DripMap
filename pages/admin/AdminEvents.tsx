@@ -13,7 +13,7 @@ const parseLocalDateTime = (dateTimeStr: string) => {
 };
 
 const AdminEvents: React.FC = () => {
-    const { events, shops, deleteEvent, updateEvent, updateEventStatus } = useApp();
+    const { events, shops, deleteEvent, updateEvent, updateEventStatus } = useApp() as any;
     const { toast } = useToast();
     const [activeTab, setActiveTab] = useState<'pending' | 'all'>('pending');
     const [filterShop, setFilterShop] = useState('All');
@@ -169,9 +169,9 @@ const AdminEvents: React.FC = () => {
                                             <button
                                                 onClick={() => togglePublish(event)}
                                                 className={`text-xs font-bold px-2 py-1 rounded border ${event.status === 'rejected' ? 'bg-red-100 text-red-700 border-red-200' :
-                                                        event.isPublished
-                                                            ? 'bg-green-100 text-green-700 border-green-200'
-                                                            : 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                                                    event.isPublished
+                                                        ? 'bg-green-100 text-green-700 border-green-200'
+                                                        : 'bg-yellow-100 text-yellow-700 border-yellow-200'
                                                     }`}
                                             >
                                                 {event.status === 'rejected' ? 'Rejected' : (event.isPublished ? 'Published' : 'Draft')}

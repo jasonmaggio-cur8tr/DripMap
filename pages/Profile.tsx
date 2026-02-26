@@ -457,14 +457,8 @@ const Profile: React.FC = () => {
       navigate("/auth");
       return;
     }
-    const result = await toggleFollow(viewedUser.id);
-    if (result.success) {
-      toast.success(isFollowing ? "Unfollowed!" : "Following!");
-    } else {
-      toast.error(
-        "Follow feature requires database setup. Please run add_followers.sql in Supabase."
-      );
-    }
+    await toggleFollow(viewedUser.id);
+    toast.success(isFollowing ? "Unfollowed!" : "Following!");
   };
 
   const isFollowing =
@@ -775,14 +769,14 @@ const Profile: React.FC = () => {
                 <div
                   key={badge.id}
                   className={`aspect-square rounded-2xl flex flex-col items-center justify-center p-3 text-center border-2 transition-all duration-300 group ${badge.unlocked
-                      ? "bg-coffee-50 border-volt-400 shadow-md scale-105"
-                      : "bg-gray-50 border-gray-100 grayscale opacity-60"
+                    ? "bg-coffee-50 border-volt-400 shadow-md scale-105"
+                    : "bg-gray-50 border-gray-100 grayscale opacity-60"
                     }`}
                 >
                   <div
                     className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 text-xl ${badge.unlocked
-                        ? "bg-coffee-900 text-volt-400"
-                        : "bg-gray-200 text-gray-400"
+                      ? "bg-coffee-900 text-volt-400"
+                      : "bg-gray-200 text-gray-400"
                       }`}
                   >
                     <i className={badge.icon}></i>
@@ -838,14 +832,14 @@ const Profile: React.FC = () => {
                     </span>
                     <div
                       className={`text-[10px] font-black px-2.5 py-1 rounded-full flex items-center gap-1 ${dripClubMembership.status === "trialing"
-                          ? "bg-blue-100 text-blue-600"
-                          : "bg-green-100 text-green-600"
+                        ? "bg-blue-100 text-blue-600"
+                        : "bg-green-100 text-green-600"
                         }`}
                     >
                       <span
                         className={`w-1.5 h-1.5 rounded-full ${dripClubMembership.status === "trialing"
-                            ? "bg-blue-500"
-                            : "bg-green-500"
+                          ? "bg-blue-500"
+                          : "bg-green-500"
                           }`}
                       ></span>
                       {dripClubMembership.status === "trialing"

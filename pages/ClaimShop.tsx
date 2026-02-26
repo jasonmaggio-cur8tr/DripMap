@@ -74,7 +74,6 @@ const ClaimShop: React.FC = () => {
         <form
           onSubmit={handleSubmit}
           className="p-8 space-y-6"
-          disabled={loading}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>

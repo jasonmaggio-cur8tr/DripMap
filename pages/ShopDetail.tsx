@@ -74,7 +74,7 @@ const ShopDetail: React.FC = () => {
   const fetchAggregate = useCallback(async () => {
     if (shop?.id) {
       const agg = await getShopAggregate(shop.id);
-      setShopAggregate(agg);
+      setShopAggregate(agg as any);
     }
   }, [shop?.id]);
 
@@ -174,7 +174,11 @@ const ShopDetail: React.FC = () => {
 
       // Barista Profiles
       if ('baristas' in changes && changes.baristas) {
-        await updateBaristaProfiles(shop.id, changes.baristas);
+        const mappedBaristas = changes.baristas.map(b => ({
+          ...b,
+          favoriteOrder: b.favoriteOrder || ''
+        }));
+        await updateBaristaProfiles(shop.id, mappedBaristas);
       }
 
       // Specialty Menu

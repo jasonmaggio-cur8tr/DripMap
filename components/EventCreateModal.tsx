@@ -141,9 +141,12 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
             mimeType: ''
           } : undefined,
           isPublished: formData.isPublished,
+          status: 'pending' // Added to satisfy Omit<CalendarEvent, "id" | "createdAt">
         });
 
-        if (result.success && result.data?.status === 'pending') {
+        // The addEvent function from context currently returns void
+        // so we check isPublished instead of result.data.status
+        if (!formData.isPublished) {
           toast.success('Event submitted for approval! 🎟️');
         } else {
           toast.success('Event created successfully!');
