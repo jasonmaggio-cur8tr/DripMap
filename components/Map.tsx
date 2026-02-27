@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import MapboxMap, { Marker, Popup, Source, Layer, NavigationControl, GeolocateControl } from 'react-map-gl/mapbox';
+import { SearchBox } from '@mapbox/search-js-react';
 import { Shop } from '../types';
 
 // Mapbox CSS is required for proper rendering
@@ -63,6 +64,30 @@ const Map: React.FC<MapProps> = ({ shops, onShopClick, userLocation }) => {
         mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN}
         style={{ width: '100%', height: '100%' }}
       >
+        <div className="absolute top-4 left-4 z-10 w-72 md:w-80 shadow-xl rounded-xl overflow-hidden [&>form]:!rounded-xl [&>form>input]:!font-sans [&>form>input]:text-sm">
+          <SearchBox
+            accessToken={import.meta.env.VITE_MAPBOX_TOKEN}
+            options={{
+              language: 'en',
+              country: 'us',
+              types: 'country,region,postcode,district,place,locality,neighborhood'
+            }}
+            onRetrieve={(res) => {
+              if (res.features && res.features.length > 0) {
+                const feature = res.features[0];
+                const [lng, lat] = feature.geometry.coordinates;
+                mapRef.current?.flyTo({
+                  center: [lng, lat],
+                  zoom: 12,
+                  pitch: 45,
+                  duration: 2500
+                });
+              }
+            }}
+            placeholder="Fly to a city..."
+          />
+        </div>
+
         {/* 3D Buildings Layer (City View) */}
         <Layer
           id="3d-buildings"

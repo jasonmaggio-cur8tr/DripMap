@@ -597,9 +597,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     // Actually Shop interface in `types.ts` has `city`? 
     // dbService maps `city: shop.city`.
     // Let's check Shop type def if needed, but safe access is best.
+    const q = searchQuery.toLowerCase().trim();
+    const searchableFields = [
+      shop.name,
+      shop.location?.city,
+      shop.location?.state,
+      shop.location?.country,
+      shop.sourcingInfo,
+      shop.espressoMachine,
+      shop.grinderDetails,
+      ...(shop.vibes || []),
+      ...(shop.cheekyVibes || []),
+      ...(shop.customVibes || []),
+      ...(shop.brewingMethods || []),
+      ...(shop.currentMenu?.map(m => `${m.roaster} ${m.beanName} ${m.notes}`) || []),
+      ...(shop.specialtyDrinks?.map(d => `${d.name} ${d.desc}`) || [])
+    ];
 
-    const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      city.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = q === '' || searchableFields.some(field =>
+      field && typeof field === 'string' && field.toLowerCase().includes(q)
+    );
 
     const matchesVibes = selectedVibes.length === 0 ||
       selectedVibes.every(v => {
