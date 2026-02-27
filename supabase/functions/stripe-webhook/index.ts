@@ -74,16 +74,70 @@ Deno.serve(async (req: Request) => {
   }
 });
 
+// Helper to infer missing metadata for manual dashboard subscriptions
+async function inferMetadata(customerId: string, subscriptionId: string, currentMetadata: any = {}) {
+  let metadata = { ...currentMetadata };
+
+  if (!metadata.shop_id && !metadata.user_id && customerId) {
+    // Check if customer is a shop
+    const { data: shop } = await supabaseAdmin
+      .from('shops')
+      .select('id')
+      .eq('stripe_customer_id', customerId)
+      .single();
+
+    if (shop) {
+      metadata.type = 'shop_subscription';
+      metadata.shop_id = shop.id;
+
+      // Infer tier from price
+      if (subscriptionId && !metadata.tier) {
+        try {
+          const sub = await stripe.subscriptions.retrieve(subscriptionId);
+          const priceId = sub.items.data[0]?.price.id;
+
+          if (priceId === Deno.env.get('STRIPE_PRICE_SHOP_PRO_MONTHLY') ||
+            priceId === Deno.env.get('STRIPE_PRICE_SHOP_PRO_ANNUAL')) {
+            metadata.tier = 'pro';
+          } else if (priceId === Deno.env.get('STRIPE_PRICE_SHOP_PRO_PLUS_MONTHLY') ||
+            priceId === Deno.env.get('STRIPE_PRICE_SHOP_PRO_PLUS_ANNUAL')) {
+            metadata.tier = 'pro_plus';
+          } else {
+            metadata.tier = 'pro'; // Default fallback
+          }
+        } catch (e) {
+          console.error("Error retrieving subscription to infer tier", e);
+          metadata.tier = 'pro';
+        }
+      }
+    } else {
+      // Check if customer is a basic user (DripClub)
+      const { data: dripClub } = await supabaseAdmin
+        .from('dripclub_memberships')
+        .select('user_id')
+        .eq('stripe_customer_id', customerId)
+        .single();
+
+      if (dripClub) {
+        metadata.type = 'dripclub_membership';
+        metadata.user_id = dripClub.user_id;
+      }
+    }
+  }
+
+  return metadata;
+}
+
 // Handle checkout.session.completed
 async function handleCheckoutCompleted(session: any) {
-  const metadata = session.metadata;
   const customerId = session.customer;
   const subscriptionId = session.subscription;
+  const metadata = await inferMetadata(customerId, subscriptionId, session.metadata);
 
-  if (metadata.type === 'shop_subscription') {
+  if (metadata.type === 'shop_subscription' || metadata.shop_id) {
     // Shop PRO/PRO+ subscription
     const shopId = metadata.shop_id;
-    const tier = metadata.tier;
+    const tier = metadata.tier || 'pro';
 
     await supabaseAdmin.from('shops').update({
       subscription_tier: tier,
@@ -92,8 +146,8 @@ async function handleCheckoutCompleted(session: any) {
       stripe_subscription_id: subscriptionId,
     }).eq('id', shopId);
 
-    console.log(`Shop ${shopId} upgraded to ${tier}`);
-  } else if (metadata.type === 'dripclub_membership') {
+    console.log(`Shop ${shopId} upgraded to ${tier} manually or via checkout`);
+  } else if (metadata.type === 'dripclub_membership' || metadata.user_id) {
     // DripClub membership
     const userId = metadata.user_id;
 
@@ -115,17 +169,22 @@ async function handleCheckoutCompleted(session: any) {
 
 // Handle subscription updates
 async function handleSubscriptionUpdate(subscription: any) {
-  const metadata = subscription.metadata;
+  const metadata = await inferMetadata(subscription.customer, subscription.id, subscription.metadata);
   const status = mapStripeStatus(subscription.status);
   const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
   const cancelAtPeriodEnd = subscription.cancel_at_period_end;
 
   if (metadata.shop_id) {
     // Shop subscription
-    await supabaseAdmin.from('shops').update({
+    const updatePayload: any = {
       subscription_status: status,
       subscription_current_period_end: currentPeriodEnd,
-    }).eq('id', metadata.shop_id);
+    };
+    if (metadata.tier) {
+      updatePayload.subscription_tier = metadata.tier;
+    }
+
+    await supabaseAdmin.from('shops').update(updatePayload).eq('id', metadata.shop_id);
   } else if (metadata.user_id) {
     // DripClub subscription
     await supabaseAdmin.from('dripclub_memberships').update({
@@ -138,7 +197,7 @@ async function handleSubscriptionUpdate(subscription: any) {
 
 // Handle subscription deleted
 async function handleSubscriptionDeleted(subscription: any) {
-  const metadata = subscription.metadata;
+  const metadata = await inferMetadata(subscription.customer, subscription.id, subscription.metadata);
 
   if (metadata.shop_id) {
     // Shop subscription canceled
@@ -166,14 +225,17 @@ async function handlePaymentSucceeded(invoice: any) {
 
   // Get subscription to find metadata
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-  const metadata = subscription.metadata;
+  const metadata = await inferMetadata(subscription.customer as string, subscription.id, subscription.metadata);
   const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
 
   if (metadata.shop_id) {
-    await supabaseAdmin.from('shops').update({
+    const updatePayload: any = {
       subscription_status: 'active',
       subscription_current_period_end: currentPeriodEnd,
-    }).eq('id', metadata.shop_id);
+    };
+    if (metadata.tier) updatePayload.subscription_tier = metadata.tier;
+
+    await supabaseAdmin.from('shops').update(updatePayload).eq('id', metadata.shop_id);
   } else if (metadata.user_id) {
     await supabaseAdmin.from('dripclub_memberships').update({
       status: 'active',
@@ -189,7 +251,7 @@ async function handlePaymentFailed(invoice: any) {
   if (!subscriptionId) return;
 
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-  const metadata = subscription.metadata;
+  const metadata = await inferMetadata(subscription.customer as string, subscription.id, subscription.metadata);
 
   if (metadata.shop_id) {
     await supabaseAdmin.from('shops').update({
