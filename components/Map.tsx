@@ -64,7 +64,7 @@ const Map: React.FC<MapProps> = ({ shops, onShopClick, userLocation }) => {
         mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN}
         style={{ width: '100%', height: '100%' }}
       >
-        <div className="absolute top-4 left-4 z-10 w-72 md:w-80 shadow-xl rounded-xl overflow-hidden [&>form]:!rounded-xl [&>form>input]:!font-sans [&>form>input]:text-sm">
+        <div className="hidden md:block absolute top-4 left-4 z-10 w-72 md:w-80 shadow-xl rounded-xl overflow-hidden [&>form]:!rounded-xl [&>form>input]:!font-sans [&>form>input]:text-sm">
           <SearchBox
             accessToken={import.meta.env.VITE_MAPBOX_TOKEN}
             options={{
