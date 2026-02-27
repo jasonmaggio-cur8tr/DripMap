@@ -92,8 +92,10 @@ const Map: React.FC<MapProps> = ({ shops, onShopClick, userLocation }) => {
 
         {/* Shop Markers */}
         {shops.map(shop => {
-          // Identify PRO+ shops for custom Volt styling
+          // Identify PRO+/PRO shops for custom styling and z-index ordering
           const isProPlus = shop.subscriptionTier === 'pro_plus';
+          const isPro = shop.subscriptionTier === 'pro';
+          const markerZIndex = isProPlus ? 50 : isPro ? 40 : 10;
 
           return (
             <Marker
@@ -101,6 +103,7 @@ const Map: React.FC<MapProps> = ({ shops, onShopClick, userLocation }) => {
               longitude={shop.location.lng}
               latitude={shop.location.lat}
               anchor="bottom"
+              style={{ zIndex: markerZIndex }}
               onClick={e => {
                 e.originalEvent.stopPropagation();
                 setSelectedShopId(shop.id);

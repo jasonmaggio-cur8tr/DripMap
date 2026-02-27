@@ -148,16 +148,88 @@ const Home: React.FC = () => {
     );
   };
 
-  // Filter shops by distance if nearMe is active
-  const filteredShops = nearMeActive && userLocation
-    ? shops.filter(shop => {
-      const distance = getDistanceMiles(
+  // Process and sort shops
+  const isDefaultView = !nearMeActive && searchQuery === '' && selectedVibes.length === 0;
+  let displayShops = [...shops];
+
+  if (nearMeActive && userLocation) {
+    // 1. Calculate distance for all shops
+    const shopsWithDistance = displayShops.map(shop => ({
+      shop,
+      distance: getDistanceMiles(
         userLocation.lat, userLocation.lng,
         shop.location.lat, shop.location.lng
-      );
-      return distance <= 100; // 100 mile radius
-    })
-    : shops;
+      )
+    })).filter(s => s.distance <= 100);
+
+    // 2. Sort by distance bands (5 miles) and PRO status
+    shopsWithDistance.sort((a, b) => {
+      const bandA = Math.floor(a.distance / 5);
+      const bandB = Math.floor(b.distance / 5);
+
+      if (bandA !== bandB) return bandA - bandB; // Closest band first
+
+      // Within the same band, sort by PRO status
+      const tierScore = (tier?: string) => {
+        if (tier === 'pro_plus') return 2;
+        if (tier === 'pro') return 1;
+        return 0;
+      };
+
+      const aTier = tierScore(a.shop.subscriptionTier);
+      const bTier = tierScore(b.shop.subscriptionTier);
+
+      if (aTier !== bTier) return bTier - aTier; // PRO+ > PRO > Free
+
+      // Same tier and band, sort by Drip Score
+      const scoreA = a.shop.dripScore || 0;
+      const scoreB = b.shop.dripScore || 0;
+      return scoreB - scoreA;
+    });
+
+    displayShops = shopsWithDistance.map(s => s.shop);
+  } else if (!isDefaultView) {
+    // Filtered view (Vibes/Search)
+    displayShops.sort((a, b) => {
+      const tierScore = (tier?: string) => {
+        if (tier === 'pro_plus') return 2;
+        if (tier === 'pro') return 1;
+        return 0;
+      };
+
+      const aTier = tierScore(a.subscriptionTier);
+      const bTier = tierScore(b.subscriptionTier);
+
+      if (aTier !== bTier) return bTier - aTier;
+
+      const scoreA = a.dripScore || 0;
+      const scoreB = b.dripScore || 0;
+      return scoreB - scoreA;
+    });
+  } else {
+    // Default View (No filters)
+    // First 3 listings: The 3 newest added listings (array comes pre-sorted by `created_at` DESC)
+    const top3Newest = displayShops.slice(0, 3);
+    const remaining = displayShops.slice(3);
+
+    // Next 10 listings: The most recent PRO+ and PRO subscriptions
+    const proShops = remaining.filter(s => s.subscriptionTier === 'pro_plus' || s.subscriptionTier === 'pro');
+    const freeShops = remaining.filter(s => s.subscriptionTier !== 'pro_plus' && s.subscriptionTier !== 'pro');
+
+    const next10Pro = proShops.slice(0, 10);
+
+    // The Rest: Remaining PROs + all free shops, sorted by Drip Score
+    const theRest = [...proShops.slice(10), ...freeShops];
+    theRest.sort((a, b) => {
+      const scoreA = a.dripScore || 0;
+      const scoreB = b.dripScore || 0;
+      return scoreB - scoreA;
+    });
+
+    displayShops = [...top3Newest, ...next10Pro, ...theRest];
+  }
+
+  const filteredShops = displayShops;
 
   const handleShopClick = (id: string) => {
     navigate(`/shop/${id}`);
