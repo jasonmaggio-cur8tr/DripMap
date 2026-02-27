@@ -178,7 +178,7 @@ const EditShop: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const originalShop = shops.find(s => s.id === id);
+    const originalShop = shops.find(s => s.id === id || s.slug === id);
     if (!originalShop || !location) return;
 
     if (uploadedImages.length === 0) {
