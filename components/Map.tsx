@@ -167,9 +167,15 @@ const Map: React.FC<MapProps> = ({ shops, onShopClick, userLocation }) => {
             >
               <div className="h-28 w-full relative overflow-hidden bg-gray-100">
                 <img src={activeShop.gallery[0]?.url} className="w-full h-full object-cover" loading="lazy" decoding="async" alt={activeShop.name} />
-                <div className="absolute bottom-2 right-2 bg-white px-2 py-0.5 rounded shadow text-xs font-bold text-[#2C1810]">
-                  ★ {activeShop.rating}
-                </div>
+                {activeShop.dripScore ? (
+                  <div className="absolute bottom-2 right-2 flex items-center text-volt-400 font-bold bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 shadow-xl text-xs">
+                    <i className="fas fa-tint mr-1"></i> {activeShop.dripScore.toFixed(0)}
+                  </div>
+                ) : (
+                  <div className="absolute bottom-2 right-2 flex items-center text-white/80 font-bold bg-black/70 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10 shadow-xl text-[10px] uppercase tracking-wide">
+                    Score Pending
+                  </div>
+                )}
                 {activeShop.subscriptionTier === 'pro_plus' && (
                   <div className="absolute top-2 left-2 bg-[#a3e635] text-[#2C1810] px-2 py-0.5 rounded shadow text-[10px] font-bold uppercase tracking-wide">
                     <i className="fas fa-bolt mr-1"></i> Pro+
