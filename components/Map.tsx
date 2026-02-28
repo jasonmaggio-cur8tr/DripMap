@@ -69,7 +69,6 @@ const Map: React.FC<MapProps> = ({ shops, onShopClick, userLocation }) => {
             accessToken={import.meta.env.VITE_MAPBOX_TOKEN}
             options={{
               language: 'en',
-              country: 'us',
               types: 'country,region,postcode,district,place,locality,neighborhood'
             }}
             onRetrieve={(res) => {
