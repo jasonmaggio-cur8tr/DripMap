@@ -19,6 +19,7 @@ import AdminEvents from './pages/admin/AdminEvents';
 import EventsFeed from './pages/EventsFeed';
 import DripClub from './pages/DripClub';
 import ScoutBounty from './pages/ScoutBounty';
+import CoffeeDateAccept from './pages/CoffeeDateAccept';
 
 const App: React.FC = () => {
   return (
@@ -35,6 +36,7 @@ const App: React.FC = () => {
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="/claim/:id" element={<ClaimShop />} />
+          <Route path="/coffee-date/accept" element={<CoffeeDateAccept />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>

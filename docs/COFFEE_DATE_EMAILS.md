@@ -5,20 +5,22 @@
 ## Email 1: The Invite (To the guest)
 **Transaction ID:** `cmlpuhcf700pw0i1nqtlyw75w`
 
-**Subject:** ☕️ {organizerName} wants to grab coffee
+**Subject:** ☕️ [Variable `organizerName`] wants to grab coffee
 
 **Body:**
 
 Hey!
 
-**{organizerName}** invited you to grab a coffee at **{shopName}**.
+**[Variable `organizerName`]** invited you to grab a coffee at **[Variable `shopName`]**.
 
-> "{message}"
+> "[Variable `message`]"
 
-**When:** {date} at {time}
-**Where:** {shopName}
+**When:** [Variable `date`] at [Variable `time`]
+**Where:** [Variable `shopName`]
 
-[**View Invite & RSVP**]({link})
+[**Accept and Add to Calendar**](Make this a button point to `{{link}}`)
+
+Can't make it? [**Propose a different time**](Make this a hyperlink pointing to `[Variable shopLink]`)
 
 See you there,
 The DripMap Team
@@ -32,14 +34,16 @@ The DripMap Team
 
 **Body:**
 
-You successfully invited **{inviteeCount}** {inviteeCount == 1 ? "person" : "people"} to **{shopName}**.
+You successfully invited **[Variable `inviteeCount`]** person(s) to **[Variable `shopName`]**.
 
 **The Details:**
-📅 {date}
-⏰ {time}
-☕️ {shopName}
+📅 [Variable `date`]
+⏰ [Variable `time`]
+☕️ [Variable `shopName`]
 
 We'll let you know when they accept.
+
+[**Add to My Calendar**](Make this a button point to `{{link}}`)
 
 Stay caffeinated,
 The DripMap Team

@@ -1420,14 +1420,17 @@ export const createCoffeeDate = async (
         coffee_date_id: date.id
       }));
 
-      const { error: inviteError } = await supabase
+      const { data: createdInvites, error: inviteError } = await supabase
         .from('coffee_date_invites')
-        .insert(invitesWithDateId);
+        .insert(invitesWithDateId)
+        .select();
 
       if (inviteError) throw inviteError;
+
+      return { success: true, data: date, invites: createdInvites };
     }
 
-    return { success: true, data: date };
+    return { success: true, data: date, invites: [] };
   } catch (error) {
     console.error("Error creating coffee date:", error);
     return { success: false, error };
@@ -1444,6 +1447,17 @@ export const getCoffeeDateByInviteToken = async (token: string) => {
       .single();
 
     if (inviteError) throw inviteError;
+
+    // Fetch creator profile to get their email
+    if (invite && invite.coffee_dates && invite.coffee_dates.created_by) {
+      const { data: creatorProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', invite.coffee_dates.created_by)
+        .single();
+      invite.coffee_dates.creator = creatorProfile;
+    }
+
     return { success: true, data: invite };
   } catch (error) {
     console.error("Error fetching invite:", error);
@@ -1607,10 +1621,68 @@ export const getShopAggregate = async (shopId: string) => {
       avgCoffeeStyle: data.avg_coffee_style,
       avgMatchaProfile: data.avg_matcha_profile,
       avgLaptopFriendly: data.avg_laptop_friendly,
-      // Map other fields as needed
+      avgParkingEase: data.avg_parking_ease,
+      trait1: data.trait_1,
+      trait2: data.trait_2,
+      updatedAt: data.updated_at,
     };
   } catch (error) {
     console.error("Error fetching shop aggregate:", error);
     return null;
+  }
+};
+
+/**
+ * Fetch all experience logs by a specific user (for their profile page)
+ */
+export const fetchUserExperienceLogs = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("experience_logs")
+      .select(`
+        *,
+        shops!inner(
+          id,
+          name,
+          city,
+          state,
+          shop_images(url)
+        )
+      `)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    // Map data to a structure convenient for the UI
+    return (data || []).map((log: any) => {
+      // Find the first owner image if available, else first image
+      const images = log.shops?.shop_images || [];
+      const coverImage = images.length > 0 ? images[0].url : undefined;
+
+      return {
+        id: log.id,
+        shopId: log.shop_id,
+        userId: log.user_id,
+        shopName: log.shops?.name,
+        shopCity: log.shops?.city,
+        shopState: log.shops?.state,
+        shopCoverImage: coverImage,
+        overallQuality: log.overall_quality,
+        bringFriendScore: log.bring_friend_score,
+        vibeEnergy: log.vibe_energy,
+        coffeeStyle: log.coffee_style,
+        specialtyDrink: log.specialty_drink,
+        matchaProfile: log.matcha_profile,
+        pastryCraft: log.pastry_craft,
+        parkingEase: log.parking_ease,
+        laptopFriendly: log.laptop_friendly,
+        quickTake: log.quick_take,
+        createdAt: log.created_at,
+      };
+    });
+  } catch (error) {
+    console.error("Error fetching user experience logs:", error);
+    return [];
   }
 };

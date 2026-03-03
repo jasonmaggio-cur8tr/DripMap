@@ -29,7 +29,7 @@ const ExperienceLogModal: React.FC<ExperienceLogModalProps> = ({
 
     // Form State
     const [formData, setFormData] = useState({
-        overallQuality: existingLog?.overallQuality ?? 50,
+        overallQuality: existingLog?.overallQuality ?? 80,
         bringFriendScore: existingLog?.bringFriendScore ?? 5,
         vibeEnergy: existingLog?.vibeEnergy ?? null,
         coffeeStyle: existingLog?.coffeeStyle ?? null,

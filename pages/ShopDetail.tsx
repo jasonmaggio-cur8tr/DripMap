@@ -985,71 +985,120 @@ const ShopDetail: React.FC = () => {
               <div className="space-y-4">
                 {/* Experience Logs List - Prioritize new logs */}
                 {(shop.experienceLogs && shop.experienceLogs.length > 0) ? (
-                  shop.experienceLogs.map((log) => (
-                    <div key={log.id} className="p-5 rounded-2xl bg-white border border-coffee-100 hover:border-volt-400 transition-colors shadow-sm">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-3">
-                          <Link to={`/profile/${log.userId}`} className="block shrink-0">
-                            <div className="w-10 h-10 rounded-full bg-coffee-100 overflow-hidden border border-coffee-200">
-                              {log.userAvatar ? (
-                                <img src={log.userAvatar} alt={log.userName} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-coffee-400">
-                                  <i className="fas fa-user"></i>
+                  shop.experienceLogs.map((log) => {
+                    // Inline state component for expandability
+                    const ExpandableLogCard = ({ log }: { log: any }) => {
+                      const [expanded, setExpanded] = useState(false);
+                      return (
+                        <div key={log.id}
+                          onClick={() => setExpanded(!expanded)}
+                          className="p-5 rounded-2xl bg-white border border-coffee-100 hover:border-volt-400 transition-colors shadow-sm cursor-pointer mb-4">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center gap-3">
+                              <Link to={`/profile/${log.userId}`} onClick={(e) => e.stopPropagation()} className="block shrink-0">
+                                <div className="w-10 h-10 rounded-full bg-coffee-100 overflow-hidden border border-coffee-200">
+                                  {log.userAvatar ? (
+                                    <img src={log.userAvatar} alt={log.userName} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-coffee-400">
+                                      <i className="fas fa-user"></i>
+                                    </div>
+                                  )}
+                                </div>
+                              </Link>
+                              <div>
+                                <Link to={`/profile/${log.userId}`} onClick={(e) => e.stopPropagation()} className="font-bold text-coffee-900 text-sm hover:text-volt-600 block">
+                                  {log.userName}
+                                </Link>
+                                <div className="text-xs text-coffee-400">
+                                  {new Date(log.createdAt).toLocaleDateString()}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end">
+                              <div className="flex items-center gap-1 bg-coffee-900 text-volt-400 px-2 py-1 rounded-md">
+                                <i className="fas fa-tint text-[10px]"></i>
+                                <span className="text-sm font-bold">{log.overallQuality}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Quick Overview Grid (Always visible) */}
+                          <div className="grid grid-cols-3 gap-2 mb-3">
+                            {log.coffeeStyle !== null && log.coffeeStyle !== undefined ? (
+                              <div className="bg-coffee-50 rounded px-2 py-1 text-center">
+                                <div className="text-[10px] text-coffee-500 uppercase">Coffee</div>
+                                <div className="text-xs font-bold text-coffee-800">
+                                  {log.coffeeStyle >= 70 ? "Modern" : log.coffeeStyle <= 30 ? "Classic" : "Balanced"}
+                                </div>
+                              </div>
+                            ) : <div></div>}
+                            {log.vibeEnergy !== null && log.vibeEnergy !== undefined ? (
+                              <div className="bg-coffee-50 rounded px-2 py-1 text-center">
+                                <div className="text-[10px] text-coffee-500 uppercase">Vibe</div>
+                                <div className="text-xs font-bold text-coffee-800">
+                                  {log.vibeEnergy >= 70 ? "Lively" : log.vibeEnergy <= 30 ? "Quiet" : "Balanced"}
+                                </div>
+                              </div>
+                            ) : <div></div>}
+                            {log.bringFriendScore !== undefined ? (
+                              <div className="bg-coffee-50 rounded px-2 py-1 text-center">
+                                <div className="text-[10px] text-coffee-500 uppercase">Rec.</div>
+                                <div className="text-xs font-bold text-coffee-800">{log.bringFriendScore}/10</div>
+                              </div>
+                            ) : <div></div>}
+                          </div>
+
+                          {log.quickTake && (
+                            <div className="relative pl-3 border-l-2 border-volt-400 mb-2">
+                              <p className="text-coffee-700 italic text-sm">"{log.quickTake}"</p>
+                            </div>
+                          )}
+
+                          {/* Expanded Details Wrapper */}
+                          <div className={`overflow-hidden transition-all duration-300 ${expanded ? 'max-h-96 opacity-100 mt-4 border-t border-coffee-50 pt-4' : 'max-h-0 opacity-0'}`}>
+                            <div className="text-xs font-bold uppercase text-coffee-400 tracking-wider mb-2">Full Vibe Check</div>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                              {log.matchaProfile !== null && log.matchaProfile !== undefined && (
+                                <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
+                                  <span className="block text-xs text-gray-400">Matcha</span>
+                                  <span className="font-medium text-coffee-800">{log.matchaProfile}/100</span>
+                                </div>
+                              )}
+                              {log.pastryCraft !== null && log.pastryCraft !== undefined && (
+                                <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
+                                  <span className="block text-xs text-gray-400">Pastry Craft</span>
+                                  <span className="font-medium text-coffee-800">{log.pastryCraft}/100</span>
+                                </div>
+                              )}
+                              {log.specialtyDrink !== null && log.specialtyDrink !== undefined && (
+                                <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
+                                  <span className="block text-xs text-gray-400">Specialty Drink</span>
+                                  <span className="font-medium text-coffee-800">{log.specialtyDrink}/100</span>
+                                </div>
+                              )}
+                              {log.laptopFriendly !== null && log.laptopFriendly !== undefined && (
+                                <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
+                                  <span className="block text-xs text-gray-400">Laptop Friendly</span>
+                                  <span className="font-medium text-coffee-800">{log.laptopFriendly}%</span>
+                                </div>
+                              )}
+                              {log.parkingEase !== null && log.parkingEase !== undefined && (
+                                <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
+                                  <span className="block text-xs text-gray-400">Parking Ease</span>
+                                  <span className="font-medium text-coffee-800">{log.parkingEase}%</span>
                                 </div>
                               )}
                             </div>
-                          </Link>
-                          <div>
-                            <Link to={`/profile/${log.userId}`} className="font-bold text-coffee-900 text-sm hover:text-volt-600 block">
-                              {log.userName}
-                            </Link>
-                            <div className="text-xs text-coffee-400">
-                              {new Date(log.createdAt).toLocaleDateString()}
-                            </div>
+                          </div>
+                          <div className="text-center mt-2 cursor-pointer text-[10px] text-coffee-400 font-bold uppercase flex items-center justify-center gap-1 hover:text-volt-500 transition-colors">
+                            {expanded ? (<><i className="fas fa-chevron-up"></i> Hide Details</>) : (<><i className="fas fa-chevron-down"></i> Expand Log</>)}
                           </div>
                         </div>
-                        <div className="flex flex-col items-end">
-                          <div className="flex items-center gap-1 bg-coffee-900 text-volt-400 px-2 py-1 rounded-md">
-                            <i className="fas fa-tint text-[10px]"></i>
-                            <span className="text-sm font-bold">{log.overallQuality}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Detailed Ratings Grid */}
-                      <div className="grid grid-cols-3 gap-2 mb-3">
-                        {log.coffeeStyle !== null && log.coffeeStyle !== undefined && (
-                          <div className="bg-coffee-50 rounded px-2 py-1 text-center">
-                            <div className="text-[10px] text-coffee-500 uppercase">Coffee</div>
-                            <div className="text-xs font-bold text-coffee-800">
-                              {log.coffeeStyle >= 70 ? "Modern" : log.coffeeStyle <= 30 ? "Classic" : "Balanced"}
-                            </div>
-                          </div>
-                        )}
-                        {log.vibeEnergy !== null && log.vibeEnergy !== undefined && (
-                          <div className="bg-coffee-50 rounded px-2 py-1 text-center">
-                            <div className="text-[10px] text-coffee-500 uppercase">Vibe</div>
-                            <div className="text-xs font-bold text-coffee-800">
-                              {log.vibeEnergy >= 70 ? "Lively" : log.vibeEnergy <= 30 ? "Quiet" : "Balanced"}
-                            </div>
-                          </div>
-                        )}
-                        {log.bringFriendScore !== undefined && (
-                          <div className="bg-coffee-50 rounded px-2 py-1 text-center">
-                            <div className="text-[10px] text-coffee-500 uppercase">Rec.</div>
-                            <div className="text-xs font-bold text-coffee-800">{log.bringFriendScore}/10</div>
-                          </div>
-                        )}
-                      </div>
-
-                      {log.quickTake && (
-                        <div className="relative pl-3 border-l-2 border-volt-400">
-                          <p className="text-coffee-700 italic text-sm">"{log.quickTake}"</p>
-                        </div>
-                      )}
-                    </div>
-                  ))
+                      );
+                    };
+                    return <ExpandableLogCard key={log.id} log={log} />;
+                  })
                 ) : shop.reviews && shop.reviews.length > 0 ? (
                   // Fallback to legacy reviews if no new logs
                   shop.reviews.map((review, i) => (

@@ -16,7 +16,7 @@ interface CoffeeDateCreateModalProps {
 const TONES = [
     { id: 'talk_shop', label: 'Lets talk shop', icon: 'abacus', message: 'Hey, lets meet up and talk shop.' },
     { id: 'study', label: 'Study session', icon: 'book', message: 'Planning to get some work done here, join me?' },
-    { id: 'meet_up', label: 'Catch up', icon: 'coffee', message: 'Though this would be a great spot to catch up.' },
+    { id: 'meet_up', label: 'Catch up', icon: 'coffee', message: 'Thought this would be a great spot to catch up.' },
     { id: 'custom', label: 'Custom', icon: 'pen', message: '' },
 ];
 
@@ -78,6 +78,33 @@ const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shopId, s
             // Combine date and time
             const startDateTime = new Date(`${date}T${time}`).toISOString();
 
+            // Helper to build Google Calendar Add URL
+            const buildGoogleCalendarUrl = (startIso: string, durationMin: number, title: string, location: string, details: string) => {
+                const startDate = new Date(startIso);
+                const endDate = new Date(startDate.getTime() + durationMin * 60000);
+
+                const formatDateStr = (d: Date) => {
+                    return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                };
+
+                const params = new URLSearchParams({
+                    action: 'TEMPLATE',
+                    text: title,
+                    dates: `${formatDateStr(startDate)}/${formatDateStr(endDate)}`,
+                    details: details,
+                    location: location,
+                });
+                return `https://calendar.google.com/calendar/render?${params.toString()}`;
+            };
+
+            const googleCalLink = buildGoogleCalendarUrl(
+                startDateTime,
+                duration,
+                `Coffee Date at ${shopName}`,
+                shopName,
+                message || "Coffee Date organized via DripMap!"
+            );
+
             // Prepare payload
             const coffeeDateData = {
                 shop_id: shopId,
@@ -112,36 +139,47 @@ const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shopId, s
                 // For MVP client-side:
 
                 // 1. Send confirmation to Creator
-                await loopService.sendTransactionalEmail(
+                const organizerRes = await loopService.sendTransactionalEmail(
                     user.email,
-                    "coffee_date_organizer_confirm", // You need to create this Transaction ID in Loops
+                    "cmm9lf63l0aee0h3513zjwrw1", // "Coffee Date Invite Sent" ID
                     {
                         shopName,
                         date: date,
                         time: time,
                         message,
-                        inviteeCount: validInvitees.length
+                        inviteeCount: validInvitees.length,
+                        link: googleCalLink
                     }
                 );
+                if (!organizerRes?.success) toast.error(`Loops Host Error: ${organizerRes?.error}`);
 
                 // 2. Send Invites
-                invitesData.forEach(async (invite) => {
-                    if (invite.invite_type === 'email' && invite.invitee_email) {
-                        await loopService.sendTransactionalEmail(
-                            invite.invitee_email,
-                            "cmlpuhcf700pw0i1nqtlyw75w", // Invite ID from Loops
-                            {
-                                organizerName: user.username || "A DripMap User",
-                                shopName,
-                                date,
-                                time,
-                                message,
-                                link: `https://dripmap.space/coffee-date/accept?token=PENDING_TOKEN_LOOKUP`
-                                // Ideally pass the token returned from createCoffeeDate, but for MVP let's assume valid
-                            }
-                        );
-                    }
-                });
+                toast.success(`Debug: Found ${result.invites?.length || 0} returned invites from DB`);
+                if (result.invites && result.invites.length > 0) {
+                    await Promise.all(result.invites.map(async (invite: any) => {
+                        if (invite.invite_type === 'email' && invite.invitee_email) {
+                            toast.success(`Debug: Triggering loops for ${invite.invitee_email}...`);
+                            const res = await loopService.sendTransactionalEmail(
+                                invite.invitee_email,
+                                "cmlpuhcf700pw0i1nqtlyw75w", // Invite ID from Loops
+                                {
+                                    organizerName: user.username || "A DripMap User",
+                                    shopName,
+                                    date,
+                                    time,
+                                    message,
+                                    link: googleCalLink, // Directly adding to calendar instead of the Accept page
+                                    shopLink: `https://dripmap.space/#/shop/${shopId}`
+                                }
+                            );
+                            if (!res?.success) toast.error(`Loops Invite Error: ${res?.error}`);
+                        } else {
+                            toast.error(`Debug: Invite type is ${invite.invite_type}, skipping email.`);
+                        }
+                    }));
+                } else {
+                    toast.error(`Debug: No invites returned from Supabase`);
+                }
 
                 toast.success('Coffee Date created! Invites sent.');
                 onSuccess();
