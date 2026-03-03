@@ -557,7 +557,7 @@ const ShopDetail: React.FC = () => {
   return (
     <div className="min-h-screen pb-20 bg-coffee-50 relative">
       {/* Lightbox Modal */}
-      {lightboxIndex !== null && (
+      {lightboxIndex !== null && filteredImages[lightboxIndex] && (
         <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-200">
           <button
             onClick={() => setLightboxIndex(null)}
@@ -612,10 +612,10 @@ const ShopDetail: React.FC = () => {
       {/* Hero Header */}
       <div
         className="h-[50vh] w-full relative group cursor-pointer"
-        onClick={() => setLightboxIndex(0)}
+        onClick={() => { if (shop.gallery?.length > 0) setLightboxIndex(0); }}
       >
         <img
-          src={shop.gallery[0].url}
+          src={shop.gallery?.[0]?.url || "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80"}
           alt={shop.name}
           className="w-full h-full object-cover"
         />

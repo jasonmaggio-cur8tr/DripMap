@@ -5,8 +5,10 @@ import EventCreateModal from './EventCreateModal';
 import { LockedOverlay } from './OwnerTools';
 
 // Parse datetime without timezone conversion
-const parseLocalDateTime = (dateTimeStr: string) => {
+const parseLocalDateTime = (dateTimeStr: string | undefined | null) => {
+  if (!dateTimeStr) return new Date(0); // Fallback to epoch if missing
   const [datePart, timePart] = dateTimeStr.split('T');
+  if (!datePart) return new Date(0);
   const [year, month, day] = datePart.split('-').map(Number);
   const [hours, minutes] = (timePart || '00:00').split(':').map(Number);
   return new Date(year, month - 1, day, hours, minutes);
