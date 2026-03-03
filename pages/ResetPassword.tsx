@@ -8,6 +8,8 @@ import { useToast } from '../context/ToastContext';
 const ResetPassword: React.FC = () => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
@@ -68,30 +70,52 @@ const ResetPassword: React.FC = () => {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-sm font-bold text-coffee-900 mb-2">New Password</label>
-                        <input
-                            type="password"
-                            required
-                            minLength={6}
-                            className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none font-medium"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            disabled={loading}
-                        />
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                required
+                                minLength={6}
+                                className="w-full px-4 py-3 pr-12 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none font-medium"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                disabled={loading}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-coffee-400 hover:text-coffee-900 focus:outline-none transition-colors"
+                                tabIndex={-1}
+                                aria-label={showPassword ? "Hide password" : "Show password"}
+                            >
+                                <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                            </button>
+                        </div>
                     </div>
 
                     <div>
                         <label className="block text-sm font-bold text-coffee-900 mb-2">Confirm Password</label>
-                        <input
-                            type="password"
-                            required
-                            minLength={6}
-                            className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none font-medium"
-                            placeholder="••••••••"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            disabled={loading}
-                        />
+                        <div className="relative">
+                            <input
+                                type={showConfirmPassword ? "text" : "password"}
+                                required
+                                minLength={6}
+                                className="w-full px-4 py-3 pr-12 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none font-medium"
+                                placeholder="••••••••"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                disabled={loading}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-coffee-400 hover:text-coffee-900 focus:outline-none transition-colors"
+                                tabIndex={-1}
+                                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                            >
+                                <i className={`fas ${showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                            </button>
+                        </div>
                     </div>
 
                     <Button type="submit" className="w-full py-4" isLoading={loading}>

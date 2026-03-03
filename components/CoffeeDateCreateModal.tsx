@@ -131,14 +131,14 @@ const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shopId, s
                 invite_type: (inv.invite_type as 'email' | 'user' | 'phone'),
                 invitee_email: inv.invitee_email
             }));
+
+            toast.success("Debug: Calling Supabase DB...");
             const result = await createCoffeeDate(coffeeDateData, typedInvitesData);
+            toast.success("Debug: DB returned!");
 
             if (result.success) {
-                // Trigger Emails via Loops (MVP: Send to inviter and first invitee if email)
-                // In a real app, the backend/Edge Function should handle this to ensure consistency
-                // For MVP client-side:
-
                 // 1. Send confirmation to Creator
+                toast.success("Debug: Sending Host Email...");
                 const organizerRes = await loopService.sendTransactionalEmail(
                     user.email,
                     "cmm9lf63l0aee0h3513zjwrw1", // "Coffee Date Invite Sent" ID
@@ -151,14 +151,14 @@ const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shopId, s
                         link: googleCalLink
                     }
                 );
+                toast.success("Debug: Host Email sent!");
                 if (!organizerRes?.success) toast.error(`Loops Host Error: ${organizerRes?.error}`);
 
                 // 2. Send Invites
-                toast.success(`Debug: Found ${result.invites?.length || 0} returned invites from DB`);
+                toast.success(`Debug: Sending ${result.invites?.length || 0} Invites...`);
                 if (result.invites && result.invites.length > 0) {
                     await Promise.all(result.invites.map(async (invite: any) => {
                         if (invite.invite_type === 'email' && invite.invitee_email) {
-                            toast.success(`Debug: Triggering loops for ${invite.invitee_email}...`);
                             const res = await loopService.sendTransactionalEmail(
                                 invite.invitee_email,
                                 "cmlpuhcf700pw0i1nqtlyw75w", // Invite ID from Loops
@@ -173,13 +173,11 @@ const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shopId, s
                                 }
                             );
                             if (!res?.success) toast.error(`Loops Invite Error: ${res?.error}`);
-                        } else {
-                            toast.error(`Debug: Invite type is ${invite.invite_type}, skipping email.`);
                         }
                     }));
-                } else {
-                    toast.error(`Debug: No invites returned from Supabase`);
                 }
+
+                toast.success('Debug: All Loops Finished!');
 
                 toast.success('Coffee Date created! Invites sent.');
                 onSuccess();
@@ -193,6 +191,7 @@ const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shopId, s
             console.error(error);
             toast.error('An error occurred');
         } finally {
+            toast.success('Debug: Reached Finally block');
             setLoading(false);
         }
     };
