@@ -269,6 +269,7 @@ export const fetchShops = async (): Promise<Shop[]> => {
 
         return shops.map(shop => ({
           id: shop.id,
+          slug: shop.slug, // Map slug
           name: shop.name,
           description: shop.description || "",
           location: {
@@ -279,6 +280,7 @@ export const fetchShops = async (): Promise<Shop[]> => {
             state: shop.state,
             country: shop.country || '',
           },
+          openHours: shop.open_hours, // Map open_hours properly
           gallery:
             (shop.shop_images || []).map((img: any) => ({
               id: img.id,

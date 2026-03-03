@@ -496,21 +496,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const updateShop = async (updatedShop: Shop) => {
-    // Optimistic update
+    // Purely optimistic update. Callers are responsible for DB network persistence.
     setShops(prev => prev.map(s => s.id === updatedShop.id ? updatedShop : s));
-
-    // DB update - we need to map Shop type back to DB columns if needed, 
-    // but dbService.updateShopInDB takes specific fields.
-    // For now, assuming specific updates are handled by components calling dbService directly
-    // or we map here. 
-    // Actually, looking at interface, it takes `updatedShop: Shop`.
-    // dbService.updateShopInDB takes partial.
-    // Let's implement basic update.
-    await db.updateShopInDB(updatedShop.id, {
-      name: updatedShop.name,
-      description: updatedShop.description,
-      // ... convert other fields if necessary
-    });
   };
 
   const toggleSaveShop = async (shopId: string) => {
