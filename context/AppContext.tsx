@@ -156,64 +156,70 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
 
     const init = async () => {
       setLoading(true);
-      await initializeStorage();
-      await refreshShops();
+      try {
+        await initializeStorage();
+        await refreshShops();
 
-      // Check for auth errors in URL hash (e.g. expired links)
-      const hashParams = new URLSearchParams(window.location.hash.substring(1)); // strip #
-      const error = hashParams.get('error');
-      const errorDescription = hashParams.get('error_description');
+        // Check for auth errors in URL hash (e.g. expired links)
+        const hashParams = new URLSearchParams(window.location.hash.substring(1)); // strip #
+        const error = hashParams.get('error');
+        const errorDescription = hashParams.get('error_description');
 
-      if (error) {
-        console.error('[AppContext] Auth error detected in hash:', error, errorDescription);
-        // Clean up the URL so the user doesn't see the ugly hash
-        window.history.replaceState(null, '', window.location.pathname);
-        setLoading(false);
+        if (error) {
+          console.error('[AppContext] Auth error detected in hash:', error, errorDescription);
+          // Clean up the URL so the user doesn't see the ugly hash
+          window.history.replaceState(null, '', window.location.pathname);
 
-        // Show user friendly message
-        // Convert + to spaces if needed (though URLSearchParams handles it usually)
-        toast.error(errorDescription?.replace(/\+/g, ' ') || 'Authentication failed. Please try again.');
+          // Show user friendly message
+          // Convert + to spaces if needed (though URLSearchParams handles it usually)
+          toast.error(errorDescription?.replace(/\+/g, ' ') || 'Authentication failed. Please try again.');
 
-        navigate('/auth');
-        return;
-      }
-
-      // Check early for recovery intent in URL hash
-      const isRecoveryHash = window.location.hash.includes('type=recovery') || window.location.hash.includes('reset-password');
-      if (isRecoveryHash) {
-        console.log('[AppContext] Detected recovery flow from URL hash.');
-        setIsPasswordResetting(true);
-      }
-
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        await loadUserProfile(session.user.id);
-      }
-
-      const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log(`[AppContext] Auth event: ${event}`);
-
-        const isRecoveryHashNow = window.location.hash.includes('type=recovery');
-
-        if (event === 'PASSWORD_RECOVERY' || (isRecoveryHashNow && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED'))) {
-          console.log('[AppContext] Password recovery detected! Enforcing reset state.');
-          setIsPasswordResetting(true);
-          // Use navigate for reliable router integration
-          navigate('/reset-password');
-
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setClaimRequests([]);
-          setIsPasswordResetting(false);
-        } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-          console.log('[AppContext] Reloading profile from auth change');
-          await loadUserProfile(session.user.id);
-          // DO NOT navigate here. Let Auth.tsx handle redirects if needed, 
-          // but effectively blocked if isPasswordResetting is true in Auth.tsx
+          navigate('/auth');
+          return;
         }
-      });
-      authSubscription = data.subscription;
-      setLoading(false);
+
+        // Check early for recovery intent in URL hash
+        const isRecoveryHash = window.location.hash.includes('type=recovery') || window.location.hash.includes('reset-password');
+        if (isRecoveryHash) {
+          console.log('[AppContext] Detected recovery flow from URL hash.');
+          setIsPasswordResetting(true);
+        }
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await loadUserProfile(session.user.id);
+        }
+
+        const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+          console.log(`[AppContext] Auth event: ${event}`);
+
+          const isRecoveryHashNow = window.location.hash.includes('type=recovery');
+
+          if (event === 'PASSWORD_RECOVERY' || (isRecoveryHashNow && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED'))) {
+            console.log('[AppContext] Password recovery detected! Enforcing reset state.');
+            setIsPasswordResetting(true);
+            // Use navigate for reliable router integration
+            navigate('/reset-password');
+
+          } else if (event === 'SIGNED_OUT') {
+            setUser(null);
+            setClaimRequests([]);
+            setIsPasswordResetting(false);
+          } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+            console.log('[AppContext] Reloading profile from auth change');
+            try {
+              await loadUserProfile(session.user.id);
+            } catch (err) {
+              console.error('[AppContext] Error fetching profile on auth change:', err);
+            }
+          }
+        });
+        authSubscription = data.subscription;
+      } catch (err) {
+        console.error('[AppContext] Initialization error:', err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     init();

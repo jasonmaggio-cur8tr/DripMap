@@ -138,43 +138,47 @@ const Profile: React.FC = () => {
       setLoading(true);
       console.log("Fetching profile for:", id, "isOwnProfile:", isOwnProfile);
 
-      if (isOwnProfile) {
-        if (!currentUser) {
-          console.log("No current user, redirecting to auth");
-          navigate("/auth");
-          setLoading(false);
-          return;
-        }
-        console.log(
-          "Setting viewed user to current user:",
-          currentUser.username
-        );
-        setViewedUser(currentUser);
-        setLoading(false);
-      } else if (profileIdentifier) {
-        console.log("Fetching profile by identifier:", profileIdentifier);
+      try {
+        if (isOwnProfile) {
+          if (!currentUser) {
+            console.log("No current user, redirecting to auth");
+            navigate("/auth");
+            return;
+          }
+          console.log(
+            "Setting viewed user to current user:",
+            currentUser.username
+          );
+          setViewedUser(currentUser);
+        } else if (profileIdentifier) {
+          console.log("Fetching profile by identifier:", profileIdentifier);
 
-        // Try to fetch by username first, then by ID
-        let profile = await getProfileByUsername(profileIdentifier);
-        console.log("Profile by username:", profile);
+          // Try to fetch by username first, then by ID
+          let profile = await getProfileByUsername(profileIdentifier);
+          console.log("Profile by username:", profile);
 
-        if (!profile) {
-          console.log("Trying to fetch by ID");
-          profile = await getProfileById(profileIdentifier);
-          console.log("Profile by ID:", profile);
-        }
+          if (!profile) {
+            console.log("Trying to fetch by ID");
+            profile = await getProfileById(profileIdentifier);
+            console.log("Profile by ID:", profile);
+          }
 
-        if (profile) {
-          console.log("Profile found:", profile.username);
-          setViewedUser(profile);
+          if (profile) {
+            console.log("Profile found:", profile.username);
+            setViewedUser(profile);
+          } else {
+            console.log("No profile found");
+            toast.error("User not found");
+            navigate("/");
+          }
         } else {
-          console.log("No profile found");
-          toast.error("User not found");
-          navigate("/");
+          console.log("No profile identifier");
         }
-        setLoading(false);
-      } else {
-        console.log("No profile identifier");
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        toast.error("Failed to load profile. Please try again.");
+        navigate("/");
+      } finally {
         setLoading(false);
       }
     };

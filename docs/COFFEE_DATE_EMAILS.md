@@ -47,3 +47,25 @@ We'll let you know when they accept.
 
 Stay caffeinated,
 The DripMap Team
+
+---
+
+## Email 4: Shop Owner Notification (To the claimed shop owner)
+**Transaction ID:** `coffee_date_shop_owner_notification`
+
+**Subject:** 🎉 Someone just planned a Coffee Date at [Variable `shopName`]!
+
+**Body:**
+
+Hi!
+
+Awesome news: **[Variable `organizerName`]** just organized a DripMap Coffee Date at your shop for **[Variable `inviteeCount`]** people!
+
+**The Details:**
+📅 **Date:** [Variable `date`]
+⏰ **Time:** [Variable `time`]
+
+We wanted to give you a heads up so you can prepare for their visit. Thanks for being a part of the DripMap community!
+
+Best,
+The DripMap Team

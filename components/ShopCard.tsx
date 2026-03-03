@@ -148,13 +148,11 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
                 </div>
             </div>
 
-            {/* Coffee Date Modal */}
             {showCoffeeDateModal && (
                 <div onClick={e => e.preventDefault()}> {/* Prevent Link navigation */}
                     <React.Suspense fallback={null}>
                         <CoffeeDateCreateModal
-                            shopId={shop.id}
-                            shopName={shop.name}
+                            shop={shop}
                             onClose={() => setShowCoffeeDateModal(false)}
                             onSuccess={() => setShowCoffeeDateModal(false)}
                         />

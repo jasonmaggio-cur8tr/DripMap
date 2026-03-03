@@ -2,13 +2,13 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { loopService } from '../services/loopService';
-import { createCoffeeDate } from '../services/dbService'; // You need to implement this
+import { createCoffeeDate, fetchUserProfile } from '../services/dbService'; // You need to implement this
 import { useToast } from '../context/ToastContext';
 import Button from './Button';
+import { Shop } from '../types';
 
 interface CoffeeDateCreateModalProps {
-    shopId: string;
-    shopName: string;
+    shop: Shop;
     onClose: () => void;
     onSuccess: () => void;
 }
@@ -20,7 +20,7 @@ const TONES = [
     { id: 'custom', label: 'Custom', icon: 'pen', message: '' },
 ];
 
-const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shopId, shopName, onClose, onSuccess }) => {
+const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shop, onClose, onSuccess }) => {
     const { user } = useApp();
     const { toast } = useToast();
     const [step, setStep] = useState(1);
@@ -100,14 +100,14 @@ const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shopId, s
             const googleCalLink = buildGoogleCalendarUrl(
                 startDateTime,
                 duration,
-                `Coffee Date at ${shopName}`,
-                shopName,
+                `Coffee Date at ${shop.name}`,
+                shop.name,
                 message || "Coffee Date organized via DripMap!"
             );
 
             // Prepare payload
             const coffeeDateData = {
-                shop_id: shopId,
+                shop_id: shop.id,
                 created_by: user.id,
                 starts_at: startDateTime,
                 duration_minutes: duration,
@@ -143,7 +143,7 @@ const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shopId, s
                     user.email,
                     "cmm9lf63l0aee0h3513zjwrw1", // "Coffee Date Invite Sent" ID
                     {
-                        shopName,
+                        shopName: shop.name,
                         date: date,
                         time: time,
                         message,
@@ -164,17 +164,38 @@ const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shopId, s
                                 "cmlpuhcf700pw0i1nqtlyw75w", // Invite ID from Loops
                                 {
                                     organizerName: user.username || "A DripMap User",
-                                    shopName,
+                                    shopName: shop.name,
                                     date,
                                     time,
                                     message,
                                     link: googleCalLink, // Directly adding to calendar instead of the Accept page
-                                    shopLink: `https://dripmap.space/#/shop/${shopId}`
+                                    shopLink: `https://dripmap.space/#/shop/${shop.id}`
                                 }
                             );
                             if (!res?.success) toast.error(`Loops Invite Error: ${res?.error}`);
                         }
                     }));
+                }
+
+                // 3. Notify Shop Owner (if claimed)
+                if (shop.isClaimed && shop.claimedBy) {
+                    toast.success("Debug: Fetching Shop Owner...");
+                    const ownerProfile = await fetchUserProfile(shop.claimedBy);
+                    if (ownerProfile && ownerProfile.email) {
+                        toast.success("Debug: Sending Owner Notification...");
+                        const ownerRes = await loopService.sendTransactionalEmail(
+                            ownerProfile.email,
+                            "coffee_date_shop_owner_notification",
+                            {
+                                shopName: shop.name,
+                                organizerName: user.username || "A DripMap User",
+                                inviteeCount: validInvitees.length,
+                                date,
+                                time
+                            }
+                        );
+                        if (!ownerRes?.success) console.error(`Loops Shop Owner Notification Error: ${ownerRes?.error}`);
+                    }
                 }
 
                 toast.success('Debug: All Loops Finished!');

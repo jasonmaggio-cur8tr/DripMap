@@ -1536,10 +1536,11 @@ const ShopDetail: React.FC = () => {
       {showCoffeeDateModal && (
         <React.Suspense fallback={null}>
           <CoffeeDateCreateModal
-            shopId={shop.id}
-            shopName={shop.name}
+            shop={shop}
             onClose={() => setShowCoffeeDateModal(false)}
-            onSuccess={() => setShowCoffeeDateModal(false)}
+            onSuccess={() => {
+              // Optionally refresh logic here if needed
+            }}
           />
         </React.Suspense>
       )}
