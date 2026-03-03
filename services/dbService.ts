@@ -699,6 +699,7 @@ export const updateShopInDB = async (
     state?: string;
     vibes?: string[];
     cheeky_vibes?: string[];
+    custom_vibes?: string[];
     open_hours?: any;
   }
 ) => {

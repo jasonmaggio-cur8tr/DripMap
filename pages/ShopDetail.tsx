@@ -729,7 +729,7 @@ const ShopDetail: React.FC = () => {
                 {shop.description}
               </p>
               <div className="flex flex-wrap gap-2">
-                {shop.vibes.map(vibe => (
+                {[...(shop.customVibes || []), ...shop.vibes].map(vibe => (
                   <TagChip key={vibe} label={vibe} isSelected />
                 ))}
               </div>

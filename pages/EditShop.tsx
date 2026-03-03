@@ -33,6 +33,8 @@ const EditShop: React.FC = () => {
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedVibes, setSelectedVibes] = useState<Vibe[]>([]);
   const [selectedCheekyVibes, setSelectedCheekyVibes] = useState<string[]>([]);
+  const [customVibes, setCustomVibes] = useState<string[]>([]);
+  const [newCustomVibe, setNewCustomVibe] = useState('');
   const [uploadedImages, setUploadedImages] = useState<{ id?: string, url: string, isNew: boolean, file?: File }[]>([]);
   const [openHours, setOpenHours] = useState<{
     monday: string;
@@ -101,6 +103,7 @@ const EditShop: React.FC = () => {
     });
     setSelectedVibes(shopToEdit.vibes);
     setSelectedCheekyVibes(shopToEdit.cheekyVibes || []);
+    setCustomVibes(shopToEdit.customVibes || []);
 
     // Load opening hours
     if (shopToEdit.openHours) {
@@ -245,6 +248,7 @@ const EditShop: React.FC = () => {
         country: formData.country,
         vibes: selectedVibes,
         cheeky_vibes: selectedCheekyVibes,
+        custom_vibes: customVibes,
         open_hours: openHours,
       };
 
@@ -363,6 +367,56 @@ const EditShop: React.FC = () => {
                     type="button"
                   />
                 ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-coffee-900 mb-3">
+                Custom Vibes <span className="text-coffee-400 font-normal">(Add your own tags)</span>
+              </label>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {customVibes.map(vibe => (
+                  <div key={vibe} className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-volt-400 text-coffee-900 font-bold text-sm">
+                    {vibe}
+                    <button
+                      type="button"
+                      onClick={() => setCustomVibes(prev => prev.filter(v => v !== vibe))}
+                      className="ml-1 text-coffee-900/60 hover:text-coffee-900"
+                    >
+                      <i className="fas fa-times text-xs"></i>
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="e.g. Secret Menu, Free Wi-Fi"
+                  className="flex-1 px-4 py-2 bg-coffee-50 border border-coffee-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-volt-400"
+                  value={newCustomVibe}
+                  onChange={e => setNewCustomVibe(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (newCustomVibe.trim() && !customVibes.includes(newCustomVibe.trim())) {
+                        setCustomVibes(prev => [...prev, newCustomVibe.trim()]);
+                        setNewCustomVibe('');
+                      }
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    if (newCustomVibe.trim() && !customVibes.includes(newCustomVibe.trim())) {
+                      setCustomVibes(prev => [...prev, newCustomVibe.trim()]);
+                      setNewCustomVibe('');
+                    }
+                  }}
+                >
+                  Add
+                </Button>
               </div>
             </div>
 

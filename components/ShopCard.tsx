@@ -140,7 +140,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
                     <i className="fas fa-map-marker-alt mr-1.5"></i> {shop.location.address}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
-                    {shop.vibes.slice(0, 3).map(v => (
+                    {[...(shop.customVibes || []), ...shop.vibes].slice(0, 3).map(v => (
                         <span key={v} className="text-[10px] bg-coffee-50 text-coffee-800 px-2 py-0.5 rounded-md border border-coffee-200">
                             {v}
                         </span>
