@@ -1,10 +1,91 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import Button from "../components/Button";
-import { Vibe, User, Shop } from "../types";
+import { Vibe, User, Shop, DripClubMembership } from "../types";
 import { useToast } from "../context/ToastContext";
 import { uploadImage } from "../services/storageService";
+import {
+  getDripClubMembership,
+  getCustomerPortalUrl,
+  getSubscriptionStatusLabel,
+  formatPrice,
+  getPricing,
+} from "../services/subscriptionService";
+import { fetchUserExperienceLogs } from "../services/dbService";
+
+// --- ANIMATED DRIPCLUB BADGE COMPONENT ---
+const DripClubBadge: React.FC<{ username: string; onManage?: () => void }> = ({ username, onManage }) => {
+  return (
+    <div className="relative w-full max-w-sm mx-auto overflow-hidden rounded-[2rem] border-4 border-coffee-900 shadow-2xl group animate-in zoom-in-95 duration-500">
+      {/* Animated Background Layers */}
+      <div className="absolute inset-0 bg-coffee-900"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-volt-400/20 via-transparent to-volt-400/10 animate-pulse"></div>
+
+      {/* Constantly moving scanning line (Prevents screenshots by showing movement) */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-volt-400/40 shadow-[0_0_15px_rgba(204,255,0,0.8)] z-20 animate-scan"></div>
+
+      {/* Animated holographic sheen */}
+      <div className="absolute inset-0 z-10 opacity-30 pointer-events-none bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine bg-[length:200%_100%]"></div>
+
+      <div className="relative z-10 p-8 flex flex-col items-center text-center">
+        <div className="w-20 h-20 bg-volt-400 rounded-3xl flex items-center justify-center text-coffee-900 mb-6 shadow-[0_0_30px_rgba(204,255,0,0.4)] transform group-hover:rotate-12 transition-transform duration-500">
+          <i className="fas fa-droplet text-4xl"></i>
+        </div>
+
+        <h2 className="text-4xl font-serif font-black text-volt-400 tracking-tighter mb-1 uppercase">DripClub</h2>
+        <p className="text-white font-black text-[10px] uppercase tracking-[0.3em] mb-6 opacity-60">Verified Member</p>
+
+        <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 w-full border border-white/10 mb-6">
+          <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mb-1">Account Holder</p>
+          <p className="text-white text-xl font-bold font-serif tracking-tight">@{username}</p>
+        </div>
+
+        <div className="bg-volt-400 text-coffee-900 px-6 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-lg flex items-center gap-2">
+          <i className="fas fa-percent"></i>
+          <span>10% Off All PRO+ Shops</span>
+        </div>
+
+        <div className="mt-8 flex items-center gap-2 opacity-40">
+          <div className="w-1.5 h-1.5 rounded-full bg-volt-400 animate-ping"></div>
+          <span className="text-[8px] text-white font-black uppercase tracking-widest">Active Membership Session</span>
+        </div>
+
+        {/* Manage button */}
+        {onManage && (
+          <button
+            onClick={onManage}
+            className="mt-6 w-full py-3 bg-white/10 text-white/80 rounded-xl font-bold text-sm hover:bg-white/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 border border-white/10"
+          >
+            <i className="fas fa-cog"></i>
+            Manage Membership
+          </button>
+        )}
+      </div>
+
+      {/* Custom Animations */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        @keyframes scan {
+          0% { top: 0%; opacity: 0; }
+          5% { opacity: 1; }
+          95% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+        .animate-scan {
+          animation: scan 3s linear infinite;
+        }
+        @keyframes shine {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        .animate-shine {
+          animation: shine 3s ease-in-out infinite;
+        }
+      `}} />
+    </div>
+  );
+};
 
 const Profile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,7 +106,14 @@ const Profile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
+  // DripClub membership state
+  const [dripClubMembership, setDripClubMembership] = useState<DripClubMembership | null>(null);
+  const [membershipLoading, setMembershipLoading] = useState(false);
+
   // Edit State
+  const [userLogs, setUserLogs] = useState<any[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+
   const [editData, setEditData] = useState({
     username: "",
     bio: "",
@@ -50,43 +138,47 @@ const Profile: React.FC = () => {
       setLoading(true);
       console.log("Fetching profile for:", id, "isOwnProfile:", isOwnProfile);
 
-      if (isOwnProfile) {
-        if (!currentUser) {
-          console.log("No current user, redirecting to auth");
-          navigate("/auth");
-          setLoading(false);
-          return;
-        }
-        console.log(
-          "Setting viewed user to current user:",
-          currentUser.username
-        );
-        setViewedUser(currentUser);
-        setLoading(false);
-      } else if (profileIdentifier) {
-        console.log("Fetching profile by identifier:", profileIdentifier);
+      try {
+        if (isOwnProfile) {
+          if (!currentUser) {
+            console.log("No current user, redirecting to auth");
+            navigate("/auth");
+            return;
+          }
+          console.log(
+            "Setting viewed user to current user:",
+            currentUser.username
+          );
+          setViewedUser(currentUser);
+        } else if (profileIdentifier) {
+          console.log("Fetching profile by identifier:", profileIdentifier);
 
-        // Try to fetch by username first, then by ID
-        let profile = await getProfileByUsername(profileIdentifier);
-        console.log("Profile by username:", profile);
+          // Try to fetch by username first, then by ID
+          let profile = await getProfileByUsername(profileIdentifier);
+          console.log("Profile by username:", profile);
 
-        if (!profile) {
-          console.log("Trying to fetch by ID");
-          profile = await getProfileById(profileIdentifier);
-          console.log("Profile by ID:", profile);
-        }
+          if (!profile) {
+            console.log("Trying to fetch by ID");
+            profile = await getProfileById(profileIdentifier);
+            console.log("Profile by ID:", profile);
+          }
 
-        if (profile) {
-          console.log("Profile found:", profile.username);
-          setViewedUser(profile);
+          if (profile) {
+            console.log("Profile found:", profile.username);
+            setViewedUser(profile);
+          } else {
+            console.log("No profile found");
+            toast.error("User not found");
+            navigate("/");
+          }
         } else {
-          console.log("No profile found");
-          toast.error("User not found");
-          navigate("/");
+          console.log("No profile identifier");
         }
-        setLoading(false);
-      } else {
-        console.log("No profile identifier");
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        toast.error("Failed to load profile. Please try again.");
+        navigate("/");
+      } finally {
         setLoading(false);
       }
     };
@@ -99,6 +191,64 @@ const Profile: React.FC = () => {
     getProfileById,
     getProfileByUsername,
   ]);
+
+  // Fetch DripClub membership for own profile
+  useEffect(() => {
+    const fetchMembership = async () => {
+      if (!isOwnProfile || !currentUser?.id) return;
+
+      setMembershipLoading(true);
+      try {
+        const membership = await getDripClubMembership(currentUser.id);
+        setDripClubMembership(membership);
+      } catch (error) {
+        console.error("Error fetching DripClub membership:", error);
+      } finally {
+        setMembershipLoading(false);
+      }
+    };
+
+    fetchMembership();
+  }, [isOwnProfile, currentUser?.id]);
+
+  // Fetch Experience Logs
+  useEffect(() => {
+    const fetchLogs = async () => {
+      if (!viewedUser?.id) return;
+      setLogsLoading(true);
+      try {
+        const logs = await fetchUserExperienceLogs(viewedUser.id);
+        setUserLogs(logs);
+      } catch (error) {
+        console.error("Error fetching logs:", error);
+      } finally {
+        setLogsLoading(false);
+      }
+    };
+
+    fetchLogs();
+  }, [viewedUser?.id]);
+
+  // Handle manage membership click
+  const handleManageMembership = async () => {
+    if (!dripClubMembership?.stripeCustomerId) return;
+
+    try {
+      const config = window.location.origin;
+      const result = await getCustomerPortalUrl(
+        dripClubMembership.stripeCustomerId,
+        `${config}/#/profile`
+      );
+
+      if ("url" in result) {
+        window.location.href = result.url;
+      } else {
+        toast.error(result.error || "Failed to open billing portal");
+      }
+    } catch (error) {
+      toast.error("Failed to open billing portal");
+    }
+  };
 
   if (loading)
     return (
@@ -143,11 +293,7 @@ const Profile: React.FC = () => {
       acc + shop.reviews.filter(r => r.userId === viewedUser.id).length,
     0
   );
-  const dripScore =
-    visitedSpots.length * 10 +
-    savedSpots.length * 5 +
-    userReviewCount * 20 +
-    claimedSpots.length * 50;
+  const dripScore = viewedUser.dripScore || 0;
 
   // Badges Logic
   const uniqueCitiesVisited = new Set(visitedSpots.map(s => s.location.city))
@@ -240,23 +386,27 @@ const Profile: React.FC = () => {
         }
       }
 
-      await updateUserProfile({
+      const profileResult = await updateUserProfile({
         username: editData.username,
         bio: editData.bio,
         avatarUrl: finalAvatarUrl,
         socialLinks: editData.socialLinks,
       });
 
+      if (profileResult && !profileResult.success) {
+        throw profileResult.error || new Error("Failed to save profile changes");
+      }
+
       // Update local viewedUser state immediately after successful save
       setViewedUser(prev =>
         prev
           ? {
-              ...prev,
-              username: editData.username,
-              bio: editData.bio,
-              avatarUrl: finalAvatarUrl,
-              socialLinks: editData.socialLinks,
-            }
+            ...prev,
+            username: editData.username,
+            bio: editData.bio,
+            avatarUrl: finalAvatarUrl,
+            socialLinks: editData.socialLinks,
+          }
           : null
       );
 
@@ -333,14 +483,8 @@ const Profile: React.FC = () => {
       navigate("/auth");
       return;
     }
-    const result = await toggleFollow(viewedUser.id);
-    if (result.success) {
-      toast.success(isFollowing ? "Unfollowed!" : "Following!");
-    } else {
-      toast.error(
-        "Follow feature requires database setup. Please run add_followers.sql in Supabase."
-      );
-    }
+    await toggleFollow(viewedUser.id);
+    toast.success(isFollowing ? "Unfollowed!" : "Following!");
   };
 
   const isFollowing =
@@ -353,7 +497,20 @@ const Profile: React.FC = () => {
     colorClass: string = "text-coffee-900"
   ) => {
     if (!url) return null;
-    const safeUrl = url.startsWith("http") ? url : `https://${url}`;
+
+    // Build proper URL based on platform
+    let safeUrl = url;
+    const cleanValue = url.replace(/^@/, '').trim(); // Remove @ if present
+
+    if (!url.startsWith("http")) {
+      if (label === "Instagram") {
+        safeUrl = `https://instagram.com/${cleanValue}`;
+      } else if (label === "X") {
+        safeUrl = `https://x.com/${cleanValue}`;
+      } else {
+        safeUrl = `https://${url}`;
+      }
+    }
     return (
       <a
         href={safeUrl}
@@ -439,7 +596,7 @@ const Profile: React.FC = () => {
                       <i className="fab fa-instagram absolute left-3 top-1/2 -translate-y-1/2 text-coffee-400"></i>
                       <input
                         type="text"
-                        placeholder="Instagram URL"
+                        placeholder="Instagram username"
                         value={editData.socialLinks.instagram}
                         onChange={e =>
                           handleSocialChange("instagram", e.target.value)
@@ -451,7 +608,7 @@ const Profile: React.FC = () => {
                       <i className="fab fa-x-twitter absolute left-3 top-1/2 -translate-y-1/2 text-coffee-400"></i>
                       <input
                         type="text"
-                        placeholder="X (Twitter) URL"
+                        placeholder="X username"
                         value={editData.socialLinks.x}
                         onChange={e => handleSocialChange("x", e.target.value)}
                         className="w-full pl-9 pr-3 py-2 text-sm bg-coffee-50 border border-coffee-200 rounded-lg focus:ring-1 focus:ring-volt-400 outline-none"
@@ -462,7 +619,14 @@ const Profile: React.FC = () => {
 
                 <div className="flex gap-3 pt-4 justify-center md:justify-start">
                   <Button onClick={handleSave} size="sm">
-                    Save Profile
+                    {uploadingAvatar ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin mr-2"></i>
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Profile"
+                    )}
                   </Button>
                   <Button onClick={handleCancel} variant="ghost" size="sm">
                     Cancel
@@ -562,6 +726,14 @@ const Profile: React.FC = () => {
                         <i className="fas fa-edit mr-2"></i> Edit Profile
                       </Button>
                       <Button
+                        variant="outline" // or ghost, consistent with design
+                        size="sm"
+                        onClick={() => navigate('/reset-password', { state: { returnPath: '/profile' } })}
+                        className="text-coffee-700 hover:bg-coffee-50"
+                      >
+                        <i className="fas fa-lock mr-2"></i> Change Password
+                      </Button>
+                      <Button
                         variant="ghost"
                         size="sm"
                         onClick={handleShareProfile}
@@ -586,9 +758,8 @@ const Profile: React.FC = () => {
                         onClick={handleToggleFollow}
                       >
                         <i
-                          className={`fas ${
-                            isFollowing ? "fa-user-check" : "fa-user-plus"
-                          } mr-2`}
+                          className={`fas ${isFollowing ? "fa-user-check" : "fa-user-plus"
+                            } mr-2`}
                         ></i>
                         {isFollowing ? "Following" : "Follow"}
                       </Button>
@@ -620,21 +791,55 @@ const Profile: React.FC = () => {
 
           <div className="bg-white p-3 sm:p-4 md:p-6 rounded-2xl sm:rounded-3xl shadow-sm border border-coffee-100">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+              {/* Leaderboard Badges */}
+              {viewedUser.leaderboardBadges?.map(badge => {
+                let badgeColors = "bg-yellow-50 border-yellow-400 text-yellow-900";
+                let iconColors = "bg-yellow-900 text-yellow-400";
+                let textColors = "text-yellow-700";
+
+                if (badge.rank === 2) {
+                  badgeColors = "bg-gray-50 border-gray-400 text-gray-900";
+                  iconColors = "bg-gray-800 text-gray-300";
+                  textColors = "text-gray-600";
+                } else if (badge.rank === 3) {
+                  badgeColors = "bg-amber-50 border-amber-600 text-amber-900";
+                  iconColors = "bg-amber-900 text-amber-500";
+                  textColors = "text-amber-700";
+                }
+
+                return (
+                  <div
+                    key={badge.id}
+                    className={`aspect-square rounded-2xl flex flex-col items-center justify-center p-3 text-center border-2 transition-all duration-300 group shadow-md scale-105 relative overflow-hidden ${badgeColors}`}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-transparent"></div>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 text-xl relative z-10 shadow-inner ${iconColors}`}>
+                      <i className="fas fa-mug-hot"></i>
+                    </div>
+                    <h3 className="font-bold text-[10px] leading-tight mb-1 relative z-10">
+                      {badge.title}
+                    </h3>
+                    <p className={`text-[9px] font-bold relative z-10 ${textColors}`}>
+                      {badge.month}/{badge.year}
+                    </p>
+                  </div>
+                );
+              })}
+
+              {/* Standard Badges */}
               {BADGES.map(badge => (
                 <div
                   key={badge.id}
-                  className={`aspect-square rounded-2xl flex flex-col items-center justify-center p-3 text-center border-2 transition-all duration-300 group ${
-                    badge.unlocked
-                      ? "bg-coffee-50 border-volt-400 shadow-md scale-105"
-                      : "bg-gray-50 border-gray-100 grayscale opacity-60"
-                  }`}
+                  className={`aspect-square rounded-2xl flex flex-col items-center justify-center p-3 text-center border-2 transition-all duration-300 group ${badge.unlocked
+                    ? "bg-coffee-50 border-volt-400 shadow-md scale-105"
+                    : "bg-gray-50 border-gray-100 grayscale opacity-60"
+                    }`}
                 >
                   <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 text-xl ${
-                      badge.unlocked
-                        ? "bg-coffee-900 text-volt-400"
-                        : "bg-gray-200 text-gray-400"
-                    }`}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 text-xl ${badge.unlocked
+                      ? "bg-coffee-900 text-volt-400"
+                      : "bg-gray-200 text-gray-400"
+                      }`}
                   >
                     <i className={badge.icon}></i>
                   </div>
@@ -655,6 +860,161 @@ const Profile: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* DRIPCLUB MEMBERSHIP - Only show on own profile */}
+        {isOwnProfile && (
+          <div className="mb-6 sm:mb-10">
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <h2 className="text-lg sm:text-xl font-serif font-bold text-coffee-900">
+                DripClub Membership
+              </h2>
+            </div>
+
+            {membershipLoading ? (
+              <div className="bg-white p-6 rounded-2xl sm:rounded-3xl shadow-sm border border-coffee-100 text-center">
+                <i className="fas fa-spinner fa-spin text-coffee-800 text-xl"></i>
+              </div>
+            ) : dripClubMembership &&
+              (dripClubMembership.status === "active" ||
+                dripClubMembership.status === "trialing") ? (
+              // Active member - Animated Badge + Info Section
+              <div className="space-y-4">
+                {/* Animated DripClub Badge */}
+                <DripClubBadge
+                  username={viewedUser.username}
+                  onManage={handleManageMembership}
+                />
+
+                {/* Subscription Details Card */}
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-coffee-100">
+                  {/* Status + Plan Type */}
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-coffee-600 text-xs font-bold uppercase tracking-wider">
+                      {dripClubMembership.planType === "annual" ? "Annual" : "Monthly"} Plan
+                    </span>
+                    <div
+                      className={`text-[10px] font-black px-2.5 py-1 rounded-full flex items-center gap-1 ${dripClubMembership.status === "trialing"
+                        ? "bg-blue-100 text-blue-600"
+                        : "bg-green-100 text-green-600"
+                        }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${dripClubMembership.status === "trialing"
+                          ? "bg-blue-500"
+                          : "bg-green-500"
+                          }`}
+                      ></span>
+                      {dripClubMembership.status === "trialing"
+                        ? "Free Trial"
+                        : getSubscriptionStatusLabel(dripClubMembership.status)}
+                    </div>
+                  </div>
+
+                  {/* Dates */}
+                  <div className="flex items-center justify-between text-xs border-t border-coffee-50 pt-3">
+                    <div>
+                      <p className="text-coffee-400 text-[10px] uppercase">Member Since</p>
+                      <p className="text-coffee-900 font-bold">
+                        {dripClubMembership.createdAt
+                          ? new Date(dripClubMembership.createdAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })
+                          : "N/A"}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-coffee-400 text-[10px] uppercase">
+                        {dripClubMembership.cancelAtPeriodEnd ? "Ends On" : "Renews On"}
+                      </p>
+                      <p className="text-coffee-900 font-bold">
+                        {dripClubMembership.currentPeriodEnd
+                          ? new Date(dripClubMembership.currentPeriodEnd).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })
+                          : "N/A"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Cancel warning */}
+                  {dripClubMembership.cancelAtPeriodEnd && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mt-3">
+                      <p className="text-amber-700 text-xs font-medium flex items-center gap-2">
+                        <i className="fas fa-exclamation-triangle"></i>
+                        Your membership will end on{" "}
+                        {dripClubMembership.currentPeriodEnd
+                          ? new Date(dripClubMembership.currentPeriodEnd).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })
+                          : "N/A"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              // Non-member CTA card
+              <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-lg border border-coffee-100">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-volt-400 p-3 rounded-xl">
+                    <i className="fas fa-crown text-coffee-900 text-xl"></i>
+                  </div>
+                  <div>
+                    <h3 className="text-coffee-900 font-black text-lg">
+                      Join DripClub
+                    </h3>
+                    <p className="text-coffee-800 text-xs">
+                      Unlock exclusive perks & discounts
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-coffee-50 rounded-xl p-4 mb-4">
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="text-3xl font-black text-coffee-900">
+                      {formatPrice(getPricing().dripClub.annual.amount)}
+                    </span>
+                    <span className="text-coffee-800 text-sm">/year</span>
+                  </div>
+                  <p className="text-volt-500 text-xs font-bold">
+                    Less than $1 per month!
+                  </p>
+                </div>
+
+                <ul className="space-y-2.5 mb-5">
+                  {[
+                    "10% off at all PRO+ coffee shops",
+                    "Exclusive DripClub member badge",
+                    "Early access to events & tastings",
+                    "Member only merchandise and surprises",
+                  ].map((perk, i) => (
+                    <li
+                      key={i}
+                      className="flex items-center gap-2.5 text-sm text-coffee-800"
+                    >
+                      <i className="fas fa-check text-volt-500 text-xs"></i>
+                      {perk}
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  onClick={() => navigate("/dripclub")}
+                  className="w-full py-3 bg-volt-400 text-coffee-900 rounded-xl font-bold text-sm hover:bg-volt-500 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-volt-400/20"
+                >
+                  <i className="fas fa-crown"></i>
+                  Join DripClub
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* PASSPORT BOOK */}
         <div className="mb-6 sm:mb-10">
@@ -699,11 +1059,10 @@ const Profile: React.FC = () => {
                               className={`
                                                 relative w-24 h-24 rounded-full border-[3px] flex flex-col items-center justify-center p-2 text-center transform transition-transform duration-300 hover:scale-110 hover:rotate-0
                                                 ${rotationClass}
-                                                ${
-                                                  shop.isClaimed
-                                                    ? "border-yellow-500/60 text-yellow-700 bg-yellow-50/50" // Gold Stamp
-                                                    : "border-coffee-900/40 text-coffee-900/60 hover:border-coffee-900 hover:text-coffee-900" // Standard Ink
-                                                }
+                                                ${shop.isClaimed
+                                  ? "border-yellow-500/60 text-yellow-700 bg-yellow-50/50" // Gold Stamp
+                                  : "border-coffee-900/40 text-coffee-900/60 hover:border-coffee-900 hover:text-coffee-900" // Standard Ink
+                                }
                                             `}
                             >
                               {/* Rough texture overlay for ink effect */}
@@ -746,6 +1105,151 @@ const Profile: React.FC = () => {
               <Button variant="primary" onClick={() => navigate("/")}>
                 Start Exploring
               </Button>
+            </div>
+          )}
+        </div>
+
+        {/* User Experience Logs */}
+        <div className="mb-6 sm:mb-10">
+          <h2 className="text-lg sm:text-xl font-serif font-bold text-coffee-900 mb-3 sm:mb-4 flex items-center gap-2">
+            <i className="fas fa-book-open text-coffee-400"></i> Experience Logs ({userLogs.length})
+          </h2>
+
+          {logsLoading ? (
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-coffee-100 text-center">
+              <i className="fas fa-spinner fa-spin text-coffee-800 text-xl"></i>
+            </div>
+          ) : userLogs.length > 0 ? (
+            <div className="space-y-4">
+              {userLogs.map((log) => {
+                const ExpandableProfileLogCard = ({ log }: { log: any }) => {
+                  const [expanded, setExpanded] = useState(false);
+                  return (
+                    <div key={log.id}
+                      onClick={() => setExpanded(!expanded)}
+                      className="p-5 rounded-2xl bg-white border border-coffee-100 hover:border-volt-400 transition-colors shadow-sm cursor-pointer relative overflow-hidden">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-lg bg-coffee-100 overflow-hidden border border-coffee-200 shrink-0">
+                            {log.shopCoverImage ? (
+                              <img src={log.shopCoverImage} alt={log.shopName} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-coffee-400">
+                                <i className="fas fa-coffee"></i>
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <Link to={`/shop/${log.shopId}`} onClick={(e) => e.stopPropagation()} className="font-bold text-coffee-900 text-base md:text-lg hover:text-volt-600 block line-clamp-1 truncate">
+                              {log.shopName}
+                            </Link>
+                            <div className="text-xs text-coffee-500">
+                              {log.shopCity}, {log.shopState}
+                            </div>
+                            <div className="text-[10px] text-coffee-400 mt-0.5">
+                              {new Date(log.createdAt).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end shrink-0">
+                          <div className="flex items-center gap-1 bg-coffee-900 text-volt-400 px-2 py-1 rounded-md">
+                            <i className="fas fa-tint text-[10px]"></i>
+                            <span className="text-sm font-bold">{log.overallQuality}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Quick Overview Grid */}
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        {log.coffeeStyle !== null && log.coffeeStyle !== undefined ? (
+                          <div className="bg-coffee-50 rounded px-2 py-1 text-center">
+                            <div className="text-[10px] text-coffee-500 uppercase flex flex-col"><span>Coffee</span></div>
+                            <div className="text-xs font-bold text-coffee-800">
+                              {log.coffeeStyle >= 70 ? "Modern" : log.coffeeStyle <= 30 ? "Classic" : "Balanced"}
+                            </div>
+                          </div>
+                        ) : <div></div>}
+                        {log.vibeEnergy !== null && log.vibeEnergy !== undefined ? (
+                          <div className="bg-coffee-50 rounded px-2 py-1 text-center">
+                            <div className="text-[10px] text-coffee-500 uppercase">Vibe</div>
+                            <div className="text-xs font-bold text-coffee-800">
+                              {log.vibeEnergy >= 70 ? "Lively" : log.vibeEnergy <= 30 ? "Quiet" : "Balanced"}
+                            </div>
+                          </div>
+                        ) : <div></div>}
+                        {log.bringFriendScore !== undefined ? (
+                          <div className="bg-coffee-50 rounded px-2 py-1 text-center">
+                            <div className="text-[10px] text-coffee-500 uppercase">Rec.</div>
+                            <div className="text-xs font-bold text-coffee-800">{log.bringFriendScore}/10</div>
+                          </div>
+                        ) : <div></div>}
+                      </div>
+
+                      {log.quickTake && (
+                        <div className="relative pl-3 border-l-2 border-volt-400 mb-2">
+                          <p className="text-coffee-700 italic text-sm line-clamp-2">"{log.quickTake}"</p>
+                        </div>
+                      )}
+
+                      {/* Expanded Details Wrapper */}
+                      <div className={`overflow-hidden transition-all duration-300 ${expanded ? 'max-h-96 opacity-100 mt-4 border-t border-coffee-50 pt-4' : 'max-h-0 opacity-0'}`}>
+                        <div className="text-xs font-bold uppercase text-coffee-400 tracking-wider mb-2">Full Vibe Check</div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          {log.matchaProfile !== null && log.matchaProfile !== undefined && (
+                            <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
+                              <span className="block text-xs text-gray-400">Matcha</span>
+                              <span className="font-medium text-coffee-800">{log.matchaProfile}/100</span>
+                            </div>
+                          )}
+                          {log.pastryCraft !== null && log.pastryCraft !== undefined && (
+                            <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
+                              <span className="block text-xs text-gray-400">Pastry Craft</span>
+                              <span className="font-medium text-coffee-800">{log.pastryCraft}/100</span>
+                            </div>
+                          )}
+                          {log.specialtyDrink !== null && log.specialtyDrink !== undefined && (
+                            <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
+                              <span className="block text-xs text-gray-400">Specialty Drink</span>
+                              <span className="font-medium text-coffee-800">{log.specialtyDrink}/100</span>
+                            </div>
+                          )}
+                          {log.laptopFriendly !== null && log.laptopFriendly !== undefined && (
+                            <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
+                              <span className="block text-xs text-gray-400">Laptop Friendly</span>
+                              <span className="font-medium text-coffee-800">{log.laptopFriendly}%</span>
+                            </div>
+                          )}
+                          {log.parkingEase !== null && log.parkingEase !== undefined && (
+                            <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
+                              <span className="block text-xs text-gray-400">Parking Ease</span>
+                              <span className="font-medium text-coffee-800">{log.parkingEase}%</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-center mt-2 cursor-pointer text-[10px] text-coffee-400 font-bold uppercase flex items-center justify-center gap-1 hover:text-volt-500 transition-colors">
+                        {expanded ? (<><i className="fas fa-chevron-up"></i> Hide Details</>) : (<><i className="fas fa-chevron-down"></i> Expand Log</>)}
+                      </div>
+                    </div>
+                  );
+                };
+                return <ExpandableProfileLogCard key={log.id} log={log} />;
+              })}
+            </div>
+          ) : (
+            <div className="bg-coffee-50 border-2 border-dashed border-coffee-200 rounded-3xl p-12 text-center">
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                <i className="fas fa-pen text-3xl text-coffee-200"></i>
+              </div>
+              <h3 className="text-base font-bold text-coffee-900 mb-2">No logs yet</h3>
+              <p className="text-coffee-500 text-sm mb-4 max-w-xs mx-auto">
+                {isOwnProfile ? "You haven't" : `@${viewedUser.username} hasn't`} rated any shops. Share your experiences!
+              </p>
+              {isOwnProfile && (
+                <Button variant="primary" onClick={() => navigate("/")} size="sm">
+                  Find Shops to Rate
+                </Button>
+              )}
             </div>
           )}
         </div>

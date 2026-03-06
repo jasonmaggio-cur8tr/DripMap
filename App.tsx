@@ -8,14 +8,25 @@ import ShopDetail from './pages/ShopDetail';
 import AddSpot from './pages/AddSpot';
 import EditShop from './pages/EditShop';
 import Auth from './pages/Auth';
+import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
 import ClaimShop from './pages/ClaimShop';
-import AdminDashboard from './pages/AdminDashboard';
+import AdminLayout from './layouts/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import Curator from './pages/admin/Curator';
+import ShopDrafts from './pages/admin/ShopDrafts';
+import AdminEvents from './pages/admin/AdminEvents';
+import EventsFeed from './pages/EventsFeed';
+import DripClub from './pages/DripClub';
+import ScoutBounty from './pages/ScoutBounty';
+import CoffeeDateAccept from './pages/CoffeeDateAccept';
+import Leaderboard from './pages/Leaderboard';
+import CommunityFeed from './pages/CommunityFeed';
 
 const App: React.FC = () => {
   return (
-    <AppProvider>
-      <Router>
+    <Router>
+      <AppProvider>
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
@@ -23,13 +34,31 @@ const App: React.FC = () => {
           <Route path="/add" element={<AddSpot />} />
           <Route path="/edit-shop/:id" element={<EditShop />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="/claim/:id" element={<ClaimShop />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/coffee-date/accept" element={<CoffeeDateAccept />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/community" element={<CommunityFeed />} />
+
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="curator" element={<Curator />} />
+            <Route path="drafts" element={<ShopDrafts />} />
+            <Route path="events" element={<AdminEvents />} />
+          </Route>
+
+          <Route path="/events" element={<EventsFeed />} />
+          <Route path="/dripclub" element={<DripClub />} />
+          <Route path="/scout-bounty" element={<ScoutBounty />} />
+
+          {/* Catch-all for Supabase auth redirects (access_token=...) and 404s */}
+          <Route path="*" element={<div className="min-h-screen flex items-center justify-center bg-coffee-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coffee-900"></div></div>} />
         </Routes>
-      </Router>
-    </AppProvider>
+      </AppProvider>
+    </Router>
   );
 };
 

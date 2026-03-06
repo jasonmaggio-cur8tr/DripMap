@@ -3,6 +3,86 @@ import { resetSupabaseAuthState } from '../lib/authUtils';
 
 const BUCKET_NAME = 'shop-images';
 
+/** Max pixel dimension (longest side) for uploaded images */
+const MAX_DIMENSION = 1600;
+/** Compression quality for JPEG/WebP output (0-1) */
+const COMPRESS_QUALITY = 0.82;
+/** Skip compression for files already under this size */
+const COMPRESS_THRESHOLD = 200 * 1024; // 200 KB
+
+/**
+ * Detect WebP encoding support via Canvas API (cached at module load)
+ */
+const supportsWebP = (() => {
+  try {
+    const c = document.createElement('canvas');
+    c.width = 1;
+    c.height = 1;
+    return c.toDataURL('image/webp').startsWith('data:image/webp');
+  } catch {
+    return false;
+  }
+})();
+
+/**
+ * Compress and resize an image for web delivery.
+ * - Caps the longest side at MAX_DIMENSION (1600 px)
+ * - Re-encodes as WebP (preferred) or JPEG at COMPRESS_QUALITY
+ * - Falls back to the original file if compression doesn't reduce size
+ */
+const compressForWeb = (file: File): Promise<File> => {
+  // Skip animated GIFs and already-tiny files
+  if (file.type === 'image/gif') return Promise.resolve(file);
+  if (file.size <= COMPRESS_THRESHOLD) return Promise.resolve(file);
+
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+
+      let { width, height } = img;
+
+      // Down-scale if either dimension exceeds the cap
+      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+        const ratio = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+
+      const outputType = supportsWebP ? 'image/webp' : 'image/jpeg';
+      const ext = supportsWebP ? 'webp' : 'jpg';
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob && blob.size < file.size) {
+            const newName = file.name.replace(/\.[^.]+$/, `.${ext}`);
+            resolve(new File([blob], newName, { type: outputType }));
+          } else {
+            resolve(file); // Keep original if compression didn't help
+          }
+        },
+        outputType,
+        COMPRESS_QUALITY
+      );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file);
+    };
+
+    img.src = url;
+  });
+};
+
 /**
  * Convert HEIC/HEIF image to JPEG
  * @param file - The HEIC/HEIF file to convert
@@ -66,7 +146,14 @@ export const uploadImage = async (
     processedFile = await convertHEICtoJPEG(file);
     console.log('Converted to:', processedFile.type, processedFile.size);
   }
-  
+
+  // Compress and resize for web
+  const originalSize = processedFile.size;
+  processedFile = await compressForWeb(processedFile);
+  if (processedFile.size < originalSize) {
+    console.log(`Compressed: ${(originalSize / 1024).toFixed(0)}KB → ${(processedFile.size / 1024).toFixed(0)}KB (${((1 - processedFile.size / originalSize) * 100).toFixed(0)}% reduction)`);
+  }
+
   // Validate file type
   const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
   if (!validTypes.includes(processedFile.type)) {
@@ -125,18 +212,18 @@ export const uploadImage = async (
     console.log(`Uploading to bucket: ${BUCKET_NAME}...`);
 
     // Upload to Supabase Storage with retries & per-attempt timeouts
-    const doUpload = async () => {
+    const doUpload = async (useUpsert: boolean = false) => {
       return supabase.storage
         .from(BUCKET_NAME)
         .upload(fileName, processedFile, {
-          cacheControl: '3600',
-          upsert: false
+          cacheControl: '31536000',
+          upsert: useUpsert
         });
     };
 
     // Helper to attempt a single upload with a per-attempt timeout
-    const attemptUploadWithTimeout = async (timeoutMs: number) => {
-      const uploadPromise = doUpload();
+    const attemptUploadWithTimeout = async (timeoutMs: number, useUpsert: boolean = false) => {
+      const uploadPromise = doUpload(useUpsert);
       uploadPromise.then((res: any) => console.log('uploadPromise resolved for', fileName, res)).catch((err: any) => console.error('uploadPromise rejected for', fileName, err));
 
       const timeoutPromise = new Promise<never>((_, reject) =>
@@ -158,12 +245,21 @@ export const uploadImage = async (
       console.log(`Attempt ${attempt}/${maxAttempts} for upload ${fileName} (timeout ${timeoutForAttempt}ms)`);
 
       try {
-        const result = await attemptUploadWithTimeout(timeoutForAttempt);
+        // On retry attempts, use upsert to overwrite if file already exists from failed previous attempt
+        const useUpsert = attempt > 1;
+        const result = await attemptUploadWithTimeout(timeoutForAttempt, useUpsert);
         data = result.data;
         error = result.error;
 
         // If success, break out
         if (!error) break;
+
+        // Check if it's a "resource already exists" error
+        const isAlreadyExistsError = error && (error.message?.toLowerCase?.().includes('already exists') || error.statusCode === '409');
+        if (isAlreadyExistsError) {
+          console.warn('File already exists, will use upsert on next attempt:', error);
+          // Continue to next attempt with upsert enabled
+        }
 
         // If it's an auth-related error, try refreshing the session once and continue retries
         const isAuthError = error && (error.message?.toLowerCase?.().includes('jwt') || error.message?.toLowerCase?.().includes('expired') || error.status === 401 || error.status === 403 || error.message?.toLowerCase?.().includes('unauthorized'));
@@ -173,19 +269,19 @@ export const uploadImage = async (
             const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
             if (refreshError || !refreshedSession) {
               console.error('Session refresh failed during upload retry:', refreshError);
-              
+
               // Reset auth state to clear corrupted/stale tokens
               await resetSupabaseAuthState();
-              
+
               throw new Error('Your session is invalid and could not be refreshed. Please log in again.');
             }
             console.log('Session refreshed successfully during upload retry');
           } catch (refreshErr) {
             console.error('Error while attempting session refresh during upload retry:', refreshErr);
-            
+
             // Reset auth state before re-throwing
             await resetSupabaseAuthState();
-            
+
             break;
           }
         }
