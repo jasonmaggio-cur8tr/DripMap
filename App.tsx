@@ -20,6 +20,8 @@ import EventsFeed from './pages/EventsFeed';
 import DripClub from './pages/DripClub';
 import ScoutBounty from './pages/ScoutBounty';
 import CoffeeDateAccept from './pages/CoffeeDateAccept';
+import Leaderboard from './pages/Leaderboard';
+import CommunityFeed from './pages/CommunityFeed';
 
 const App: React.FC = () => {
   return (
@@ -37,6 +39,8 @@ const App: React.FC = () => {
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="/claim/:id" element={<ClaimShop />} />
           <Route path="/coffee-date/accept" element={<CoffeeDateAccept />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/community" element={<CommunityFeed />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>

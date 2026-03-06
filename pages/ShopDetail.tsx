@@ -21,7 +21,7 @@ import { useToast } from "../context/ToastContext";
 import ShopPricingModal from "../components/ShopPricingModal";
 import { createShopCheckoutSession, getCustomerPortalUrl, updateProPlusDiscountEnabled } from "../services/subscriptionService";
 import { BillingInterval, ShopAggregate } from "../types";
-import { getShopAggregate } from "../services/dbService";
+import { getShopAggregate, toggleExperienceLogLike } from "../services/dbService";
 import ExperienceLogModal from "../components/ExperienceLogModal";
 import {
   HappeningNowEditor,
@@ -35,6 +35,41 @@ import EventsSection from "../components/EventsSection";
 
 const ExpandableLogCard = ({ log }: { log: any }) => {
   const [expanded, setExpanded] = useState(false);
+  const { user } = useApp();
+  const [isLiked, setIsLiked] = useState<boolean>(log.isLiked || false);
+  const [likesCount, setLikesCount] = useState<number>(log.likesCount || 0);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
+
+  const handleLike = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) {
+      alert("Please log in to like this log.");
+      return;
+    }
+    if (isLikeLoading) return;
+
+    setIsLikeLoading(true);
+    // Optimistic UI update
+    const previousIsLiked = isLiked;
+    setIsLiked(!isLiked);
+    setLikesCount((prev) => (isLiked ? prev - 1 : prev + 1));
+
+    try {
+      const result = await toggleExperienceLogLike(log.id, user.id);
+      if (!result.success) {
+        // Revert on failure
+        setIsLiked(previousIsLiked);
+        setLikesCount((prev) => (previousIsLiked ? prev + 1 : prev - 1));
+      }
+    } catch (e) {
+      // Revert on failure
+      setIsLiked(previousIsLiked);
+      setLikesCount((prev) => (previousIsLiked ? prev + 1 : prev - 1));
+    } finally {
+      setIsLikeLoading(false);
+    }
+  };
+
   return (
     <div key={log.id}
       onClick={() => setExpanded(!expanded)}
@@ -137,8 +172,22 @@ const ExpandableLogCard = ({ log }: { log: any }) => {
           )}
         </div>
       </div>
-      <div className="text-center mt-2 cursor-pointer text-[10px] text-coffee-400 font-bold uppercase flex items-center justify-center gap-1 hover:text-volt-500 transition-colors">
-        {expanded ? (<><i className="fas fa-chevron-up"></i> Hide Details</>) : (<><i className="fas fa-chevron-down"></i> Expand Log</>)}
+      <div className="flex items-center justify-between mt-4">
+        <button
+          onClick={handleLike}
+          disabled={isLikeLoading}
+          className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full transition-colors ${isLiked
+              ? "bg-red-50 text-red-500 hover:bg-red-100"
+              : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+            }`}
+        >
+          <i className={`${isLiked ? 'fas' : 'far'} fa-heart`}></i>
+          {likesCount > 0 && <span>{likesCount}</span>}
+        </button>
+
+        <div className="text-center cursor-pointer text-[10px] text-coffee-400 font-bold uppercase flex items-center gap-1 hover:text-volt-500 transition-colors">
+          {expanded ? (<><i className="fas fa-chevron-up"></i> Hide Details</>) : (<><i className="fas fa-chevron-down"></i> Expand Log</>)}
+        </div>
       </div>
     </div>
   );
@@ -275,25 +324,28 @@ const ShopDetail: React.FC = () => {
       // Happening Now
       if ('happeningNow' in changes) {
         const status = changes.happeningNow;
-        await updateHappeningNow(shop.id, status ? {
+        const res = await updateHappeningNow(shop.id, status ? {
           title: status.title,
           message: status.message,
           sticker: status.sticker,
         } : null);
+        if (!res.success) throw res.error;
       }
 
       // Now Brewing Menu
       if ('currentMenu' in changes && changes.currentMenu) {
-        await updateNowBrewing(shop.id, changes.currentMenu);
+        const res = await updateNowBrewing(shop.id, changes.currentMenu);
+        if (!res.success) throw res.error;
       }
 
       // Coffee Tech
       if ('sourcingInfo' in changes || 'espressoMachine' in changes || 'grinderDetails' in changes) {
-        await updateCoffeeTech(shop.id, {
+        const res = await updateCoffeeTech(shop.id, {
           sourcingInfo: changes.sourcingInfo ?? shop.sourcingInfo,
           espressoMachine: changes.espressoMachine ?? shop.espressoMachine,
           grinderDetails: changes.grinderDetails ?? shop.grinderDetails,
         });
+        if (!res.success) throw res.error;
       }
 
       // Barista Profiles
@@ -302,20 +354,23 @@ const ShopDetail: React.FC = () => {
           ...b,
           favoriteOrder: b.favoriteOrder || ''
         }));
-        await updateBaristaProfiles(shop.id, mappedBaristas);
+        const res = await updateBaristaProfiles(shop.id, mappedBaristas);
+        if (!res.success) throw res.error;
       }
 
       // Specialty Menu
       if ('specialtyDrinks' in changes && changes.specialtyDrinks) {
-        await updateSpecialtyMenu(shop.id, changes.specialtyDrinks);
+        const res = await updateSpecialtyMenu(shop.id, changes.specialtyDrinks);
+        if (!res.success) throw res.error;
       }
 
       // Vegan Options
       if ('veganFoodOptions' in changes || 'plantMilks' in changes) {
-        await updateVeganOptions(shop.id, {
+        const res = await updateVeganOptions(shop.id, {
           veganFoodOptions: changes.veganFoodOptions ?? shop.veganFoodOptions ?? false,
           plantMilks: changes.plantMilks ?? shop.plantMilks ?? [],
         });
+        if (!res.success) throw res.error;
       }
 
       toast.success("Changes saved!");

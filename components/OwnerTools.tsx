@@ -156,6 +156,33 @@ export const SpecialtyMenuEditor = ({
         onUpdate(safeItems.filter((_, i) => i !== idx));
     };
 
+    const [editingIdx, setEditingIdx] = useState<number | null>(null);
+    const [editingItem, setEditingItem] = useState({ name: '', desc: '' });
+
+    const moveItem = (idx: number, direction: 'up' | 'down') => {
+        const newItems = [...safeItems];
+        if (direction === 'up' && idx > 0) {
+            [newItems[idx - 1], newItems[idx]] = [newItems[idx], newItems[idx - 1]];
+        } else if (direction === 'down' && idx < newItems.length - 1) {
+            [newItems[idx], newItems[idx + 1]] = [newItems[idx + 1], newItems[idx]];
+        }
+        onUpdate(newItems);
+    };
+
+    const startEdit = (idx: number) => {
+        setEditingIdx(idx);
+        setEditingItem(safeItems[idx]);
+    };
+
+    const saveEdit = () => {
+        if (editingIdx !== null) {
+            const newItems = [...safeItems];
+            newItems[editingIdx] = editingItem;
+            onUpdate(newItems);
+            setEditingIdx(null);
+        }
+    };
+
     return (
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-coffee-100 relative mb-8 overflow-hidden">
             <div className="flex items-center justify-between mb-4 border-b border-coffee-100 pb-2">
@@ -176,18 +203,41 @@ export const SpecialtyMenuEditor = ({
 
             <div className="space-y-4">
                 {safeItems.map((drink, idx) => (
-                    <div key={idx} className="flex justify-between items-start group">
-                        <div>
-                            <p className="font-bold text-sm text-coffee-900">{drink.name}</p>
-                            <p className="text-xs text-gray-600">{drink.desc}</p>
-                        </div>
-                        {isOwner && !isLocked && (
-                            <button
-                                onClick={() => handleRemove(idx)}
-                                className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                                <Icons.Trash />
-                            </button>
+                    <div key={idx} className="flex justify-between items-start group relative">
+                        {editingIdx === idx ? (
+                            <div className="w-full bg-coffee-50 p-3 rounded-lg border border-coffee-200">
+                                <input
+                                    className="w-full mb-2 p-2 text-sm bg-coffee-900 border border-coffee-800 rounded text-volt-400 font-bold focus:outline-none focus:border-volt-400 placeholder-coffee-600"
+                                    value={editingItem.name}
+                                    onChange={e => setEditingItem({ ...editingItem, name: e.target.value })}
+                                />
+                                <input
+                                    className="w-full mb-2 p-2 text-sm bg-coffee-900 border border-coffee-800 rounded text-volt-400 focus:outline-none focus:border-volt-400 placeholder-coffee-600"
+                                    value={editingItem.desc}
+                                    onChange={e => setEditingItem({ ...editingItem, desc: e.target.value })}
+                                />
+                                <div className="flex gap-2">
+                                    <button onClick={saveEdit} className="bg-coffee-900 text-volt-400 px-3 py-1 rounded text-xs font-bold hover:bg-black">Save</button>
+                                    <button onClick={() => setEditingIdx(null)} className="text-gray-500 text-xs font-bold">Cancel</button>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <div>
+                                    <p className="font-bold text-sm text-coffee-900">{drink.name}</p>
+                                    <p className="text-xs text-gray-600">{drink.desc}</p>
+                                </div>
+                                {isOwner && !isLocked && (
+                                    <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                        <div className="flex flex-col mr-2">
+                                            <button onClick={() => moveItem(idx, 'up')} disabled={idx === 0} className="text-gray-400 hover:text-coffee-900 disabled:opacity-30 leading-none"><i className="fas fa-chevron-up text-[10px]"></i></button>
+                                            <button onClick={() => moveItem(idx, 'down')} disabled={idx === safeItems.length - 1} className="text-gray-400 hover:text-coffee-900 disabled:opacity-30 leading-none"><i className="fas fa-chevron-down text-[10px]"></i></button>
+                                        </div>
+                                        <button onClick={() => startEdit(idx)} className="text-gray-400 hover:text-coffee-900 p-1.5"><i className="fas fa-edit text-sm"></i></button>
+                                        <button onClick={() => handleRemove(idx)} className="text-gray-400 hover:text-red-500 p-1.5"><Icons.Trash /></button>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 ))}
@@ -560,11 +610,11 @@ const AddBrewItemModal = ({ isOpen, onClose, onAdd }: { isOpen: boolean, onClose
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (newItem.roaster && newItem.beanName) {
+        if (newItem.beanName) {
             onAdd({
                 id: Math.random().toString(36).substr(2, 9),
                 type: newItem.type as any || 'Espresso',
-                roaster: newItem.roaster,
+                roaster: newItem.roaster || 'House Roast',
                 beanName: newItem.beanName,
                 notes: newItem.notes || ''
             });
@@ -606,7 +656,6 @@ const AddBrewItemModal = ({ isOpen, onClose, onAdd }: { isOpen: boolean, onClose
                                 placeholder="e.g. Onyx"
                                 value={newItem.roaster || ''}
                                 onChange={e => setNewItem({ ...newItem, roaster: e.target.value })}
-                                required
                             />
                         </div>
                         <div>

@@ -37,7 +37,7 @@ interface AppContextType {
     password: string
   ) => Promise<{ success: boolean; error?: any }>;
   logout: () => Promise<void>;
-  updateUserProfile: (updates: Partial<User>) => Promise<void>;
+  updateUserProfile: (updates: Partial<User>) => Promise<{ success: boolean; error?: any }>;
   resetPassword: (email: string) => Promise<{ success: boolean; error?: any }>;
   updatePassword: (password: string) => Promise<{ success: boolean; error?: any }>;
   addShop: (
@@ -410,11 +410,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const updateUserProfile = async (updates: Partial<User>) => {
-    if (!user) return;
+    if (!user) return { success: false, error: "No user" };
     const result = await db.updateUserProfile(user.id, updates);
     if (result.success) {
       setUser(prev => prev ? { ...prev, ...updates } : null);
+      return { success: true };
     }
+    return { success: false, error: result.error };
   };
 
   // Shop Actions
@@ -449,6 +451,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     const result = await db.createShop(dbData);
 
     if (result.success && result.shop) {
+      // Award points for creating a shop
+      if (user) {
+        await db.awardPoints(user.id, 'create_shop', 50, result.shop.id);
+      }
+
       // 2. Construct full Shop object for optimistic update
       // result.shop is the raw DB row. We need to map it to Shop interface.
       const newShop: Shop = {
@@ -764,7 +771,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       return { ...prev, followingIds: newFollowing };
     });
 
-    await db.toggleFollowUser(user.id, targetUserId, isFollowing);
+    await db.toggleFollow(user.id, targetUserId);
   };
 
   // Brands

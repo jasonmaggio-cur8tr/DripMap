@@ -293,11 +293,7 @@ const Profile: React.FC = () => {
       acc + shop.reviews.filter(r => r.userId === viewedUser.id).length,
     0
   );
-  const dripScore =
-    visitedSpots.length * 10 +
-    savedSpots.length * 5 +
-    userReviewCount * 20 +
-    claimedSpots.length * 50;
+  const dripScore = viewedUser.dripScore || 0;
 
   // Badges Logic
   const uniqueCitiesVisited = new Set(visitedSpots.map(s => s.location.city))
@@ -390,12 +386,16 @@ const Profile: React.FC = () => {
         }
       }
 
-      await updateUserProfile({
+      const profileResult = await updateUserProfile({
         username: editData.username,
         bio: editData.bio,
         avatarUrl: finalAvatarUrl,
         socialLinks: editData.socialLinks,
       });
+
+      if (profileResult && !profileResult.success) {
+        throw profileResult.error || new Error("Failed to save profile changes");
+      }
 
       // Update local viewedUser state immediately after successful save
       setViewedUser(prev =>
@@ -791,6 +791,42 @@ const Profile: React.FC = () => {
 
           <div className="bg-white p-3 sm:p-4 md:p-6 rounded-2xl sm:rounded-3xl shadow-sm border border-coffee-100">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+              {/* Leaderboard Badges */}
+              {viewedUser.leaderboardBadges?.map(badge => {
+                let badgeColors = "bg-yellow-50 border-yellow-400 text-yellow-900";
+                let iconColors = "bg-yellow-900 text-yellow-400";
+                let textColors = "text-yellow-700";
+
+                if (badge.rank === 2) {
+                  badgeColors = "bg-gray-50 border-gray-400 text-gray-900";
+                  iconColors = "bg-gray-800 text-gray-300";
+                  textColors = "text-gray-600";
+                } else if (badge.rank === 3) {
+                  badgeColors = "bg-amber-50 border-amber-600 text-amber-900";
+                  iconColors = "bg-amber-900 text-amber-500";
+                  textColors = "text-amber-700";
+                }
+
+                return (
+                  <div
+                    key={badge.id}
+                    className={`aspect-square rounded-2xl flex flex-col items-center justify-center p-3 text-center border-2 transition-all duration-300 group shadow-md scale-105 relative overflow-hidden ${badgeColors}`}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-transparent"></div>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 text-xl relative z-10 shadow-inner ${iconColors}`}>
+                      <i className="fas fa-mug-hot"></i>
+                    </div>
+                    <h3 className="font-bold text-[10px] leading-tight mb-1 relative z-10">
+                      {badge.title}
+                    </h3>
+                    <p className={`text-[9px] font-bold relative z-10 ${textColors}`}>
+                      {badge.month}/{badge.year}
+                    </p>
+                  </div>
+                );
+              })}
+
+              {/* Standard Badges */}
               {BADGES.map(badge => (
                 <div
                   key={badge.id}

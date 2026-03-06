@@ -277,6 +277,10 @@ export interface User {
   followerIds?: string[];
   followingIds?: string[];
 
+  // Gamification fields
+  dripScore?: number;
+  leaderboardBadges?: any[];
+
   // DripClub membership fields
   isDripClubMember?: boolean;
   dripClubMemberSince?: string;

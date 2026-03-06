@@ -252,7 +252,10 @@ const EditShop: React.FC = () => {
         open_hours: openHours,
       };
 
-      await updateShopInDB(originalShop.id, shopUpdates);
+      const updateResult = await updateShopInDB(originalShop.id, shopUpdates);
+      if (!updateResult.success) {
+        throw updateResult.error || new Error("Failed to update shop details in database");
+      }
 
       // 4. Update Local State & Redirect
       // We refresh shops to get the updated gallery (with new IDs) and details
@@ -302,7 +305,6 @@ const EditShop: React.FC = () => {
               <div>
                 <label className="block text-sm font-bold text-coffee-900 mb-2">City</label>
                 <input
-                  required
                   className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
                   value={formData.city}
                   onChange={e => setFormData({ ...formData, city: e.target.value })}
@@ -335,7 +337,6 @@ const EditShop: React.FC = () => {
             <div>
               <label className="block text-sm font-bold text-coffee-900 mb-2">Full Address</label>
               <input
-                required
                 className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none mb-4"
                 value={formData.address}
                 onChange={e => setFormData({ ...formData, address: e.target.value })}
@@ -456,7 +457,6 @@ const EditShop: React.FC = () => {
                 </button>
               </div>
               <textarea
-                required
                 rows={4}
                 className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
                 value={formData.description}

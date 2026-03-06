@@ -73,8 +73,8 @@ export const fetchUserProfile = async (
     if (error) throw error;
     if (!profile) return null;
 
-    // Fetch saved shops, visited shops, followers, and following
-    const [savedResult, visitedResult, followersResult, followingResult] =
+    // Fetch saved shops, visited shops, followers, following, drip score, and badges
+    const [savedResult, visitedResult, followersResult, followingResult, scoreResult, badgesResult] =
       await Promise.all([
         supabase.from("saved_shops").select("shop_id").eq("user_id", userId),
         supabase.from("visited_shops").select("shop_id").eq("user_id", userId),
@@ -87,6 +87,19 @@ export const fetchUserProfile = async (
           .from("user_follows")
           .select("following_id")
           .eq("follower_id", userId)
+          .then(r => (r.error ? { data: [] } : r)),
+        supabase
+          .from("user_drip_scores")
+          .select("total_score")
+          .eq("user_id", userId)
+          .single()
+          .then(r => (r.error ? { data: null } : r)),
+        supabase
+          .from("leaderboard_history")
+          .select("id, month, year, title, rank")
+          .eq("user_id", userId)
+          .order("year", { ascending: false })
+          .order("month", { ascending: false })
           .then(r => (r.error ? { data: [] } : r)),
       ]);
 
@@ -109,6 +122,8 @@ export const fetchUserProfile = async (
       visitedShops: visitedResult.data?.map(v => v.shop_id) || [],
       followerIds: followersResult.data?.map(f => f.follower_id) || [],
       followingIds: followingResult.data?.map(f => f.following_id) || [],
+      dripScore: scoreResult.data?.total_score || 0,
+      leaderboardBadges: badgesResult.data || [],
     };
   } catch (error) {
     console.error("Error fetching user profile:", error);
@@ -129,8 +144,8 @@ export const fetchUserProfileByUsername = async (
     if (error) throw error;
     if (!profile) return null;
 
-    // Fetch saved shops, visited shops, followers, and following
-    const [savedResult, visitedResult, followersResult, followingResult] =
+    // Fetch saved shops, visited shops, followers, following, drip score, and badges
+    const [savedResult, visitedResult, followersResult, followingResult, scoreResult, badgesResult] =
       await Promise.all([
         supabase
           .from("saved_shops")
@@ -149,6 +164,19 @@ export const fetchUserProfileByUsername = async (
           .from("user_follows")
           .select("following_id")
           .eq("follower_id", profile.id)
+          .then(r => (r.error ? { data: [] } : r)),
+        supabase
+          .from("user_drip_scores")
+          .select("total_score")
+          .eq("user_id", profile.id)
+          .single()
+          .then(r => (r.error ? { data: null } : r)),
+        supabase
+          .from("leaderboard_history")
+          .select("id, month, year, title, rank")
+          .eq("user_id", profile.id)
+          .order("year", { ascending: false })
+          .order("month", { ascending: false })
           .then(r => (r.error ? { data: [] } : r)),
       ]);
 
@@ -171,6 +199,8 @@ export const fetchUserProfileByUsername = async (
       visitedShops: visitedResult.data?.map(v => v.shop_id) || [],
       followerIds: followersResult.data?.map(f => f.follower_id) || [],
       followingIds: followingResult.data?.map(f => f.following_id) || [],
+      dripScore: scoreResult.data?.total_score || 0,
+      leaderboardBadges: badgesResult.data || [],
     };
   } catch (error) {
     console.error("Error fetching user profile by username:", error);
@@ -238,6 +268,15 @@ export const updateUserProfile = async (
       .eq("id", userId);
 
     if (error) throw error;
+
+    // Award Gamification Points for Profile Completion
+    if (updates.bio) {
+      await awardPoints(userId, 'profile_bio', 10);
+    }
+    if (updates.avatarUrl) {
+      await awardPoints(userId, 'profile_avatar', 10);
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Error updating profile:", error);
@@ -258,7 +297,7 @@ export const fetchShops = async (): Promise<Shop[]> => {
           *,
           shop_images(*),
           reviews(*, profiles(username, avatar_url)),
-          experience_logs(*, profiles(username, avatar_url)),
+          experience_logs(*, profiles:profiles!experience_logs_user_id_fkey(username, avatar_url)),
           shop_aggregates(drip_score)
         `
           )
@@ -406,7 +445,7 @@ export const fetchShopBySlug = async (slugOrId: string): Promise<Shop | null> =>
                 *,
                 shop_images(*),
                 reviews(*, profiles(username, avatar_url)),
-                experience_logs(*, profiles(username, avatar_url)),
+                experience_logs(*, profiles:profiles!experience_logs_user_id_fkey(username, avatar_url)),
                 shop_aggregates(drip_score)
             `)
       .eq("slug", slugOrId)
@@ -420,7 +459,7 @@ export const fetchShopBySlug = async (slugOrId: string): Promise<Shop | null> =>
                     *,
                     shop_images(*),
                     reviews(*, profiles(username, avatar_url)),
-                    experience_logs(*, profiles(username, avatar_url)),
+                    experience_logs(*, profiles:profiles!experience_logs_user_id_fkey(username, avatar_url)),
                     shop_aggregates(drip_score)
                 `)
         .eq("id", slugOrId)
@@ -995,6 +1034,9 @@ export const toggleSavedShop = async (
         .insert({ user_id: userId, shop_id: shopId });
 
       if (error) throw error;
+
+      // Award Gamification Points for Saving a Shop
+      await awardPoints(userId, 'save_shop', 5, shopId);
     }
     return { success: true };
   } catch (error) {
@@ -1057,6 +1099,9 @@ export const toggleVisitedShop = async (
         console.error("[toggleVisitedShop] Error inserting to visited_shops:", error);
         throw error;
       }
+
+      // Award Gamification Points for Passport Stamp
+      await awardPoints(userId, 'shop_checkin', 10, shopId);
 
       // Increment stamp_count on the shop
       const { data: shop, error: fetchError } = await supabase
@@ -1592,6 +1637,9 @@ export const submitExperienceLog = async (
       // Non-fatal error, just log it
     }
 
+    // Award Gamification Points
+    await awardPoints(userId, 'submit_experience_log', 20, log.id);
+
     return { success: true, log };
   } catch (error: any) {
     console.error("Error submitting experience log:", error);
@@ -1686,6 +1734,203 @@ export const fetchUserExperienceLogs = async (userId: string) => {
     });
   } catch (error) {
     console.error("Error fetching user experience logs:", error);
+    return [];
+  }
+};
+
+// ==============================================================================
+// GAMIFICATION & SOCIAL
+// ==============================================================================
+
+export const awardPoints = async (userId: string, actionType: string, points: number, targetId?: string) => {
+  try {
+    const { error } = await supabase.from('user_points').insert({
+      user_id: userId,
+      action_type: actionType,
+      points,
+      target_id: targetId || null
+    });
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to award points', error);
+    return { success: false, error };
+  }
+};
+
+export const checkHasFollowed = async (followerId: string, followingId: string) => {
+  try {
+    const { data } = await supabase
+      .from('user_follows')
+      .select('follower_id')
+      .eq('follower_id', followerId)
+      .eq('following_id', followingId)
+      .single();
+    return !!data;
+  } catch {
+    return false;
+  }
+};
+
+export const toggleFollow = async (followerId: string, followingId: string) => {
+  try {
+    const isFollowing = await checkHasFollowed(followerId, followingId);
+    if (isFollowing) {
+      await supabase.from('user_follows').delete().match({ follower_id: followerId, following_id: followingId });
+      return { success: true, isFollowing: false };
+    } else {
+      await supabase.from('user_follows').insert({ follower_id: followerId, following_id: followingId });
+
+      // Award Gamification Points
+      await awardPoints(followerId, 'follow_user', 5, followingId);
+
+      // Create Notification for the person being followed
+      await createNotification(followingId, followerId, 'follow');
+
+      return { success: true, isFollowing: true };
+    }
+  } catch (error) {
+    console.error('Failed to toggle follow', error);
+    return { success: false, error };
+  }
+};
+
+export const toggleExperienceLogLike = async (logId: string, userId: string) => {
+  try {
+    const { data } = await supabase.from('experience_log_likes').select('log_id').match({ log_id: logId, user_id: userId }).single();
+    if (data) {
+      await supabase.from('experience_log_likes').delete().match({ log_id: logId, user_id: userId });
+      return { success: true, isLiked: false };
+    } else {
+      await supabase.from('experience_log_likes').insert({ log_id: logId, user_id: userId });
+
+      // Notify the log creator
+      const { data: logData } = await supabase.from('experience_logs').select('user_id').eq('id', logId).single();
+      if (logData && logData.user_id) {
+        await createNotification(logData.user_id, userId, 'like', logId);
+      }
+
+      return { success: true, isLiked: true };
+    }
+  } catch (error) {
+    return { success: false, error };
+  }
+};
+
+export const createNotification = async (
+  userId: string,
+  actorId: string | null,
+  type: 'like' | 'follow' | 'badge',
+  entityId?: string
+) => {
+  if (userId === actorId) return { success: true }; // Don't notify self
+  try {
+    const { error } = await supabase.from('notifications').insert({
+      user_id: userId,
+      actor_id: actorId,
+      type,
+      entity_id: entityId || null
+    });
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to create notification', error);
+    return { success: false, error };
+  }
+};
+
+export const fetchNotifications = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*, actor:profiles!actor_id(username, avatar_url)')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(30);
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Failed to fetch notifications', error);
+    return [];
+  }
+};
+
+export const markNotificationRead = async (notificationId: string) => {
+  try {
+    await supabase.from('notifications').update({ is_read: true }).eq('id', notificationId);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error };
+  }
+};
+
+export const getLeaderboard = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('user_drip_scores')
+      .select('*')
+      .order('total_score', { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Failed to get leaderboard', error);
+    return [];
+  }
+};
+
+export const fetchFollowingFeed = async (userId: string) => {
+  try {
+    const { data: follows } = await supabase
+      .from("user_follows")
+      .select("following_id")
+      .eq("follower_id", userId);
+
+    if (!follows || follows.length === 0) return [];
+
+    const followingIds = follows.map(f => f.following_id);
+
+    const { data, error } = await supabase
+      .from("experience_logs")
+      .select(`
+        *,
+        shops(id, name, city, state, shop_images(url)),
+        profiles:user_id(username, avatar_url)
+      `)
+      .in("user_id", followingIds)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (error) throw error;
+
+    return (data || []).map((log: any) => {
+      const images = log.shops?.shop_images || [];
+      const coverImage = images.length > 0 ? images[0].url : undefined;
+      return {
+        id: log.id,
+        shopId: log.shop_id,
+        userId: log.user_id,
+        shopName: log.shops?.name,
+        shopCity: log.shops?.city,
+        shopState: log.shops?.state,
+        shopCoverImage: coverImage,
+        overallQuality: log.overall_quality,
+        bringFriendScore: log.bring_friend_score,
+        vibeEnergy: log.vibe_energy,
+        coffeeStyle: log.coffee_style,
+        specialtyDrink: log.specialty_drink,
+        matchaProfile: log.matcha_profile,
+        pastryCraft: log.pastry_craft,
+        parkingEase: log.parking_ease,
+        laptopFriendly: log.laptop_friendly,
+        quickTake: log.quick_take,
+        createdAt: log.created_at,
+        userName: log.profiles?.username,
+        userAvatar: log.profiles?.avatar_url,
+      };
+    });
+  } catch (error) {
+    console.error("Failed to fetch following feed", error);
     return [];
   }
 };
