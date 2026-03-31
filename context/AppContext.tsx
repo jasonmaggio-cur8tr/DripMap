@@ -27,6 +27,7 @@ interface AppContextType {
   shops: Shop[];
   user: User | null;
   loading: boolean;
+  shopsLoading: boolean;
   signup: (
     email: string,
     password: string,
@@ -102,6 +103,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const [shops, setShops] = useState<Shop[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [shopsLoading, setShopsLoading] = useState(true);
   const [isPasswordResetting, setIsPasswordResetting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedVibes, setSelectedVibes] = useState<Vibe[]>([]);
@@ -158,7 +160,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       setLoading(true);
       try {
         await initializeStorage();
-        await refreshShops();
+        // Fire shop fetch in background — don't block auth resolution
+        refreshShops();
 
         // Check for auth errors in URL hash (e.g. expired links)
         const hashParams = new URLSearchParams(window.location.hash.substring(1)); // strip #
@@ -267,6 +270,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const refreshShops = async () => {
+    setShopsLoading(true);
     try {
       console.log("[AppContext] Fetching shops...");
       const fetchedShops = await db.fetchShops();
@@ -316,6 +320,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       console.error("[AppContext] Failed to refresh shops:", error);
       // Fall back to initial shops on error
       setShops(INITIAL_SHOPS);
+    } finally {
+      setShopsLoading(false);
     }
   };
 
@@ -785,6 +791,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         shops: filteredShops,
         user,
         loading,
+        shopsLoading,
         signup,
         login,
         logout,

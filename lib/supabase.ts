@@ -109,8 +109,12 @@ export const supabase = (isConfigured
       },
       fetch: (url, options = {}) => {
         // Add a timeout to prevent indefinite hangs on mobile when waking from sleep
+        // Give storage operations much longer to complete (120s) compared to DB queries (15s)
+        const isStorageUpload = typeof url === 'string' && url.includes('/storage/v1/object/');
+        const timeoutInterval = isStorageUpload ? 120000 : 15000;
+        
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds
+        const timeoutId = setTimeout(() => controller.abort(), timeoutInterval);
 
         return fetch(url, { ...options, signal: controller.signal })
           .then(res => {

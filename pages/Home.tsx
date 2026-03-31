@@ -21,7 +21,7 @@ const getDistanceMiles = (lat1: number, lng1: number, lat2: number, lng2: number
 };
 
 const Home: React.FC = () => {
-  const { shops, searchQuery, setSearchQuery, selectedVibes, toggleVibe, loading } = useApp();
+  const { shops, searchQuery, setSearchQuery, selectedVibes, toggleVibe, loading, shopsLoading } = useApp();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'map' | 'list'>('list'); // Mobile view toggle
   const [nearMeActive, setNearMeActive] = useState(false);
@@ -235,19 +235,6 @@ const Home: React.FC = () => {
     navigate(`/shop/${id}`);
   };
 
-  if (loading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-coffee-50">
-        <div className="text-center">
-          <div className="w-20 h-20 bg-coffee-900 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg animate-pulse">
-            <i className="fas fa-droplet text-volt-400 text-4xl"></i>
-          </div>
-          <LoadingSpinner size="lg" />
-          <p className="text-coffee-600 mt-4 font-medium">Loading spots...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="h-[calc(100dvh-4rem)] mt-16 flex flex-col md:flex-row overflow-hidden relative w-full">
@@ -357,7 +344,24 @@ const Home: React.FC = () => {
             </div>
           </div>
 
-          {filteredShops.length === 0 ? (
+          {shopsLoading ? (
+            /* Skeleton loader while shops are fetching */
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-coffee-100 animate-pulse">
+                  <div className="h-36 bg-coffee-100"></div>
+                  <div className="p-3 space-y-2">
+                    <div className="h-4 bg-coffee-100 rounded-full w-3/4"></div>
+                    <div className="h-3 bg-coffee-100 rounded-full w-1/2"></div>
+                    <div className="flex gap-2 mt-2">
+                      <div className="h-6 bg-coffee-100 rounded-full w-16"></div>
+                      <div className="h-6 bg-coffee-100 rounded-full w-20"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredShops.length === 0 ? (
             <div className="text-center py-10 text-coffee-800/60">
               <i className="fas fa-globe-americas text-4xl mb-4"></i>
               <p>{nearMeActive ? 'No spots found within 100 miles.' : 'No spots found in this area.'}</p>

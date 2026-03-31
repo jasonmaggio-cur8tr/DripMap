@@ -1,0 +1,56 @@
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Inter:wght@300;400;500;600&display=swap');
+
+/* Tailwind base layers */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Hide scrollbar for horizontal scrolling areas */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom Map Marker Styles */
+.custom-marker-pin {
+  width: 30px;
+  height: 30px;
+  border-radius: 50% 50% 50% 0;
+  background: #231b15;
+  position: absolute;
+  transform: rotate(-45deg);
+  left: 50%;
+  top: 50%;
+  margin: -15px 0 0 -15px;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+  border: 2px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-marker-pin::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  margin: 0;
+  background: #ccff00;
+  position: absolute;
+  border-radius: 50%;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  width: 200px !important;
+}

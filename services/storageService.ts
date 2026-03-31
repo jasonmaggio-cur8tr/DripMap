@@ -35,7 +35,7 @@ const compressForWeb = (file: File): Promise<File> => {
   if (file.type === 'image/gif') return Promise.resolve(file);
   if (file.size <= COMPRESS_THRESHOLD) return Promise.resolve(file);
 
-  return new Promise((resolve) => {
+  const compressionPromise = new Promise<File>((resolve) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
 
@@ -60,18 +60,22 @@ const compressForWeb = (file: File): Promise<File> => {
       const outputType = supportsWebP ? 'image/webp' : 'image/jpeg';
       const ext = supportsWebP ? 'webp' : 'jpg';
 
-      canvas.toBlob(
-        (blob) => {
-          if (blob && blob.size < file.size) {
-            const newName = file.name.replace(/\.[^.]+$/, `.${ext}`);
-            resolve(new File([blob], newName, { type: outputType }));
-          } else {
-            resolve(file); // Keep original if compression didn't help
-          }
-        },
-        outputType,
-        COMPRESS_QUALITY
-      );
+      try {
+        canvas.toBlob(
+          (blob) => {
+            if (blob && blob.size < file.size) {
+              const newName = file.name.replace(/\.[^.]+$/, `.${ext}`);
+              resolve(new File([blob], newName, { type: outputType }));
+            } else {
+              resolve(file); // Keep original if compression didn't help
+            }
+          },
+          outputType,
+          COMPRESS_QUALITY
+        );
+      } catch (err) {
+        resolve(file); // Fallback if toBlob throws
+      }
     };
 
     img.onerror = () => {
@@ -81,6 +85,12 @@ const compressForWeb = (file: File): Promise<File> => {
 
     img.src = url;
   });
+
+  const timeoutPromise = new Promise<File>((resolve) => 
+    setTimeout(() => resolve(file), 15000)
+  );
+
+  return Promise.race([compressionPromise, timeoutPromise]);
 };
 
 /**
@@ -89,7 +99,7 @@ const compressForWeb = (file: File): Promise<File> => {
  * @returns A JPEG file or the original file if conversion fails
  */
 const convertHEICtoJPEG = async (file: File): Promise<File> => {
-  return new Promise((resolve) => {
+  const conversionPromise = new Promise<File>((resolve) => {
     const reader = new FileReader();
     
     reader.onload = (e) => {
@@ -102,19 +112,23 @@ const convertHEICtoJPEG = async (file: File): Promise<File> => {
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0);
         
-        // Convert to JPEG blob
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const convertedFile = new File(
-              [blob], 
-              file.name.replace(/\.heic$/i, '.jpg').replace(/\.heif$/i, '.jpg'),
-              { type: 'image/jpeg' }
-            );
-            resolve(convertedFile);
-          } else {
-            resolve(file); // Fallback to original
-          }
-        }, 'image/jpeg', 0.9);
+        try {
+          // Convert to JPEG blob
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const convertedFile = new File(
+                [blob], 
+                file.name.replace(/\.heic$/i, '.jpg').replace(/\.heif$/i, '.jpg'),
+                { type: 'image/jpeg' }
+              );
+              resolve(convertedFile);
+            } else {
+              resolve(file); // Fallback to original
+            }
+          }, 'image/jpeg', 0.9);
+        } catch (err) {
+          resolve(file); // Fallback
+        }
       };
       
       img.onerror = () => resolve(file); // Fallback to original
@@ -124,6 +138,12 @@ const convertHEICtoJPEG = async (file: File): Promise<File> => {
     reader.onerror = () => resolve(file); // Fallback to original
     reader.readAsDataURL(file);
   });
+
+  const timeoutPromise = new Promise<File>((resolve) => 
+    setTimeout(() => resolve(file), 15000)
+  );
+
+  return Promise.race([conversionPromise, timeoutPromise]);
 };
 
 /**
