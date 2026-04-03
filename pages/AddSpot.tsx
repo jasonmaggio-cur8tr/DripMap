@@ -200,42 +200,14 @@ const AddSpot: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      // Log current auth/session + profile immediately before upload so we can debug first-attempt issues
-      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-      console.log('createSpot (pre-upload) user:', currentUser, userError);
-
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', currentUser?.id)
-        .single();
-      console.log('createSpot (pre-upload) profile:', profile, profileError);
-
-      // Check for mismatch between the AppContext user and the supabase client user
-      if (currentUser?.id && user && currentUser.id !== user.id) {
-        console.warn('Detected mismatch between app user and auth user before upload', { appUser: user.id, authUser: currentUser.id });
-        // Try one session refresh attempt to re-hydrate session if the token is stale
-        const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
-        if (refreshError || !refreshedSession) {
-          console.error('Session refresh failed while attempting to correct mismatch:', refreshError);
-          
-          // Reset auth state to clear corrupted/stale tokens
-          await resetSupabaseAuthState();
-          
-          const message = 'Session mismatch detected and could not be refreshed. Please log in again.';
-          toast.error(message);
-          setSessionIssue(message);
-          setIsSubmitting(false);
-          return;
-        }
-        console.log('Session refreshed successfully after mismatch; proceeding with uploads');
+      if (!user) {
+        toast.error('Please log in to add a shop.');
+        setIsSubmitting(false);
+        return;
       }
 
-      console.log('Starting image upload...', uploadedImages.length, 'images');
-      
       // Upload images to Supabase Storage
       const imageFiles = uploadedImages.map(img => img.file);
-      // Upload images sequentially. Pass progress callback so UI can show per-file progress.
       setUploadProgress({ completed: 0, total: imageFiles.length });
       const uploadResult = await uploadImages(imageFiles, 'shops', (completed, total) => {
         setUploadProgress({ completed, total });
