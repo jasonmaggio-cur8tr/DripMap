@@ -24,8 +24,9 @@ const AddSpot: React.FC = () => {
   const [similarShops, setSimilarShops] = useState<typeof shops>([]);
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
 
-  // Brand State
-  const [isCreatingBrand, setIsCreatingBrand] = useState(false);
+  // Brand State — explicit 3-way mode
+  type BrandMode = 'independent' | 'existing' | 'new';
+  const [brandMode, setBrandMode] = useState<BrandMode>('independent');
   const [newBrandData, setNewBrandData] = useState({
     name: '',
     description: '',
@@ -254,7 +255,7 @@ const AddSpot: React.FC = () => {
       let finalBrandId = formData.brandId;
       let finalShopName = formData.name;
 
-      if (isCreatingBrand) {
+      if (brandMode === 'new') {
         if (!newBrandData.name) {
           toast.error("Please enter a Brand Name.");
           setIsSubmitting(false);
@@ -274,6 +275,8 @@ const AddSpot: React.FC = () => {
 
         addBrand(newBrand);
         finalShopName = newBrandData.name;
+      } else if (brandMode === 'independent') {
+        finalBrandId = '';
       }
 
       // Create shop
@@ -298,7 +301,7 @@ const AddSpot: React.FC = () => {
         claimedBy: undefined
       });
 
-      if (isCreatingBrand) {
+      if (brandMode === 'new') {
         toast.success("Brand registered & spot added successfully!");
       } else {
         toast.success("Spot added successfully!");
@@ -381,26 +384,22 @@ const AddSpot: React.FC = () => {
                      { value: 'existing', label: 'Existing Brand', icon: 'fa-link', desc: 'Add a location to a brand already on DripMap' },
                      { value: 'new', label: 'Register New Brand', icon: 'fa-plus-circle', desc: 'Create a new brand / chain' },
                    ].map(opt => {
-                     const active =
-                       (opt.value === 'independent' && !isCreatingBrand && !formData.brandId) ||
-                       (opt.value === 'existing' && !isCreatingBrand && !!formData.brandId) ||
-                       (opt.value === 'new' && isCreatingBrand);
+                     const active = brandMode === opt.value;
                      return (
                        <button
                          key={opt.value}
                          type="button"
                          onClick={() => {
-                           if (opt.value === 'new') {
-                             setIsCreatingBrand(true);
-                             setFormData(prev => ({ ...prev, brandId: '', name: '' }));
-                           } else if (opt.value === 'existing') {
-                             setIsCreatingBrand(false);
+                           setBrandMode(opt.value as BrandMode);
+                           // Reset dependent state when switching modes
+                           if (opt.value !== 'existing') {
+                             setFormData(prev => ({ ...prev, brandId: '' }));
+                           }
+                           if (opt.value !== 'new') {
                              setNewBrandData({ name: '', description: '', websiteUrl: '' });
-                             // Keep brandId as is (user will pick from dropdown below)
-                           } else {
-                             setIsCreatingBrand(false);
-                             setFormData(prev => ({ ...prev, brandId: '', name: '' }));
-                             setNewBrandData({ name: '', description: '', websiteUrl: '' });
+                           }
+                           if (opt.value === 'independent') {
+                             setFormData(prev => ({ ...prev, name: '' }));
                            }
                          }}
                          className={`flex flex-col items-start gap-1 p-4 rounded-xl border-2 text-left transition-all ${
@@ -422,7 +421,7 @@ const AddSpot: React.FC = () => {
                  </div>
 
                  {/* Existing brand dropdown */}
-                 {!isCreatingBrand && (
+                 {brandMode === 'existing' && (
                    <div>
                      {brands.length === 0 ? (
                        <p className="text-sm text-coffee-400 italic">
@@ -430,7 +429,7 @@ const AddSpot: React.FC = () => {
                          <button
                            type="button"
                            className="text-volt-500 font-bold hover:underline"
-                           onClick={() => { setIsCreatingBrand(true); setFormData(prev => ({ ...prev, brandId: '', name: '' })); }}
+                           onClick={() => { setBrandMode('new'); setFormData(prev => ({ ...prev, brandId: '', name: '' })); }}
                          >
                            Register the first one →
                          </button>
@@ -450,7 +449,7 @@ const AddSpot: React.FC = () => {
                              }));
                            }}
                          >
-                           <option value="">— No brand selected (independent) —</option>
+                           <option value="">— Select a brand —</option>
                            {brands.map(b => (
                              <option key={b.id} value={b.id}>{b.name}</option>
                            ))}
@@ -466,7 +465,7 @@ const AddSpot: React.FC = () => {
                  )}
 
                  {/* New brand form */}
-                 {isCreatingBrand && (
+                 {brandMode === 'new' && (
                    <div className="bg-coffee-50 border border-coffee-200 rounded-xl p-4 space-y-4 animate-in fade-in duration-300">
                        <div className="flex items-center gap-2 text-coffee-500 text-xs font-bold uppercase tracking-wider mb-2">
                            <i className="fas fa-plus-circle text-volt-500"></i> Creating New Brand
@@ -475,7 +474,7 @@ const AddSpot: React.FC = () => {
                            <div>
                                <label className="block text-xs font-bold text-coffee-900 mb-1">Brand Name</label>
                                <input
-                                   required={isCreatingBrand}
+                                   required={brandMode === 'new'}
                                    placeholder="e.g. Blue Bottle Coffee"
                                    className="w-full px-3 py-2 bg-white border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
                                    value={newBrandData.name}
@@ -508,14 +507,18 @@ const AddSpot: React.FC = () => {
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label className="block text-sm font-bold text-coffee-900 mb-2">Shop Name</label>
+                    <label className="block text-sm font-bold text-coffee-900 mb-2">
+                      Shop Name
+                      {brandMode === 'existing' && formData.brandId && <span className="text-xs font-normal text-coffee-400 ml-2">(auto-filled from brand)</span>}
+                      {brandMode === 'new' && <span className="text-xs font-normal text-coffee-400 ml-2">(uses brand name)</span>}
+                    </label>
                     <input
                         required
-                        placeholder={isCreatingBrand ? "Will use Brand Name" : "e.g. The Daily Grind"}
-                        className={`w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none ${formData.brandId || isCreatingBrand ? 'opacity-75 bg-gray-100' : ''}`}
-                        value={isCreatingBrand ? newBrandData.name : formData.name}
-                        onChange={e => !isCreatingBrand && !formData.brandId && setFormData({...formData, name: e.target.value})}
-                        readOnly={!!formData.brandId || isCreatingBrand}
+                        placeholder={brandMode === 'new' ? "Will use Brand Name" : "e.g. The Daily Grind"}
+                        className={`w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none ${(brandMode === 'existing' && !!formData.brandId) || brandMode === 'new' ? 'opacity-75 bg-gray-100 cursor-not-allowed' : ''}`}
+                        value={brandMode === 'new' ? newBrandData.name : formData.name}
+                        onChange={e => brandMode === 'independent' && setFormData({...formData, name: e.target.value})}
+                        readOnly={(brandMode === 'existing' && !!formData.brandId) || brandMode === 'new'}
                     />
                     {showDuplicateWarning && similarShops.length > 0 && (
                       <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
