@@ -751,6 +751,10 @@ const AddSpot: React.FC = () => {
                     accept="image/*"
                 />
             </div>
+             <p className="text-xs text-coffee-400 mt-2">
+               <i className="fas fa-info-circle mr-1"></i>
+               Photos are auto-compressed. Max 3MB per image after compression. For large phone photos, they will be resized automatically.
+             </p>
           </section>
 
           <div className="pt-4">
@@ -761,7 +765,11 @@ const AddSpot: React.FC = () => {
               disabled={!allPreviewsReady}
             >
                 {isSubmitting 
-                  ? (uploadProgress.total > 0 ? `Uploading... (${uploadProgress.completed}/${uploadProgress.total})` : 'Uploading...') 
+                  ? (uploadProgress.total > 0 && uploadProgress.completed < uploadProgress.total
+                      ? `Uploading photos... (${uploadProgress.completed}/${uploadProgress.total})`
+                      : uploadProgress.completed > 0
+                        ? 'Saving spot...' 
+                        : 'Uploading...')
                   : 'Submit Spot'}
                 <i className="fas fa-arrow-right ml-2"></i>
             </Button>

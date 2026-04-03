@@ -4,11 +4,13 @@ import { resetSupabaseAuthState } from '../lib/authUtils';
 const BUCKET_NAME = 'shop-images';
 
 /** Max pixel dimension (longest side) for uploaded images */
-const MAX_DIMENSION = 1600;
+const MAX_DIMENSION = 1280;
 /** Compression quality for JPEG/WebP output (0-1) */
-const COMPRESS_QUALITY = 0.82;
+const COMPRESS_QUALITY = 0.75;
 /** Skip compression for files already under this size */
-const COMPRESS_THRESHOLD = 200 * 1024; // 200 KB
+const COMPRESS_THRESHOLD = 100 * 1024; // 100 KB
+/** Hard cap after compression — reject if still over this */
+const POST_COMPRESS_MAX = 3 * 1024 * 1024; // 3 MB
 
 /**
  * Detect WebP encoding support via Canvas API (cached at module load)
@@ -180,10 +182,10 @@ export const uploadImage = async (
     throw new Error(`Invalid file type: ${processedFile.type}. Please upload an image (JPG, PNG, WebP, or GIF). HEIC/HEIF images from iPhone are automatically converted.`);
   }
 
-  // Validate file size (max 5MB)
-  const maxSize = 5 * 1024 * 1024; // 5MB
+  // Validate file size (max 3MB after compression — helps mobile uploads)
+  const maxSize = POST_COMPRESS_MAX;
   if (processedFile.size > maxSize) {
-    throw new Error('File too large. Maximum size is 5MB');
+    throw new Error(`Image is too large (${(processedFile.size / (1024*1024)).toFixed(1)}MB after compression). Please use a smaller photo or reduce your camera resolution in Settings → Camera.`);
   }
 
   // Generate unique filename
@@ -261,7 +263,8 @@ export const uploadImage = async (
 
     while (attempt < maxAttempts) {
       attempt += 1;
-      const timeoutForAttempt = attempt === 1 ? 30000 : (attempt === 2 ? 60000 : 120000);
+      // Shorter timeouts: 15s / 25s / 45s — fail fast so mobile users see an error quickly
+      const timeoutForAttempt = attempt === 1 ? 15000 : (attempt === 2 ? 25000 : 45000);
       console.log(`Attempt ${attempt}/${maxAttempts} for upload ${fileName} (timeout ${timeoutForAttempt}ms)`);
 
       try {
