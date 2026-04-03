@@ -22,6 +22,8 @@ import ScoutBounty from './pages/ScoutBounty';
 import CoffeeDateAccept from './pages/CoffeeDateAccept';
 import Leaderboard from './pages/Leaderboard';
 import CommunityFeed from './pages/CommunityFeed';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 
 const App: React.FC = () => {
   return (
@@ -53,6 +55,8 @@ const App: React.FC = () => {
           <Route path="/events" element={<EventsFeed />} />
           <Route path="/dripclub" element={<DripClub />} />
           <Route path="/scout-bounty" element={<ScoutBounty />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
 
           {/* Catch-all for Supabase auth redirects (access_token=...) and 404s */}
           <Route path="*" element={<div className="min-h-screen flex items-center justify-center bg-coffee-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coffee-900"></div></div>} />

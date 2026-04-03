@@ -370,84 +370,141 @@ const AddSpot: React.FC = () => {
           <section className="space-y-4">
              <h2 className="text-sm font-bold text-coffee-400 uppercase tracking-wider border-b border-coffee-100 pb-2">The Basics</h2>
 
-             {/* Brand Selection */}
+             {/* Brand / Chain Association */}
              <div>
-                 <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-bold text-coffee-900">Brand / Chain Association</label>
-                    <button
-                        type="button"
-                        onClick={() => {
-                          setIsCreatingBrand(!isCreatingBrand);
-                          setFormData(prev => ({ ...prev, brandId: '' }));
-                          if (!isCreatingBrand) {
-                            setFormData(prev => ({ ...prev, name: '' }));
-                          }
-                        }}
-                        className="text-xs font-bold text-volt-500 hover:text-coffee-900 hover:underline transition-colors"
-                    >
-                        {isCreatingBrand ? 'Select Existing Brand' : '+ Register New Brand'}
-                    </button>
+                 <label className="block text-sm font-bold text-coffee-900 mb-3">Brand / Chain Association</label>
+
+                 {/* 3-option radio group */}
+                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                   {[
+                     { value: 'independent', label: 'Independent Spot', icon: 'fa-store', desc: 'One-of-a-kind shop, no chain' },
+                     { value: 'existing', label: 'Existing Brand', icon: 'fa-link', desc: 'Add a location to a brand already on DripMap' },
+                     { value: 'new', label: 'Register New Brand', icon: 'fa-plus-circle', desc: 'Create a new brand / chain' },
+                   ].map(opt => {
+                     const active =
+                       (opt.value === 'independent' && !isCreatingBrand && !formData.brandId) ||
+                       (opt.value === 'existing' && !isCreatingBrand && !!formData.brandId) ||
+                       (opt.value === 'new' && isCreatingBrand);
+                     return (
+                       <button
+                         key={opt.value}
+                         type="button"
+                         onClick={() => {
+                           if (opt.value === 'new') {
+                             setIsCreatingBrand(true);
+                             setFormData(prev => ({ ...prev, brandId: '', name: '' }));
+                           } else if (opt.value === 'existing') {
+                             setIsCreatingBrand(false);
+                             setNewBrandData({ name: '', description: '', websiteUrl: '' });
+                             // Keep brandId as is (user will pick from dropdown below)
+                           } else {
+                             setIsCreatingBrand(false);
+                             setFormData(prev => ({ ...prev, brandId: '', name: '' }));
+                             setNewBrandData({ name: '', description: '', websiteUrl: '' });
+                           }
+                         }}
+                         className={`flex flex-col items-start gap-1 p-4 rounded-xl border-2 text-left transition-all ${
+                           active
+                             ? 'border-volt-400 bg-coffee-50'
+                             : 'border-coffee-100 bg-white hover:border-coffee-300'
+                         }`}
+                       >
+                         <div className="flex items-center gap-2">
+                           <i className={`fas ${opt.icon} ${active ? 'text-volt-500' : 'text-coffee-400'}`} />
+                           <span className={`text-sm font-bold ${active ? 'text-coffee-900' : 'text-coffee-600'}`}>
+                             {opt.label}
+                           </span>
+                         </div>
+                         <span className="text-xs text-coffee-400 leading-tight">{opt.desc}</span>
+                       </button>
+                     );
+                   })}
                  </div>
 
-                 {isCreatingBrand ? (
-                    <div className="bg-coffee-50 border border-coffee-200 rounded-xl p-4 space-y-4 animate-in fade-in duration-300">
-                        <div className="flex items-center gap-2 text-coffee-500 text-xs font-bold uppercase tracking-wider mb-2">
-                            <i className="fas fa-plus-circle text-volt-500"></i> Creating New Brand
-                        </div>
+                 {/* Existing brand dropdown */}
+                 {!isCreatingBrand && (
+                   <div>
+                     {brands.length === 0 ? (
+                       <p className="text-sm text-coffee-400 italic">
+                         No brands registered yet.{' '}
+                         <button
+                           type="button"
+                           className="text-volt-500 font-bold hover:underline"
+                           onClick={() => { setIsCreatingBrand(true); setFormData(prev => ({ ...prev, brandId: '', name: '' })); }}
+                         >
+                           Register the first one →
+                         </button>
+                       </p>
+                     ) : (
+                       <div className="space-y-2">
+                         <label className="block text-xs font-bold text-coffee-700 uppercase tracking-wider">Select Brand</label>
+                         <select
+                           className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none appearance-none"
+                           value={formData.brandId}
+                           onChange={e => {
+                             const selectedBrand = brands.find(b => b.id === e.target.value);
+                             setFormData(prev => ({
+                               ...prev,
+                               brandId: e.target.value,
+                               name: selectedBrand ? selectedBrand.name : prev.name,
+                             }));
+                           }}
+                         >
+                           <option value="">— No brand selected (independent) —</option>
+                           {brands.map(b => (
+                             <option key={b.id} value={b.id}>{b.name}</option>
+                           ))}
+                         </select>
+                         {formData.brandId && (
+                           <p className="text-xs text-volt-600 font-semibold">
+                             ✓ This location will be added to the <strong>{brands.find(b => b.id === formData.brandId)?.name}</strong> brand.
+                           </p>
+                         )}
+                       </div>
+                     )}
+                   </div>
+                 )}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-xs font-bold text-coffee-900 mb-1">Brand Name</label>
-                                <input
-                                    required={isCreatingBrand}
-                                    placeholder="e.g. Blue Bottle Coffee"
-                                    className="w-full px-3 py-2 bg-white border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
-                                    value={newBrandData.name}
-                                    onChange={e => setNewBrandData({...newBrandData, name: e.target.value})}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-coffee-900 mb-1">Brand Website <span className="text-coffee-400 font-normal">(Optional)</span></label>
-                                <input
-                                    placeholder="https://..."
-                                    className="w-full px-3 py-2 bg-white border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
-                                    value={newBrandData.websiteUrl}
-                                    onChange={e => setNewBrandData({...newBrandData, websiteUrl: e.target.value})}
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-coffee-900 mb-1">Brand Description <span className="text-coffee-400 font-normal">(Optional)</span></label>
-                            <input
-                                placeholder="Short slogan or story about the brand"
-                                className="w-full px-3 py-2 bg-white border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
-                                value={newBrandData.description}
-                                onChange={e => setNewBrandData({...newBrandData, description: e.target.value})}
-                            />
-                        </div>
-                    </div>
-                 ) : (
-                    <select
-                        className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none appearance-none"
-                        value={formData.brandId}
-                        onChange={e => {
-                          const selectedBrand = brands.find(b => b.id === e.target.value);
-                          setFormData(prev => ({
-                            ...prev,
-                            brandId: e.target.value,
-                            name: selectedBrand ? selectedBrand.name : prev.name
-                          }));
-                        }}
-                    >
-                        <option value="">No, it's an independent spot</option>
-                        <optgroup label="Registered Brands">
-                            {brands.map(b => (
-                                <option key={b.id} value={b.id}>{b.name}</option>
-                            ))}
-                        </optgroup>
-                    </select>
+                 {/* New brand form */}
+                 {isCreatingBrand && (
+                   <div className="bg-coffee-50 border border-coffee-200 rounded-xl p-4 space-y-4 animate-in fade-in duration-300">
+                       <div className="flex items-center gap-2 text-coffee-500 text-xs font-bold uppercase tracking-wider mb-2">
+                           <i className="fas fa-plus-circle text-volt-500"></i> Creating New Brand
+                       </div>
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           <div>
+                               <label className="block text-xs font-bold text-coffee-900 mb-1">Brand Name</label>
+                               <input
+                                   required={isCreatingBrand}
+                                   placeholder="e.g. Blue Bottle Coffee"
+                                   className="w-full px-3 py-2 bg-white border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
+                                   value={newBrandData.name}
+                                   onChange={e => setNewBrandData({...newBrandData, name: e.target.value})}
+                               />
+                           </div>
+                           <div>
+                               <label className="block text-xs font-bold text-coffee-900 mb-1">Brand Website <span className="text-coffee-400 font-normal">(Optional)</span></label>
+                               <input
+                                   placeholder="https://..."
+                                   className="w-full px-3 py-2 bg-white border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
+                                   value={newBrandData.websiteUrl}
+                                   onChange={e => setNewBrandData({...newBrandData, websiteUrl: e.target.value})}
+                               />
+                           </div>
+                       </div>
+                       <div>
+                           <label className="block text-xs font-bold text-coffee-900 mb-1">Brand Description <span className="text-coffee-400 font-normal">(Optional)</span></label>
+                           <input
+                               placeholder="Short slogan or story about the brand"
+                               className="w-full px-3 py-2 bg-white border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
+                               value={newBrandData.description}
+                               onChange={e => setNewBrandData({...newBrandData, description: e.target.value})}
+                           />
+                       </div>
+                   </div>
                  )}
              </div>
+
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>

@@ -15,7 +15,7 @@ import { useToast } from '../context/ToastContext';
 const EditShop: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   // Use refreshShops to update state after save
-  const { shops, updateShop, user, refreshShops } = useApp();
+  const { shops, updateShop, user, refreshShops, brands, addBrand } = useApp();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -54,6 +54,11 @@ const EditShop: React.FC = () => {
     sunday: ''
   });
   const [isUploading, setIsUploading] = useState(false);
+
+  // Brand state
+  const [brandId, setBrandId] = useState('');
+  const [isCreatingBrand, setIsCreatingBrand] = useState(false);
+  const [newBrandData, setNewBrandData] = useState({ name: '', description: '', websiteUrl: '' });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -104,6 +109,7 @@ const EditShop: React.FC = () => {
     setSelectedVibes(shopToEdit.vibes);
     setSelectedCheekyVibes(shopToEdit.cheekyVibes || []);
     setCustomVibes(shopToEdit.customVibes || []);
+    setBrandId((shopToEdit as any).brandId || '');
 
     // Load opening hours
     if (shopToEdit.openHours) {
@@ -236,6 +242,20 @@ const EditShop: React.FC = () => {
         }
       }
 
+      // Handle brand update
+      let finalBrandId = brandId;
+      if (isCreatingBrand && newBrandData.name) {
+        const generatedId = `brand-${Math.random().toString(36).substr(2, 9)}`;
+        addBrand({
+          id: generatedId,
+          name: newBrandData.name,
+          slug: newBrandData.name.toLowerCase().replace(/\s+/g, '-'),
+          description: newBrandData.description || undefined,
+          websiteUrl: newBrandData.websiteUrl || undefined,
+        });
+        finalBrandId = generatedId;
+      }
+
       // 3. Update Shop Details (excluding gallery, which is handled via shop_images)
       const shopUpdates = {
         name: formData.name,
@@ -250,6 +270,7 @@ const EditShop: React.FC = () => {
         cheeky_vibes: selectedCheekyVibes,
         custom_vibes: customVibes,
         open_hours: openHours,
+        brand_id: finalBrandId || null,
       };
 
       const updateResult = await updateShopInDB(originalShop.id, shopUpdates);
@@ -292,6 +313,88 @@ const EditShop: React.FC = () => {
           {/* Section 1: Basic Info */}
           <section className="space-y-4">
             <h2 className="text-sm font-bold text-coffee-400 uppercase tracking-wider border-b border-coffee-100 pb-2">The Basics</h2>
+
+            {/* Brand / Chain Association */}
+            <div className="mb-4">
+              <label className="block text-sm font-bold text-coffee-900 mb-3">Brand / Chain Association</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                {[
+                  { value: 'independent', label: 'Independent Spot', icon: 'fa-store', desc: 'One-of-a-kind, no chain' },
+                  { value: 'existing', label: 'Existing Brand', icon: 'fa-link', desc: 'Part of a brand on DripMap' },
+                  { value: 'new', label: 'Register New Brand', icon: 'fa-plus-circle', desc: 'Create a new brand' },
+                ].map(opt => {
+                  const active =
+                    (opt.value === 'independent' && !isCreatingBrand && !brandId) ||
+                    (opt.value === 'existing' && !isCreatingBrand && !!brandId) ||
+                    (opt.value === 'new' && isCreatingBrand);
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        if (opt.value === 'new') { setIsCreatingBrand(true); setBrandId(''); }
+                        else if (opt.value === 'existing') { setIsCreatingBrand(false); setNewBrandData({ name: '', description: '', websiteUrl: '' }); }
+                        else { setIsCreatingBrand(false); setBrandId(''); setNewBrandData({ name: '', description: '', websiteUrl: '' }); }
+                      }}
+                      className={`flex flex-col items-start gap-1 p-3 rounded-xl border-2 text-left transition-all ${
+                        active ? 'border-volt-400 bg-coffee-50' : 'border-coffee-100 bg-white hover:border-coffee-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <i className={`fas ${opt.icon} ${active ? 'text-volt-500' : 'text-coffee-400'}`} />
+                        <span className={`text-sm font-bold ${active ? 'text-coffee-900' : 'text-coffee-600'}`}>{opt.label}</span>
+                      </div>
+                      <span className="text-xs text-coffee-400 leading-tight">{opt.desc}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Existing brand dropdown */}
+              {!isCreatingBrand && brands.length > 0 && (
+                <div className="space-y-2">
+                  <select
+                    className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none appearance-none"
+                    value={brandId}
+                    onChange={e => setBrandId(e.target.value)}
+                  >
+                    <option value="">— No brand (independent) —</option>
+                    {brands.map(b => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
+                  {brandId && (
+                    <p className="text-xs text-volt-600 font-semibold">
+                      ✓ Linked to <strong>{brands.find(b => b.id === brandId)?.name}</strong>
+                    </p>
+                  )}
+                </div>
+              )}
+              {!isCreatingBrand && brands.length === 0 && (
+                <p className="text-sm text-coffee-400 italic">No brands on DripMap yet. Use "Register New Brand" above.</p>
+              )}
+
+              {/* New brand form */}
+              {isCreatingBrand && (
+                <div className="bg-coffee-50 border border-coffee-200 rounded-xl p-4 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-coffee-900 mb-1">Brand Name</label>
+                      <input placeholder="e.g. Blue Bottle Coffee" className="w-full px-3 py-2 bg-white border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none" value={newBrandData.name} onChange={e => setNewBrandData({...newBrandData, name: e.target.value})} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-coffee-900 mb-1">Website <span className="text-coffee-400 font-normal">(optional)</span></label>
+                      <input placeholder="https://..." className="w-full px-3 py-2 bg-white border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none" value={newBrandData.websiteUrl} onChange={e => setNewBrandData({...newBrandData, websiteUrl: e.target.value})} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-coffee-900 mb-1">Description <span className="text-coffee-400 font-normal">(optional)</span></label>
+                    <input placeholder="Short tagline or story" className="w-full px-3 py-2 bg-white border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none" value={newBrandData.description} onChange={e => setNewBrandData({...newBrandData, description: e.target.value})} />
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-bold text-coffee-900 mb-2">Shop Name</label>
