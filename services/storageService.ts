@@ -230,105 +230,65 @@ export const uploadImage = async (
     
     console.log('User authenticated, session valid until:', new Date(expiresAt));
 
-    // Bucket existence verified on app init - proceed directly to upload
-    console.log(`Uploading to bucket: ${BUCKET_NAME}...`);
+    // --- XHR-based upload (more reliable on iOS Safari than fetch) ---
+    // fetch() + Promise.race leaves zombie requests running on timeout (does NOT cancel the
+    // underlying TCP connection). XHR's native .timeout property actually aborts the connection.
+    const supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL as string;
+    const supabaseAnonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY as string;
 
-    // Upload to Supabase Storage with retries & per-attempt timeouts
-    const doUpload = async (useUpsert: boolean = false) => {
-      return supabase.storage
-        .from(BUCKET_NAME)
-        .upload(fileName, processedFile, {
-          cacheControl: '31536000',
-          upsert: useUpsert
-        });
-    };
+    const uploadViaXHR = (useUpsert: boolean, timeoutMs: number): Promise<void> =>
+      new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open(useUpsert ? 'PUT' : 'POST', `${supabaseUrl}/storage/v1/object/${BUCKET_NAME}/${fileName}`);
+        xhr.setRequestHeader('Authorization', `Bearer ${session!.access_token}`);
+        xhr.setRequestHeader('apikey', supabaseAnonKey);
+        xhr.setRequestHeader('Content-Type', processedFile.type || 'application/octet-stream');
+        xhr.setRequestHeader('x-upsert', useUpsert ? 'true' : 'false');
+        xhr.setRequestHeader('Cache-Control', '31536000');
+        xhr.timeout = timeoutMs; // native abort — actually kills the TCP connection
 
-    // Helper to attempt a single upload with a per-attempt timeout
-    const attemptUploadWithTimeout = async (timeoutMs: number, useUpsert: boolean = false) => {
-      const uploadPromise = doUpload(useUpsert);
-      uploadPromise.then((res: any) => console.log('uploadPromise resolved for', fileName, res)).catch((err: any) => console.error('uploadPromise rejected for', fileName, err));
-
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`Upload timeout after ${timeoutMs / 1000}s - check Supabase storage configuration, RLS policies, and internet connection`)), timeoutMs)
-      );
-
-      return await Promise.race([uploadPromise, timeoutPromise]) as any;
-    };
-
-    // Try multiple attempts with increasing timeouts and exponential backoff
-    const maxAttempts = 3;
-    let attempt = 0;
-    let data: any = null;
-    let error: any = null;
-
-    while (attempt < maxAttempts) {
-      attempt += 1;
-      // Shorter timeouts: 15s / 25s / 45s — fail fast so mobile users see an error quickly
-      const timeoutForAttempt = attempt === 1 ? 15000 : (attempt === 2 ? 25000 : 45000);
-      console.log(`Attempt ${attempt}/${maxAttempts} for upload ${fileName} (timeout ${timeoutForAttempt}ms)`);
-
-      try {
-        // On retry attempts, use upsert to overwrite if file already exists from failed previous attempt
-        const useUpsert = attempt > 1;
-        const result = await attemptUploadWithTimeout(timeoutForAttempt, useUpsert);
-        data = result.data;
-        error = result.error;
-
-        // If success, break out
-        if (!error) break;
-
-        // Check if it's a "resource already exists" error
-        const isAlreadyExistsError = error && (error.message?.toLowerCase?.().includes('already exists') || error.statusCode === '409');
-        if (isAlreadyExistsError) {
-          console.warn('File already exists, will use upsert on next attempt:', error);
-          // Continue to next attempt with upsert enabled
-        }
-
-        // If it's an auth-related error, try refreshing the session once and continue retries
-        const isAuthError = error && (error.message?.toLowerCase?.().includes('jwt') || error.message?.toLowerCase?.().includes('expired') || error.status === 401 || error.status === 403 || error.message?.toLowerCase?.().includes('unauthorized'));
-        if (isAuthError) {
-          console.warn('Auth-related upload error detected; attempting to refresh session before next attempt', error);
-          try {
-            const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
-            if (refreshError || !refreshedSession) {
-              console.error('Session refresh failed during upload retry:', refreshError);
-
-              // Reset auth state to clear corrupted/stale tokens
-              await resetSupabaseAuthState();
-
-              throw new Error('Your session is invalid and could not be refreshed. Please log in again.');
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            try {
+              const body = JSON.parse(xhr.responseText);
+              reject(new Error(body.message || `Upload failed (${xhr.status})`));
+            } catch {
+              reject(new Error(`Upload failed (${xhr.status}): ${xhr.statusText}`));
             }
-            console.log('Session refreshed successfully during upload retry');
-          } catch (refreshErr) {
-            console.error('Error while attempting session refresh during upload retry:', refreshErr);
-
-            // Reset auth state before re-throwing
-            await resetSupabaseAuthState();
-
-            break;
           }
-        }
+        };
+        xhr.onerror = () => reject(new Error('Network error during upload. Check your connection and try again.'));
+        xhr.ontimeout = () => reject(new Error(`Upload timed out after ${Math.round(timeoutMs / 1000)}s. Your connection may be slow — please try again.`));
+
+        xhr.send(processedFile);
+      });
+
+    // 2 attempts: 60 s then 90 s. XHR actually cancels on timeout — no zombie-request stacking.
+    const maxAttempts = 2;
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const timeoutMs = attempt === 1 ? 60_000 : 90_000;
+      const useUpsert = attempt > 1;
+      console.log(`XHR upload attempt ${attempt}/${maxAttempts} — timeout ${timeoutMs / 1000}s, upsert=${useUpsert}`);
+      try {
+        await uploadViaXHR(useUpsert, timeoutMs);
+        lastError = null;
+        break; // success
       } catch (err: any) {
-        console.error(`Attempt ${attempt} for ${fileName} failed:`, err);
-        error = err;
-      }
-
-      if (attempt < maxAttempts) {
-        const backoffMs = 250 * Math.pow(2, attempt - 1);
-        console.log(`Waiting ${backoffMs}ms before retrying ${fileName}`);
-        await new Promise(res => setTimeout(res, backoffMs));
+        lastError = err instanceof Error ? err : new Error(String(err?.message ?? err));
+        console.error(`XHR upload attempt ${attempt} failed:`, lastError.message);
+        if (attempt < maxAttempts) {
+          await new Promise(r => setTimeout(r, 1500));
+        }
       }
     }
 
-    console.log('Upload response - data:', data, 'error:', error);
+    if (lastError) throw lastError;
 
-    if (error) {
-      // Bubble up the underlying Supabase error so callers (UI) see the real reason
-      console.error('Supabase upload error:', error);
-      throw error;
-    }
-
-    // Get public URL
+    // Get public URL (local computation — no network call)
     const { data: { publicUrl } } = supabase.storage
       .from(BUCKET_NAME)
       .getPublicUrl(fileName);
@@ -342,16 +302,14 @@ export const uploadImage = async (
   } catch (error: any) {
     console.error('Error uploading image:', error);
 
-    // Convert some known issues into clearer messages, then rethrow so callers see the reason
     let errorMessage = error.message || 'Failed to upload image';
 
-    // Check for auth/session errors first
     if (errorMessage.includes('JWT') || errorMessage.includes('session') || errorMessage.includes('expired') || errorMessage.includes('401')) {
       errorMessage = 'Your session has expired. Please log in again to continue uploading.';
-    } else if (errorMessage.includes('timeout')) {
-      errorMessage = 'Upload timed out. The file may be too large or your connection is slow. Please try again with smaller images.';
+    } else if (errorMessage.includes('timed out') || errorMessage.includes('timeout')) {
+      errorMessage = 'Upload timed out. Try again — if it keeps failing, use a smaller photo.';
     } else if (errorMessage.includes('not found')) {
-      errorMessage = `Storage bucket \"${BUCKET_NAME}\" not found. Please contact support.`;
+      errorMessage = `Storage bucket "${BUCKET_NAME}" not found. Please contact support.`;
     }
 
     throw new Error(errorMessage);
