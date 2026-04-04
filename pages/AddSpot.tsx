@@ -208,10 +208,35 @@ const AddSpot: React.FC = () => {
 
       // Upload images to Supabase Storage
       const imageFiles = uploadedImages.map(img => img.file);
+
+      // Get the auth token ONCE here with a generous timeout, then pass it
+      // directly to the upload functions so they never call getSession() themselves.
+      // getSession() can make a slow network call on mobile (token refresh) — doing
+      // it once here is safer than doing it inside each file's upload loop.
+      let accessToken: string | undefined;
+      try {
+        const sessionResult = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('session_timeout')), 20000)
+          )
+        ]);
+        accessToken = sessionResult.data.session?.access_token ?? undefined;
+      } catch (err: any) {
+        if (err?.message === 'session_timeout') {
+          throw new Error('Could not connect to the authentication server. Please check your internet connection and try again.');
+        }
+        throw err;
+      }
+
+      if (!accessToken) {
+        throw new Error('Could not authenticate. Please log out and log back in, then try again.');
+      }
+
       setUploadProgress({ completed: 0, total: imageFiles.length });
       const uploadResult = await uploadImages(imageFiles, 'shops', (completed, total) => {
         setUploadProgress({ completed, total });
-      });
+      }, accessToken);
 
       console.log('Upload result:', uploadResult);
 

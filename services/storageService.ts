@@ -156,7 +156,8 @@ const convertHEICtoJPEG = async (file: File): Promise<File> => {
  */
 export const uploadImage = async (
   file: File,
-  folder: string = 'shops'
+  folder: string = 'shops',
+  accessToken?: string   // pre-fetched token: skips getSession() call entirely
 ): Promise<{ success: boolean; url?: string; error?: any }> => {
   console.log('uploadImage called for file:', file.name, 'size:', file.size, 'type:', file.type);
   
@@ -195,45 +196,21 @@ export const uploadImage = async (
   console.log('Uploading to:', fileName);
 
   try {
-    // Check if user is authenticated — wrap with timeout because getSession() can
-    // make a network call on mobile (token refresh) with no built-in timeout.
-    const sessionTimeout = <T>(promise: Promise<T>): Promise<T> =>
-      Promise.race([
-        promise,
-        new Promise<never>((_, reject) =>
+    // Use the pre-fetched token if provided; otherwise fetch session (with 5s timeout as fallback)
+    let sessionToken = accessToken;
+    if (!sessionToken) {
+      const sessionTimeout = <T>(p: Promise<T>): Promise<T> =>
+        Promise.race([p, new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error('Auth check timed out. Please check your connection.')), 5000)
-        )
-      ]);
+        )]);
+      const { data: { session: fetchedSession } } = await sessionTimeout(supabase.auth.getSession());
+      sessionToken = fetchedSession?.access_token;
+    }
 
-    let { data: { session }, error: sessionError } = await sessionTimeout(supabase.auth.getSession());
-    
-    if (sessionError || !session) {
-      console.error('No active session found for upload:', sessionError);
+    if (!sessionToken) {
       await resetSupabaseAuthState();
       throw new Error('Your session has expired or is invalid. Please log in again to continue.');
     }
-    
-    // Check if token is about to expire and refresh if needed
-    const expiresAt = session.expires_at ? session.expires_at * 1000 : 0;
-    const now = Date.now();
-    
-    if (expiresAt < now) {
-      console.log('Session expired, attempting to refresh...');
-      const { data: { session: refreshedSession }, error: refreshError } = await sessionTimeout(
-        supabase.auth.refreshSession()
-      );
-      
-      if (refreshError || !refreshedSession) {
-        console.error('Failed to refresh session:', refreshError);
-        await resetSupabaseAuthState();
-        throw new Error('Your session has expired and could not be refreshed. Please log in again to continue.');
-      }
-      
-      session = refreshedSession;
-      console.log('Session refreshed successfully');
-    }
-    
-    console.log('User authenticated, session valid until:', new Date(expiresAt));
 
     // --- XHR-based upload (more reliable on iOS Safari than fetch) ---
     // fetch() + Promise.race leaves zombie requests running on timeout (does NOT cancel the
@@ -245,7 +222,7 @@ export const uploadImage = async (
       new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open(useUpsert ? 'PUT' : 'POST', `${supabaseUrl}/storage/v1/object/${BUCKET_NAME}/${fileName}`);
-        xhr.setRequestHeader('Authorization', `Bearer ${session!.access_token}`);
+        xhr.setRequestHeader('Authorization', `Bearer ${sessionToken}`);
         xhr.setRequestHeader('apikey', supabaseAnonKey);
         xhr.setRequestHeader('Content-Type', processedFile.type || 'application/octet-stream');
         xhr.setRequestHeader('x-upsert', useUpsert ? 'true' : 'false');
@@ -327,7 +304,8 @@ export const uploadImage = async (
 export const uploadImages = async (
   files: File[],
   folder: string = 'shops',
-  onProgress?: (completed: number, total: number, fileName?: string) => void
+  onProgress?: (completed: number, total: number, fileName?: string) => void,
+  accessToken?: string  // pre-fetched token passed through to each uploadImage call
 ): Promise<{ success: boolean; urls?: string[]; error?: any }> => {
   console.log(`Starting sequential upload of ${files.length} files...`);
 
@@ -339,7 +317,7 @@ export const uploadImages = async (
     console.log(`Uploading file ${i + 1}/${files.length}: ${file.name}`);
 
     // uploadImage will throw on any error — bubble that up so callers can surface it in UI
-    const result = await uploadImage(file, folder);
+    const result = await uploadImage(file, folder, accessToken);
 
     if (!result || !result.success || !result.url) {
       // Defensive: If uploadImage returns a non-throwing error result, convert to thrown Error
