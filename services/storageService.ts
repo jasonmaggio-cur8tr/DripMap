@@ -195,15 +195,21 @@ export const uploadImage = async (
   console.log('Uploading to:', fileName);
 
   try {
-    // Check if user is authenticated and refresh if needed
-    let { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    // Check if user is authenticated — wrap with timeout because getSession() can
+    // make a network call on mobile (token refresh) with no built-in timeout.
+    const sessionTimeout = <T>(promise: Promise<T>): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Auth check timed out. Please check your connection.')), 5000)
+        )
+      ]);
+
+    let { data: { session }, error: sessionError } = await sessionTimeout(supabase.auth.getSession());
     
     if (sessionError || !session) {
       console.error('No active session found for upload:', sessionError);
-      
-      // Reset auth state to clear corrupted localStorage tokens
       await resetSupabaseAuthState();
-      
       throw new Error('Your session has expired or is invalid. Please log in again to continue.');
     }
     
@@ -213,14 +219,13 @@ export const uploadImage = async (
     
     if (expiresAt < now) {
       console.log('Session expired, attempting to refresh...');
-      const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+      const { data: { session: refreshedSession }, error: refreshError } = await sessionTimeout(
+        supabase.auth.refreshSession()
+      );
       
       if (refreshError || !refreshedSession) {
         console.error('Failed to refresh session:', refreshError);
-        
-        // Reset auth state to clear corrupted/stale tokens
         await resetSupabaseAuthState();
-        
         throw new Error('Your session has expired and could not be refreshed. Please log in again to continue.');
       }
       
