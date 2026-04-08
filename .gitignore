@@ -31,3 +31,5 @@ dist-ssr
 
 # Vercel
 .vercel
+docs_shared
+supabase

@@ -4,7 +4,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 // Helper to safely access environment variables
 const getEnv = (key: string) => {
   let val = '';
-  
+
   // Try import.meta.env first (Vite Standard)
   try {
     // @ts-ignore
@@ -12,7 +12,7 @@ const getEnv = (key: string) => {
       // @ts-ignore
       val = import.meta.env[key];
     }
-  } catch (e) {}
+  } catch (e) { }
 
   // If not found, try process.env (Fallback)
   if (!val) {
@@ -20,9 +20,9 @@ const getEnv = (key: string) => {
       if (typeof process !== 'undefined' && process.env) {
         val = process.env[key];
       }
-    } catch (e) {}
+    } catch (e) { }
   }
-  
+
   return val || '';
 };
 
@@ -30,11 +30,11 @@ const supabaseUrl = getEnv('VITE_SUPABASE_URL');
 const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY');
 
 // Check if we have valid configuration (not empty and not the placeholder default)
-const isConfigured = supabaseUrl && 
-                     supabaseAnonKey && 
-                     supabaseUrl !== 'your-supabase-url-here' &&
-                     supabaseAnonKey !== 'your-supabase-anon-key-here' &&
-                     supabaseUrl.startsWith('http');
+const isConfigured = supabaseUrl &&
+  supabaseAnonKey &&
+  supabaseUrl !== 'your-supabase-url-here' &&
+  supabaseAnonKey !== 'your-supabase-anon-key-here' &&
+  supabaseUrl.startsWith('http');
 
 if (!isConfigured) {
   console.warn('Supabase Environment Variables missing or using placeholders. Using Mock Client for Demo.');
@@ -44,36 +44,36 @@ if (!isConfigured) {
 const mockClient = {
   auth: {
     getSession: async () => ({ data: { session: null }, error: null }),
-    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => { } } } }),
     signUp: async () => {
-        console.warn("Mock signup: Please configure Supabase credentials in .env");
-        return { 
-          data: { user: null, session: null }, 
-          error: { message: 'Supabase not configured. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env file' } 
-        };
+      console.warn("Mock signup: Please configure Supabase credentials in .env");
+      return {
+        data: { user: null, session: null },
+        error: { message: 'Supabase not configured. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env file' }
+      };
     },
     signInWithPassword: async () => {
-        console.warn("Mock login: Please configure Supabase credentials in .env");
-        return { 
-          data: { user: null, session: null }, 
-          error: { message: 'Supabase not configured. Please add credentials to .env file' } 
-        };
+      console.warn("Mock login: Please configure Supabase credentials in .env");
+      return {
+        data: { user: null, session: null },
+        error: { message: 'Supabase not configured. Please add credentials to .env file' }
+      };
     },
     signInWithOtp: async () => {
-        console.log("Mock Login: Check console for 'success'");
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return { data: {}, error: null };
+      console.log("Mock Login: Check console for 'success'");
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return { data: {}, error: null };
     },
     signOut: async () => {
-        return { error: null };
+      return { error: null };
     },
   },
   from: (table: string) => ({
     select: () => ({
-        eq: () => ({
-            single: async () => ({ data: null, error: null }),
-            maybeSingle: async () => ({ data: null, error: null }),
-        })
+      eq: () => ({
+        single: async () => ({ data: null, error: null }),
+        maybeSingle: async () => ({ data: null, error: null }),
+      })
     }),
     insert: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }),
     update: () => ({ eq: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }) }),
@@ -86,43 +86,66 @@ const mockClient = {
     }),
     getBucket: async () => ({ data: null, error: { message: 'not found' } }),
     createBucket: async () => ({ error: { message: 'Storage not configured' } })
+  },
+  functions: {
+    invoke: async () => ({
+      data: null,
+      error: { message: 'Supabase not configured. Please add credentials to .env file' }
+    })
   }
 };
 
 // Export real client if configured, otherwise export mock cast as any to satisfy types
-export const supabase = (isConfigured 
+export const supabase = (isConfigured
   ? createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    },
+    global: {
+      headers: {
+        'x-client-info': 'dripmap-web'
       },
-      global: {
-        headers: {
-          'x-client-info': 'dripmap-web'
-        },
-        fetch: (url, options = {}) => {
-          // Wrap fetch to add better error logging for QUIC protocol errors
-          return fetch(url, options).catch((error) => {
+      fetch: (url, options = {}) => {
+        // Add a timeout to prevent indefinite hangs on mobile when waking from sleep
+        // Give storage operations much longer to complete (120s) compared to DB queries (15s)
+        const isStorageUpload = typeof url === 'string' && url.includes('/storage/v1/object/');
+        const timeoutInterval = isStorageUpload ? 120000 : 15000;
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutInterval);
+
+        return fetch(url, { ...options, signal: controller.signal })
+          .then(res => {
+            clearTimeout(timeoutId);
+            return res;
+          })
+          .catch((error) => {
+            clearTimeout(timeoutId);
+            const isTimeout = error.name === 'AbortError';
             console.error('[supabase] Fetch error:', {
               url,
-              error: error.message || String(error),
+              error: isTimeout ? 'Request Timeout' : error.message || String(error),
               type: error.name,
               stack: error.stack
             });
-            
+
+            if (isTimeout) {
+              throw new Error('Network timeout. Please check your connection and try again.');
+            }
             // Re-throw to let retry logic handle it
             throw error;
           });
-        }
-      },
-      db: {
-        schema: 'public'
-      },
-      realtime: {
-        params: {
-          eventsPerSecond: 10
-        }
       }
-    })
+    },
+    db: {
+      schema: 'public'
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 10
+      }
+    }
+  })
   : mockClient) as any as SupabaseClient;

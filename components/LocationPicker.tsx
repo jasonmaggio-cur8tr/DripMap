@@ -1,14 +1,8 @@
-
-import React, { useEffect, useRef, useState } from 'react';
-import Button from './Button';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import MapboxMap, { Marker, NavigationControl } from 'react-map-gl/mapbox';
+import { SearchBox } from '@mapbox/search-js-react';
 import { useToast } from '../context/ToastContext';
-
-// Declare Leaflet types globally
-declare global {
-  interface Window {
-    L: any;
-  }
-}
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface LocationValue {
   lat: number;
@@ -23,145 +17,130 @@ interface LocationPickerProps {
 }
 
 const LocationPicker: React.FC<LocationPickerProps> = ({ value, onLocationSelect, searchAddress }) => {
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const markerRef = useRef<any>(null);
-  const [isSearching, setIsSearching] = useState(false);
+  const mapRef = useRef<any>(null);
   const { toast } = useToast();
 
-  // Initialize Map
-  useEffect(() => {
-    if (!mapContainerRef.current || mapInstanceRef.current) return;
+  const [viewState, setViewState] = useState({
+    longitude: value?.lng || -122.4194,
+    latitude: value?.lat || 37.7749,
+    zoom: value ? 14 : 10
+  });
 
-    const L = window.L;
-    if (!L) return;
-
-    // Default to SF or user's current location if possible (omitted for simplicity)
-    const defaultLat = 37.7749;
-    const defaultLng = -122.4194;
-
-    const map = L.map(mapContainerRef.current, {
-      zoomControl: false,
-    }).setView([defaultLat, defaultLng], 13);
-
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap &copy; CARTO',
-      subdomains: 'abcd',
-      maxZoom: 20
-    }).addTo(map);
-    
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-    // Click handler
-    map.on('click', async (e: any) => {
-      const { lat, lng } = e.latlng;
-      updateMarker(lat, lng);
-      
-      // Simple reverse geocode attempt (optional, can skip to save API calls)
-      onLocationSelect({ lat, lng });
-    });
-
-    mapInstanceRef.current = map;
-
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    };
-  }, []);
-
-  // Update marker when value changes externally (e.g. via search)
   useEffect(() => {
     if (value && value.lat && value.lng) {
-        updateMarker(value.lat, value.lng, false); // Don't trigger callback to avoid loop
+      setViewState({
+        longitude: value.lng,
+        latitude: value.lat,
+        zoom: 15
+      });
+      mapRef.current?.flyTo({ center: [value.lng, value.lat], zoom: 15 });
     }
-  }, [value]);
+  }, [value, value?.lat, value?.lng]);
 
-  const updateMarker = (lat: number, lng: number, triggerCallback = true) => {
-    const L = window.L;
-    if (!mapInstanceRef.current || !L) return;
+  useEffect(() => {
+    // If the user hasn't typed enough, or if we already have a precise pin for this exact address, skip.
+    if (!searchAddress || searchAddress.length < 8) return;
 
-    if (markerRef.current) {
-        markerRef.current.setLatLng([lat, lng]);
-    } else {
-        const customIcon = L.divIcon({
-            className: 'custom-picker-icon',
-            html: `<div class="w-8 h-8 bg-coffee-900 rounded-full border-4 border-volt-400 shadow-xl flex items-center justify-center"><i class="fas fa-map-pin text-volt-400 text-[10px]"></i></div>`,
-            iconSize: [32, 32],
-            iconAnchor: [16, 16]
+    const timeoutId = setTimeout(async () => {
+      try {
+        const token = import.meta.env.VITE_MAPBOX_TOKEN;
+        if (!token) return;
+
+        const res = await fetch(`https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(searchAddress)}&access_token=${token}&limit=1`);
+        const data = await res.json();
+        const feature = data.features?.[0];
+        if (feature) {
+          const [lng, lat] = feature.geometry.coordinates;
+          // Only auto-pin if it's a significant move or we haven't pinned yet
+          if (!value || (Math.abs(value.lat - lat) > 0.001 || Math.abs(value.lng - lng) > 0.001)) {
+            setViewState({ longitude: lng, latitude: lat, zoom: 15 });
+            mapRef.current?.flyTo({ center: [lng, lat], zoom: 15 });
+            onLocationSelect({ lat, lng });
+          }
+        }
+      } catch (err) {
+        console.error("Geocoding failed", err);
+      }
+    }, 1500); // 1.5s debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [searchAddress]);
+
+  const handleRetrieve = useCallback(
+    (res: any) => {
+      const feature = res.features[0];
+      if (feature) {
+        const [lng, lat] = feature.geometry.coordinates;
+        setViewState({ longitude: lng, latitude: lat, zoom: 15 });
+        onLocationSelect({
+          lat,
+          lng,
+          address: feature.properties.full_address || feature.properties.place_formatted || feature.properties.name
         });
-        markerRef.current = L.marker([lat, lng], { icon: customIcon }).addTo(mapInstanceRef.current);
-    }
-
-    mapInstanceRef.current.setView([lat, lng], 15);
-  };
-
-  const handleSearch = async () => {
-    if (!searchAddress.trim()) {
-        toast.error("Please enter a city or address first.");
-        return;
-    }
-
-    setIsSearching(true);
-    try {
-        // Add limit=1 to be polite to the API
-        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchAddress)}&limit=1`);
-        
-        if (!response.ok) {
-            throw new Error("Network response was not ok");
-        }
-
-        const data = await response.json();
-
-        if (data && data.length > 0) {
-            const result = data[0];
-            const lat = parseFloat(result.lat);
-            const lng = parseFloat(result.lon);
-            
-            updateMarker(lat, lng);
-            onLocationSelect({ 
-                lat, 
-                lng, 
-                address: result.display_name // Update with full formatted address
-            });
-            toast.success("Location found!");
-        } else {
-            toast.error("Location not found. Try a different address.");
-        }
-    } catch (error) {
-        console.error("Geocoding error:", error);
-        toast.error("Could not find location. Please click on the map manually.");
-    } finally {
-        setIsSearching(false);
-    }
-  };
+        toast.success("Location found!");
+      }
+    },
+    [onLocationSelect, toast]
+  );
 
   return (
     <div className="space-y-3">
-        <div className="flex gap-2">
-            <Button 
-                type="button" 
-                onClick={handleSearch} 
-                variant="secondary" 
-                size="sm"
-                isLoading={isSearching}
-                className="w-full"
-            >
-                <i className="fas fa-search-location mr-2"></i> 
-                Find "{searchAddress || '...'}" on Map
-            </Button>
-        </div>
-        <div className="relative w-full h-64 rounded-xl overflow-hidden border-2 border-coffee-100 shadow-inner bg-coffee-50">
-            <div ref={mapContainerRef} className="w-full h-full" />
-            {!value?.lat && (
-                <div className="absolute inset-0 flex items-center justify-center bg-coffee-50/50 pointer-events-none z-[400]">
-                    <span className="bg-white/90 px-3 py-1 rounded text-xs font-bold text-coffee-800 shadow">
-                        Search or click map to pin location
-                    </span>
-                </div>
-            )}
-        </div>
+      <div className="w-full relative z-50">
+        <SearchBox
+          accessToken={import.meta.env.VITE_MAPBOX_TOKEN}
+          options={{
+            language: 'en'
+          }}
+          onRetrieve={handleRetrieve}
+          value={searchAddress}
+          theme={{
+            variables: {
+              fontFamily: 'inherit',
+              unit: '16px',
+              colorText: '#2C1810',
+              colorPrimary: '#3b82f6', // Focus color
+              colorBackground: '#ffffff',
+              colorBackgroundHover: '#f9fafb',
+              borderRadius: '8px',
+              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+            }
+          }}
+        />
+      </div>
+
+      <div className="relative w-full h-64 rounded-xl overflow-hidden border-2 border-coffee-100 shadow-inner bg-coffee-50 z-0">
+        <MapboxMap
+          ref={mapRef}
+          {...viewState}
+          onMove={evt => setViewState(evt.viewState)}
+          mapStyle="mapbox://styles/mapbox/dark-v11"
+          mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN}
+          projection="mercator"
+          style={{ width: '100%', height: '100%' }}
+          onClick={(e) => {
+            const { lng, lat } = e.lngLat;
+            onLocationSelect({ lat, lng });
+          }}
+        >
+          <NavigationControl position="bottom-right" />
+
+          {value?.lat && value?.lng && (
+            <Marker longitude={value.lng} latitude={value.lat} anchor="center">
+              <div className="w-8 h-8 bg-[#2C1810] rounded-full border-4 border-[#a3e635] shadow-xl flex items-center justify-center">
+                <i className="fas fa-map-pin text-[#a3e635] text-[10px]"></i>
+              </div>
+            </Marker>
+          )}
+        </MapboxMap>
+
+        {!value?.lat && (
+          <div className="absolute inset-0 flex items-center justify-center bg-coffee-50/50 pointer-events-none z-[400]">
+            <span className="bg-white/90 px-3 py-1 rounded text-xs font-bold text-coffee-800 shadow">
+              Search or click map to pin location
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

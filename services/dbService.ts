@@ -1,5 +1,5 @@
-import { supabase } from '../lib/supabase';
-import { Shop, User, Review, ClaimRequest, ShopImage } from '../types';
+import { supabase } from "../lib/supabase";
+import { Shop, User, Review, ClaimRequest, ShopImage } from "../types";
 
 // ==================== RETRY UTILITY ====================
 
@@ -11,145 +11,222 @@ const retryWithBackoff = async <T>(
   fn: () => Promise<T>,
   maxRetries: number = 3,
   baseDelay: number = 1000,
-  operationName: string = 'operation'
+  operationName: string = "operation"
 ): Promise<T> => {
   let lastError: any;
-  
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       if (attempt > 0) {
         const delay = baseDelay * Math.pow(2, attempt - 1);
-        console.log(`[dbService] Retry attempt ${attempt}/${maxRetries} for ${operationName} after ${delay}ms delay`);
+        console.log(
+          `[dbService] Retry attempt ${attempt}/${maxRetries} for ${operationName} after ${delay}ms delay`
+        );
         await new Promise(resolve => setTimeout(resolve, delay));
       }
-      
+
       return await fn();
     } catch (error: any) {
       lastError = error;
       const errorMsg = error?.message || error?.details || String(error);
-      
+
       // Check if it's a retryable error (network issues, QUIC protocol errors, etc.)
-      const isRetryable = 
-        errorMsg.includes('Failed to fetch') ||
-        errorMsg.includes('QUIC') ||
-        errorMsg.includes('network') ||
-        errorMsg.includes('timeout') ||
-        errorMsg.includes('ECONNRESET') ||
-        errorMsg.includes('ETIMEDOUT');
-      
+      const isRetryable =
+        errorMsg.includes("Failed to fetch") ||
+        errorMsg.includes("QUIC") ||
+        errorMsg.includes("network") ||
+        errorMsg.includes("timeout") ||
+        errorMsg.includes("ECONNRESET") ||
+        errorMsg.includes("ETIMEDOUT");
+
       if (!isRetryable || attempt === maxRetries) {
-        console.error(`[dbService] ${operationName} failed after ${attempt + 1} attempts:`, error);
+        console.error(
+          `[dbService] ${operationName} failed after ${attempt + 1} attempts:`,
+          error
+        );
         throw error;
       }
-      
-      console.warn(`[dbService] ${operationName} failed (attempt ${attempt + 1}), will retry:`, errorMsg);
+
+      console.warn(
+        `[dbService] ${operationName} failed (attempt ${attempt + 1
+        }), will retry:`,
+        errorMsg
+      );
     }
   }
-  
+
   throw lastError;
 };
 
 // ==================== PROFILES ====================
 
-export const fetchUserProfile = async (userId: string): Promise<User | null> => {
+export const fetchUserProfile = async (
+  userId: string
+): Promise<User | null> => {
   try {
     const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
       .single();
 
     if (error) throw error;
     if (!profile) return null;
 
-    // Fetch saved shops, visited shops, followers, and following
-    const [savedResult, visitedResult, followersResult, followingResult] = await Promise.all([
-      supabase.from('saved_shops').select('shop_id').eq('user_id', userId),
-      supabase.from('visited_shops').select('shop_id').eq('user_id', userId),
-      supabase.from('user_follows').select('follower_id').eq('following_id', userId).then(r => r.error ? { data: [] } : r),
-      supabase.from('user_follows').select('following_id').eq('follower_id', userId).then(r => r.error ? { data: [] } : r)
-    ]);
+    // Fetch saved shops, visited shops, followers, following, drip score, and badges
+    const [savedResult, visitedResult, followersResult, followingResult, scoreResult, badgesResult] =
+      await Promise.all([
+        supabase.from("saved_shops").select("shop_id").eq("user_id", userId),
+        supabase.from("visited_shops").select("shop_id").eq("user_id", userId),
+        supabase
+          .from("user_follows")
+          .select("follower_id")
+          .eq("following_id", userId)
+          .then(r => (r.error ? { data: [] } : r)),
+        supabase
+          .from("user_follows")
+          .select("following_id")
+          .eq("follower_id", userId)
+          .then(r => (r.error ? { data: [] } : r)),
+        supabase
+          .from("user_drip_scores")
+          .select("total_score")
+          .eq("user_id", userId)
+          .single()
+          .then(r => (r.error ? { data: null } : r)),
+        supabase
+          .from("leaderboard_history")
+          .select("id, month, year, title, rank")
+          .eq("user_id", userId)
+          .order("year", { ascending: false })
+          .order("month", { ascending: false })
+          .then(r => (r.error ? { data: [] } : r)),
+      ]);
 
     return {
       id: profile.id,
       username: profile.username,
       email: profile.email,
       avatarUrl: profile.avatar_url,
-      bio: profile.bio || '',
+      bio: profile.bio || "",
+      isAdmin: profile.is_admin || false,
       socialLinks: {
         instagram: profile.instagram,
-        x: profile.x
+        x: profile.x,
       },
       isBusinessOwner: profile.is_business_owner,
-      isAdmin: profile.is_admin || false,
+      isPro: profile.is_pro || false,
+      isDripClubMember: profile.dripclub_member || false,
+      dripClubMemberSince: profile.dripclub_member_since,
       savedShops: savedResult.data?.map(s => s.shop_id) || [],
       visitedShops: visitedResult.data?.map(v => v.shop_id) || [],
       followerIds: followersResult.data?.map(f => f.follower_id) || [],
-      followingIds: followingResult.data?.map(f => f.following_id) || []
+      followingIds: followingResult.data?.map(f => f.following_id) || [],
+      dripScore: scoreResult.data?.total_score || 0,
+      leaderboardBadges: badgesResult.data || [],
     };
   } catch (error) {
-    console.error('Error fetching user profile:', error);
+    console.error("Error fetching user profile:", error);
     return null;
   }
 };
 
-export const fetchUserProfileByUsername = async (username: string): Promise<User | null> => {
+export const fetchUserProfileByUsername = async (
+  username: string
+): Promise<User | null> => {
   try {
     const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .ilike('username', username)
+      .from("profiles")
+      .select("*")
+      .ilike("username", username)
       .single();
 
     if (error) throw error;
     if (!profile) return null;
 
-    // Fetch saved shops, visited shops, followers, and following
-    const [savedResult, visitedResult, followersResult, followingResult] = await Promise.all([
-      supabase.from('saved_shops').select('shop_id').eq('user_id', profile.id),
-      supabase.from('visited_shops').select('shop_id').eq('user_id', profile.id),
-      supabase.from('user_follows').select('follower_id').eq('following_id', profile.id).then(r => r.error ? { data: [] } : r),
-      supabase.from('user_follows').select('following_id').eq('follower_id', profile.id).then(r => r.error ? { data: [] } : r)
-    ]);
+    // Fetch saved shops, visited shops, followers, following, drip score, and badges
+    const [savedResult, visitedResult, followersResult, followingResult, scoreResult, badgesResult] =
+      await Promise.all([
+        supabase
+          .from("saved_shops")
+          .select("shop_id")
+          .eq("user_id", profile.id),
+        supabase
+          .from("visited_shops")
+          .select("shop_id")
+          .eq("user_id", profile.id),
+        supabase
+          .from("user_follows")
+          .select("follower_id")
+          .eq("following_id", profile.id)
+          .then(r => (r.error ? { data: [] } : r)),
+        supabase
+          .from("user_follows")
+          .select("following_id")
+          .eq("follower_id", profile.id)
+          .then(r => (r.error ? { data: [] } : r)),
+        supabase
+          .from("user_drip_scores")
+          .select("total_score")
+          .eq("user_id", profile.id)
+          .single()
+          .then(r => (r.error ? { data: null } : r)),
+        supabase
+          .from("leaderboard_history")
+          .select("id, month, year, title, rank")
+          .eq("user_id", profile.id)
+          .order("year", { ascending: false })
+          .order("month", { ascending: false })
+          .then(r => (r.error ? { data: [] } : r)),
+      ]);
 
     return {
       id: profile.id,
       username: profile.username,
       email: profile.email,
       avatarUrl: profile.avatar_url,
-      bio: profile.bio || '',
+      bio: profile.bio || "",
       socialLinks: {
         instagram: profile.instagram,
-        x: profile.x
+        x: profile.x,
       },
       isBusinessOwner: profile.is_business_owner,
       isAdmin: profile.is_admin || false,
+      isPro: profile.is_pro || false,
+      isDripClubMember: profile.dripclub_member || false,
+      dripClubMemberSince: profile.dripclub_member_since,
       savedShops: savedResult.data?.map(s => s.shop_id) || [],
       visitedShops: visitedResult.data?.map(v => v.shop_id) || [],
       followerIds: followersResult.data?.map(f => f.follower_id) || [],
-      followingIds: followingResult.data?.map(f => f.following_id) || []
+      followingIds: followingResult.data?.map(f => f.following_id) || [],
+      dripScore: scoreResult.data?.total_score || 0,
+      leaderboardBadges: badgesResult.data || [],
     };
   } catch (error) {
-    console.error('Error fetching user profile by username:', error);
+    console.error("Error fetching user profile by username:", error);
     return null;
   }
 };
 
-export const toggleFollowUser = async (followerId: string, followingId: string, isCurrentlyFollowing: boolean) => {
+export const toggleFollowUser = async (
+  followerId: string,
+  followingId: string,
+  isCurrentlyFollowing: boolean
+) => {
   try {
     if (isCurrentlyFollowing) {
       // Unfollow
       const { error } = await supabase
-        .from('user_follows')
+        .from("user_follows")
         .delete()
-        .eq('follower_id', followerId)
-        .eq('following_id', followingId);
+        .eq("follower_id", followerId)
+        .eq("following_id", followingId);
 
       if (error) throw error;
     } else {
       // Follow
       const { error } = await supabase
-        .from('user_follows')
+        .from("user_follows")
         .insert({ follower_id: followerId, following_id: followingId });
 
       if (error) throw error;
@@ -157,35 +234,52 @@ export const toggleFollowUser = async (followerId: string, followingId: string, 
 
     return { success: true };
   } catch (error: any) {
-    console.error('Error toggling follow:', error);
-    return { success: false, error: error.message || 'Failed to follow/unfollow' };
+    console.error("Error toggling follow:", error);
+    return {
+      success: false,
+      error: error.message || "Failed to follow/unfollow",
+    };
   }
-};;
+};
 
-export const updateUserProfile = async (userId: string, updates: {
-  username?: string;
-  bio?: string;
-  avatarUrl?: string;
-  instagram?: string;
-  x?: string;
-}) => {
+export const updateUserProfile = async (
+  userId: string,
+  updates: {
+    username?: string;
+    bio?: string;
+    avatarUrl?: string;
+    instagram?: string;
+    x?: string;
+  }
+) => {
   try {
     const updateData: any = {};
     if (updates.username !== undefined) updateData.username = updates.username;
     if (updates.bio !== undefined) updateData.bio = updates.bio;
-    if (updates.avatarUrl !== undefined) updateData.avatar_url = updates.avatarUrl;
-    if (updates.instagram !== undefined) updateData.instagram = updates.instagram;
+    if (updates.avatarUrl !== undefined)
+      updateData.avatar_url = updates.avatarUrl;
+    if (updates.instagram !== undefined)
+      updateData.instagram = updates.instagram;
     if (updates.x !== undefined) updateData.x = updates.x;
-    
+
     const { error } = await supabase
-      .from('profiles')
+      .from("profiles")
       .update(updateData)
-      .eq('id', userId);
+      .eq("id", userId);
 
     if (error) throw error;
+
+    // Award Gamification Points for Profile Completion
+    if (updates.bio) {
+      await awardPoints(userId, 'profile_bio', 10);
+    }
+    if (updates.avatarUrl) {
+      await awardPoints(userId, 'profile_avatar', 10);
+    }
+
     return { success: true };
   } catch (error) {
-    console.error('Error updating profile:', error);
+    console.error("Error updating profile:", error);
     return { success: false, error };
   }
 };
@@ -194,56 +288,295 @@ export const updateUserProfile = async (userId: string, updates: {
 
 export const fetchShops = async (): Promise<Shop[]> => {
   try {
-    return await retryWithBackoff(async () => {
-      const { data: shops, error } = await supabase
-        .from('shops')
-        .select(`
+    return await retryWithBackoff(
+      async () => {
+        const { data: shops, error } = await supabase
+          .from("shops")
+          .select(
+            `
           *,
           shop_images(*),
-          reviews(*, profiles(username, avatar_url))
-        `)
-        .order('created_at', { ascending: false });
+          reviews(*, profiles(username, avatar_url)),
+          experience_logs(*, profiles:profiles!experience_logs_user_id_fkey(username, avatar_url)),
+          shop_aggregates(drip_score)
+        `
+          )
+          .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      if (!shops) return [];
+        if (error) throw error;
+        if (!shops) return [];
 
-      return shops.map(shop => ({
-        id: shop.id,
-        name: shop.name,
-        description: shop.description || '',
-        location: {
-          lat: parseFloat(shop.lat),
-          lng: parseFloat(shop.lng),
-          address: shop.address,
-          city: shop.city,
-          state: shop.state
-        },
-        gallery: shop.shop_images?.map((img: any) => ({
+        return shops.map(shop => ({
+          id: shop.id,
+          slug: shop.slug, // Map slug
+          name: shop.name,
+          description: shop.description || "",
+          location: {
+            lat: parseFloat(shop.lat),
+            lng: parseFloat(shop.lng),
+            address: shop.address,
+            city: shop.city,
+            state: shop.state,
+            country: shop.country || '',
+          },
+          openHours: shop.open_hours, // Map open_hours properly
+          gallery:
+            (shop.shop_images || []).map((img: any) => ({
+              id: img.id,
+              url: img.url,
+              type: img.type,
+              caption: img.caption,
+              sortOrder: img.sort_order || 0,
+            })).sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0)),
+          vibes: shop.vibes || [],
+          cheekyVibes: shop.cheeky_vibes || [],
+          rating: parseFloat(shop.rating) || 0,
+          reviewCount: shop.review_count || 0,
+          reviews:
+            shop.reviews?.map((r: any) => ({
+              id: r.id,
+              userId: r.user_id,
+              username: r.profiles?.username || "Anonymous",
+              avatarUrl:
+                r.profiles?.avatar_url ||
+                `https://ui-avatars.com/api/?name=${r.profiles?.username || "User"
+                }&background=random`,
+              rating: r.rating,
+              comment: r.comment || "",
+              date: new Date(r.created_at).toLocaleDateString(),
+            })) || [],
+          experienceLogs:
+            shop.experience_logs?.map((l: any) => ({
+              id: l.id,
+              shopId: l.shop_id,
+              userId: l.user_id,
+              userName: l.profiles?.username || "Drip Explorer",
+              userAvatar: l.profiles?.avatar_url,
+              overallQuality: l.overall_quality,
+              bringFriendScore: l.bring_friend_score,
+              vibeEnergy: l.vibe_energy,
+              coffeeStyle: l.coffee_style,
+              specialtyDrink: l.specialty_drink,
+              matchaProfile: l.matcha_profile,
+              pastryCraft: l.pastry_craft,
+              parkingEase: l.parking_ease,
+              laptopFriendly: l.laptop_friendly,
+              quickTake: l.quick_take,
+              createdAt: l.created_at,
+              updatedAt: l.updated_at,
+            })).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) || [],
+          isClaimed: shop.is_claimed,
+          claimedBy: shop.claimed_by,
+          stampCount: shop.stamp_count || 0,
+          subscriptionTier: shop.subscription_tier || 'free',
+          subscriptionStatus: shop.subscription_status || 'inactive',
+          proPlusDiscountEnabled: shop.pro_plus_discount_enabled || false,
+          subscriptionCurrentPeriodEnd: shop.subscription_current_period_end,
+          cancelAtPeriodEnd: shop.cancel_at_period_end || false,
+          canceledAt: shop.canceled_at,
+          // Note: stripeCustomerId and stripeSubscriptionId are fetched separately
+          // via subscriptionService.getShopSubscription() when needed for billing
+
+          // PRO Features
+          brandId: shop.brand_id,
+          locationName: shop.location_name,
+          customVibes: shop.custom_vibes || [],
+          spotifyPlaylistUrl: shop.spotify_playlist_url,
+          websiteUrl: shop.website_url,
+          mapsUrl: shop.maps_url,
+          onlineOrderUrl: shop.online_order_url,
+
+          // Happening Now
+          happeningNow: shop.happening_now_title ? {
+            id: shop.id, // Use shop ID as happening now ID
+            title: shop.happening_now_title,
+            message: shop.happening_now_message,
+            sticker: shop.happening_now_sticker,
+            expiresAt: shop.happening_now_expires_at,
+            createdAt: shop.updated_at || shop.created_at, // Use shop's updated_at
+          } : undefined,
+
+          // Now Brewing
+          currentMenu: shop.current_menu || [],
+
+          // Coffee Tech
+          sourcingInfo: shop.sourcing_info,
+          espressoMachine: shop.espresso_machine,
+          grinderDetails: shop.grinder_details,
+          brewingMethods: shop.brewing_methods || [],
+
+          // Barista Profiles
+          baristas: shop.baristas || [],
+
+          // Specialty Menu
+          specialtyDrinks: shop.specialty_drinks || [],
+
+          // Vegan Options
+          veganFoodOptions: shop.vegan_food_options || false,
+          plantMilks: shop.plant_milks || [],
+          // Map Drip Score
+          dripScore: shop.shop_aggregates?.drip_score,
+        }));
+
+
+      },
+      3,
+      1000,
+      "fetchShops"
+    );
+  } catch (error) {
+    console.error(
+      "[dbService] Error fetching shops (all retries exhausted):",
+      error
+    );
+    return [];
+  }
+};
+
+/**
+ * Fetch a single shop by Slug (or ID fallback)
+ */
+export const fetchShopBySlug = async (slugOrId: string): Promise<Shop | null> => {
+  try {
+    // Try by slug first
+    let { data, error } = await supabase
+      .from("shops")
+      .select(`
+                *,
+                shop_images(*),
+                reviews(*, profiles(username, avatar_url)),
+                experience_logs(*, profiles:profiles!experience_logs_user_id_fkey(username, avatar_url)),
+                shop_aggregates(drip_score)
+            `)
+      .eq("slug", slugOrId)
+      .single();
+
+    if (error && error.code === 'PGRST116') {
+      // Not found by slug, try ID
+      const res = await supabase
+        .from("shops")
+        .select(`
+                    *,
+                    shop_images(*),
+                    reviews(*, profiles(username, avatar_url)),
+                    experience_logs(*, profiles:profiles!experience_logs_user_id_fkey(username, avatar_url)),
+                    shop_aggregates(drip_score)
+                `)
+        .eq("id", slugOrId)
+        .single();
+      data = res.data;
+      error = res.error;
+    }
+
+    if (error) throw error;
+    if (!data) return null;
+
+    // Map data (reusing fetchShops logic structure)
+    const shop = data;
+    return {
+      id: shop.id,
+      slug: shop.slug,
+      name: shop.name,
+      description: shop.description || "",
+      location: {
+        lat: parseFloat(shop.lat),
+        lng: parseFloat(shop.lng),
+        address: shop.address,
+        city: shop.city,
+        state: shop.state,
+        country: shop.country || '',
+      },
+      gallery:
+        (shop.shop_images || []).map((img: any) => ({
+          id: img.id,
           url: img.url,
           type: img.type,
-          caption: img.caption
-        })) || [],
-        vibes: shop.vibes || [],
-        cheekyVibes: shop.cheeky_vibes || [],
-        rating: parseFloat(shop.rating) || 0,
-        reviewCount: shop.review_count || 0,
-        reviews: shop.reviews?.map((r: any) => ({
+          caption: img.caption,
+          sortOrder: img.sort_order || 0,
+        })).sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0)),
+      vibes: shop.vibes || [],
+      cheekyVibes: shop.cheeky_vibes || [],
+      rating: parseFloat(shop.rating) || 0,
+      reviewCount: shop.review_count || 0,
+      reviews:
+        shop.reviews?.map((r: any) => ({
           id: r.id,
           userId: r.user_id,
-          username: r.profiles?.username || 'Anonymous',
-          avatarUrl: r.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${r.profiles?.username || 'User'}&background=random`,
+          username: r.profiles?.username || "Anonymous",
+          avatarUrl: r.profiles?.avatar_url || '',
           rating: r.rating,
-          comment: r.comment || '',
-          date: new Date(r.created_at).toLocaleDateString()
+          comment: r.comment || "",
+          date: new Date(r.created_at).toLocaleDateString(),
         })) || [],
-        isClaimed: shop.is_claimed,
-        claimedBy: shop.claimed_by,
-        stampCount: shop.stamp_count || 0
-      }));
-    }, 3, 1000, 'fetchShops');
-  } catch (error) {
-    console.error('[dbService] Error fetching shops (all retries exhausted):', error);
-    return [];
+
+      experienceLogs:
+        shop.experience_logs?.map((l: any) => ({
+          id: l.id,
+          shopId: l.shop_id,
+          userId: l.user_id,
+          userName: l.profiles?.username || "Drip Explorer",
+          userAvatar: l.profiles?.avatar_url,
+          overallQuality: l.overall_quality,
+          bringFriendScore: l.bring_friend_score,
+          vibeEnergy: l.vibe_energy,
+          coffeeStyle: l.coffee_style,
+          specialtyDrink: l.specialty_drink,
+          matchaProfile: l.matcha_profile,
+          pastryCraft: l.pastry_craft,
+          parkingEase: l.parking_ease,
+          laptopFriendly: l.laptop_friendly,
+          quickTake: l.quick_take,
+          createdAt: l.created_at,
+          updatedAt: l.updated_at,
+        })).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) || [],
+
+      isClaimed: shop.is_claimed || false,
+      claimedBy: shop.claimed_by,
+      stampCount: shop.stamp_count || 0,
+      openHours: shop.open_hours,
+
+      // Pro Fields
+      brandId: shop.brand_id,
+      locationName: shop.location_name,
+      customVibes: shop.custom_vibes || [],
+      spotifyPlaylistUrl: shop.spotify_playlist_url,
+      websiteUrl: shop.website_url,
+      mapsUrl: shop.maps_url,
+      onlineOrderUrl: shop.online_order_url,
+
+      happeningNow: shop.happening_now_title ? {
+        id: shop.id,
+        title: shop.happening_now_title,
+        message: shop.happening_now_message,
+        sticker: shop.happening_now_sticker,
+        expiresAt: shop.happening_now_expires_at,
+        createdAt: shop.updated_at || shop.created_at,
+      } : undefined,
+
+      currentMenu: shop.current_menu || [],
+      sourcingInfo: shop.sourcing_info,
+      espressoMachine: shop.espresso_machine,
+      grinderDetails: shop.grinder_details,
+      brewingMethods: shop.brewing_methods || [],
+      baristas: shop.baristas || [],
+      specialtyDrinks: shop.specialty_drinks || [],
+      veganFoodOptions: shop.vegan_food_options || false,
+      plantMilks: shop.plant_milks || [],
+
+      // Subscription
+      subscriptionTier: shop.subscription_tier || 'free',
+      subscriptionStatus: shop.subscription_status || 'inactive',
+      proPlusDiscountEnabled: shop.pro_plus_discount_enabled || false,
+      subscriptionCurrentPeriodEnd: shop.subscription_current_period_end,
+      cancelAtPeriodEnd: shop.cancel_at_period_end || false,
+      canceledAt: shop.canceled_at,
+
+      // Drip Score
+      dripScore: shop.shop_aggregates?.drip_score,
+    };
+  } catch (e) {
+    console.error("Error fetching shop by slug:", e);
+    return null;
   }
 };
 
@@ -255,23 +588,32 @@ export const createShop = async (shopData: {
   address: string;
   city: string;
   state: string;
+  country?: string;
   vibes: string[];
   cheekyVibes: string[];
-  images: { url: string; type: 'owner' | 'community' }[];
+  brandId?: string;
+  locationName?: string;
+  openHours?: any;
+  images: { url: string; type: "owner" | "community" }[];
 }) => {
   try {
     const { data: shop, error: shopError } = await supabase
-      .from('shops')
+      .from("shops")
       .insert({
         name: shopData.name,
+        slug: shopData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''), // Basic Auto-slug
         description: shopData.description,
         lat: shopData.lat,
         lng: shopData.lng,
         address: shopData.address,
         city: shopData.city,
         state: shopData.state,
+        country: shopData.country,
         vibes: shopData.vibes,
-        cheeky_vibes: shopData.cheekyVibes
+        cheeky_vibes: shopData.cheekyVibes,
+        brand_id: shopData.brandId,
+        location_name: shopData.locationName,
+        open_hours: shopData.openHours,
       })
       .select()
       .single();
@@ -283,25 +625,26 @@ export const createShop = async (shopData: {
       const imageInserts = shopData.images.map(img => ({
         shop_id: shop.id,
         url: img.url,
-        type: img.type
+        type: img.type,
       }));
 
-      await supabase.from('shop_images').insert(imageInserts);
+      await supabase.from("shop_images").insert(imageInserts);
     }
 
     return { success: true, shop };
   } catch (error) {
-    console.error('Error creating shop:', error);
+    console.error("Error creating shop:", error);
     return { success: false, error };
   }
 };
+
 
 /**
  * Add images to an existing shop
  */
 export const addShopImages = async (
-  shopId: string, 
-  images: { url: string; type: 'owner' | 'community' }[]
+  shopId: string,
+  images: { url: string; type: "owner" | "community" }[]
 ) => {
   try {
     if (images.length === 0) return { success: true };
@@ -309,18 +652,75 @@ export const addShopImages = async (
     const imageInserts = images.map(img => ({
       shop_id: shopId,
       url: img.url,
-      type: img.type
+      type: img.type,
     }));
 
-    const { error } = await supabase
-      .from('shop_images')
-      .insert(imageInserts);
+    const { error } = await supabase.from("shop_images").insert(imageInserts).select();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[addShopImages] Database insert error (RLS may be blocking):', error);
+      throw error;
+    }
 
     return { success: true };
   } catch (error) {
-    console.error('Error adding shop images:', error);
+    console.error("Error adding shop images:", error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Delete a shop image
+ */
+export const deleteShopImage = async (imageId: string) => {
+  try {
+    console.log(`[dbService] Attempting to delete image: ${imageId}`);
+    const { error, count } = await supabase
+      .from("shop_images")
+      .delete({ count: 'exact' }) // Request count of deleted rows
+      .eq("id", imageId);
+
+    if (error) {
+      console.error("[dbService] Supabase DELETE error:", error);
+      throw error;
+    }
+
+    if (count === 0) {
+      console.warn(`[dbService] Warning: Delete returned successes but 0 rows were deleted. ID: ${imageId}. RLS may be blocking.`);
+    } else {
+      console.log(`[dbService] Successfully deleted ${count} image(s).`);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting shop image:", error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Reorder shop images
+ */
+export const reorderShopImages = async (
+  shopId: string,
+  orderedImageIds: string[]
+) => {
+  try {
+    // Process updates in batches or individually
+    // Ideally this would be an RPC or a single transaction, but for small lists this is fine
+    const updates = orderedImageIds.map((id, index) =>
+      supabase
+        .from("shop_images")
+        .update({ sort_order: index })
+        .eq("id", id)
+        .eq("shop_id", shopId) // Security check
+    );
+
+    await Promise.all(updates);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error reordering shop images:", error);
     return { success: false, error };
   }
 };
@@ -328,150 +728,407 @@ export const addShopImages = async (
 /**
  * Update shop details
  */
-export const updateShopInDB = async (shopId: string, updates: {
-  name?: string;
-  description?: string;
-  lat?: number;
-  lng?: number;
-  address?: string;
-  city?: string;
-  state?: string;
-  vibes?: string[];
-  cheeky_vibes?: string[];
-  open_hours?: any;
-}) => {
+export const updateShopInDB = async (
+  shopId: string,
+  updates: {
+    name?: string;
+    description?: string;
+    lat?: number;
+    lng?: number;
+    address?: string;
+    city?: string;
+    state?: string;
+    vibes?: string[];
+    cheeky_vibes?: string[];
+    custom_vibes?: string[];
+    open_hours?: any;
+  }
+) => {
   try {
     const { error } = await supabase
-      .from('shops')
+      .from("shops")
       .update(updates)
-      .eq('id', shopId);
+      .eq("id", shopId);
 
     if (error) throw error;
 
     return { success: true };
   } catch (error) {
-    console.error('Error updating shop:', error);
+    console.error("Error updating shop:", error);
+    return { success: false, error };
+  }
+};
+
+// ==================== PRO FEATURES ====================
+
+/**
+ * Update Happening Now status (Digital A-Frame)
+ */
+export const updateHappeningNow = async (
+  shopId: string,
+  status: { title: string; message: string; sticker?: string } | null
+) => {
+  try {
+    const updates = status
+      ? {
+        happening_now_title: status.title,
+        happening_now_message: status.message,
+        happening_now_sticker: status.sticker || null,
+        happening_now_expires_at: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(), // 4 hours
+      }
+      : {
+        happening_now_title: null,
+        happening_now_message: null,
+        happening_now_sticker: null,
+        happening_now_expires_at: null,
+      };
+
+    const { error } = await supabase
+      .from("shops")
+      .update(updates)
+      .eq("id", shopId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating Happening Now:", error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Update Now Brewing menu
+ */
+export const updateNowBrewing = async (
+  shopId: string,
+  menu: Array<{ id: string; type: 'Espresso' | 'Pour Over' | 'Drip' | 'Cold Brew'; roaster: string; beanName: string; notes: string }>
+) => {
+  try {
+    const { error } = await supabase
+      .from("shops")
+      .update({ current_menu: menu })
+      .eq("id", shopId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating Now Brewing menu:", error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Update Coffee Tech info
+ */
+export const updateCoffeeTech = async (
+  shopId: string,
+  data: {
+    sourcingInfo?: string;
+    espressoMachine?: string;
+    grinderDetails?: string;
+    brewingMethods?: string[];
+  }
+) => {
+  try {
+    const { error } = await supabase
+      .from("shops")
+      .update({
+        sourcing_info: data.sourcingInfo || null,
+        espresso_machine: data.espressoMachine || null,
+        grinder_details: data.grinderDetails || null,
+        brewing_methods: data.brewingMethods || [],
+      })
+      .eq("id", shopId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating Coffee Tech:", error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Update Barista Profiles
+ */
+export const updateBaristaProfiles = async (
+  shopId: string,
+  baristas: Array<{ name: string; role: string; bio: string; favoriteOrder: string }>
+) => {
+  try {
+    const { error } = await supabase
+      .from("shops")
+      .update({ baristas })
+      .eq("id", shopId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating Barista Profiles:", error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Update Specialty Menu
+ */
+export const updateSpecialtyMenu = async (
+  shopId: string,
+  drinks: Array<{ name: string; desc: string }>
+) => {
+  try {
+    const { error } = await supabase
+      .from("shops")
+      .update({ specialty_drinks: drinks })
+      .eq("id", shopId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating Specialty Menu:", error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Update Vegan Options
+ */
+export const updateVeganOptions = async (
+  shopId: string,
+  data: {
+    veganFoodOptions: boolean;
+    plantMilks: Array<{ name: string; upcharge: string }>;
+  }
+) => {
+  try {
+    const { error } = await supabase
+      .from("shops")
+      .update({
+        vegan_food_options: data.veganFoodOptions,
+        plant_milks: data.plantMilks,
+      })
+      .eq("id", shopId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating Vegan Options:", error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Update Premium Links
+ */
+export const updatePremiumLinks = async (
+  shopId: string,
+  links: {
+    websiteUrl?: string;
+    mapsUrl?: string;
+    onlineOrderUrl?: string;
+    spotifyPlaylistUrl?: string;
+  }
+) => {
+  try {
+    const { error } = await supabase
+      .from("shops")
+      .update({
+        website_url: links.websiteUrl || null,
+        maps_url: links.mapsUrl || null,
+        online_order_url: links.onlineOrderUrl || null,
+        spotify_playlist_url: links.spotifyPlaylistUrl || null,
+      })
+      .eq("id", shopId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating Premium Links:", error);
     return { success: false, error };
   }
 };
 
 // ==================== REVIEWS ====================
 
-export const addReview = async (shopId: string, userId: string, rating: number, comment: string) => {
+export const addReview = async (
+  shopId: string,
+  userId: string,
+  rating: number,
+  comment: string
+) => {
   try {
-    console.log('Adding review:', { shopId, userId, rating, comment });
-    
     const { data, error } = await supabase
-      .from('reviews')
+      .from("reviews")
       .insert({
         shop_id: shopId,
         user_id: userId,
         rating,
-        comment
+        comment,
       })
       .select()
       .single();
 
     if (error) {
-      console.error('Error inserting review:', error);
+      console.error("[addReview] Error inserting review:", error);
       throw error;
     }
 
-    console.log('Review inserted successfully:', data);
+    // Manually update shop rating and review_count (fallback if DB trigger doesn't exist)
+    try {
+      // Fetch all reviews for this shop to calculate new average
+      const { data: reviews, error: reviewsError } = await supabase
+        .from("reviews")
+        .select("rating")
+        .eq("shop_id", shopId);
 
-    // Calculate new average rating
-    const { data: allReviews, error: reviewsError } = await supabase
-      .from('reviews')
-      .select('rating')
-      .eq('shop_id', shopId);
+      if (reviewsError) {
+        console.error("[addReview] Error fetching reviews for rating calc:", reviewsError);
+      } else if (reviews && reviews.length > 0) {
+        const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+        const reviewCount = reviews.length;
 
-    if (reviewsError) {
-      console.error('Error fetching reviews for rating calculation:', reviewsError);
-      throw reviewsError;
-    }
+        const { error: updateError } = await supabase
+          .from("shops")
+          .update({
+            rating: parseFloat(avgRating.toFixed(2)),
+            review_count: reviewCount
+          })
+          .eq("id", shopId);
 
-    console.log('All reviews for shop:', allReviews);
-
-    if (allReviews && allReviews.length > 0) {
-      const avgRating = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
-      console.log('Calculated average rating:', avgRating, 'from', allReviews.length, 'reviews');
-      
-      // Update shop's rating and review count
-      const { error: updateError } = await supabase
-        .from('shops')
-        .update({
-          rating: avgRating,
-          review_count: allReviews.length
-        })
-        .eq('id', shopId);
-
-      if (updateError) {
-        console.error('Error updating shop rating:', updateError);
-        throw updateError;
+        if (updateError) {
+          console.error("[addReview] Error updating shop rating/count (RLS may block this):", updateError);
+        }
       }
-
-      console.log('Shop rating updated successfully');
+    } catch (calcError) {
+      console.error("[addReview] Error in rating calculation:", calcError);
     }
 
     return { success: true, review: data };
   } catch (error) {
-    console.error('Error adding review:', error);
+    console.error("[addReview] Error adding review:", error);
     return { success: false, error };
   }
 };
 
 // ==================== SAVED SHOPS ====================
 
-export const toggleSavedShop = async (userId: string, shopId: string, isSaved: boolean) => {
+export const toggleSavedShop = async (
+  userId: string,
+  shopId: string,
+  isSaved: boolean
+) => {
   try {
     if (isSaved) {
       // Remove from saved
       const { error } = await supabase
-        .from('saved_shops')
+        .from("saved_shops")
         .delete()
-        .eq('user_id', userId)
-        .eq('shop_id', shopId);
+        .eq("user_id", userId)
+        .eq("shop_id", shopId);
 
       if (error) throw error;
     } else {
       // Add to saved
       const { error } = await supabase
-        .from('saved_shops')
+        .from("saved_shops")
         .insert({ user_id: userId, shop_id: shopId });
 
       if (error) throw error;
+
+      // Award Gamification Points for Saving a Shop
+      await awardPoints(userId, 'save_shop', 5, shopId);
     }
     return { success: true };
   } catch (error) {
-    console.error('Error toggling saved shop:', error);
+    console.error("Error toggling saved shop:", error);
     return { success: false, error };
   }
 };
 
 // ==================== VISITED SHOPS ====================
 
-export const toggleVisitedShop = async (userId: string, shopId: string, isVisited: boolean) => {
+export const toggleVisitedShop = async (
+  userId: string,
+  shopId: string,
+  isVisited: boolean
+) => {
   try {
+
     if (isVisited) {
       // Remove from visited
       const { error } = await supabase
-        .from('visited_shops')
+        .from("visited_shops")
         .delete()
-        .eq('user_id', userId)
-        .eq('shop_id', shopId);
+        .eq("user_id", userId)
+        .eq("shop_id", shopId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("[toggleVisitedShop] Error deleting from visited_shops:", error);
+        throw error;
+      }
+
+      // Decrement stamp_count on the shop
+      const { data: shop, error: fetchError } = await supabase
+        .from("shops")
+        .select("stamp_count")
+        .eq("id", shopId)
+        .single();
+
+      if (fetchError) {
+        console.error("[toggleVisitedShop] Error fetching shop stamp_count:", fetchError);
+      }
+
+      if (shop) {
+        const newCount = Math.max(0, (shop.stamp_count || 0) - 1);
+        const { error: updateError } = await supabase
+          .from("shops")
+          .update({ stamp_count: newCount })
+          .eq("id", shopId);
+
+        if (updateError) {
+          console.error("[toggleVisitedShop] Error updating stamp_count (RLS may block this):", updateError);
+        }
+      }
     } else {
       // Add to visited
       const { error } = await supabase
-        .from('visited_shops')
+        .from("visited_shops")
         .insert({ user_id: userId, shop_id: shopId });
 
-      if (error) throw error;
+      if (error) {
+        console.error("[toggleVisitedShop] Error inserting to visited_shops:", error);
+        throw error;
+      }
+
+      // Award Gamification Points for Passport Stamp
+      await awardPoints(userId, 'shop_checkin', 10, shopId);
+
+      // Increment stamp_count on the shop
+      const { data: shop, error: fetchError } = await supabase
+        .from("shops")
+        .select("stamp_count")
+        .eq("id", shopId)
+        .single();
+
+      if (fetchError) {
+        console.error("[toggleVisitedShop] Error fetching shop stamp_count:", fetchError);
+      }
+
+      if (shop) {
+        const newCount = (shop.stamp_count || 0) + 1;
+        const { error: updateError } = await supabase
+          .from("shops")
+          .update({ stamp_count: newCount })
+          .eq("id", shopId);
+
+        if (updateError) {
+          console.error("[toggleVisitedShop] Error updating stamp_count (RLS may block this):", updateError);
+        }
+      }
     }
     return { success: true };
   } catch (error) {
-    console.error('Error toggling visited shop:', error);
+    console.error("Error toggling visited shop:", error);
     return { success: false, error };
   }
 };
@@ -487,13 +1144,13 @@ export const submitClaimRequest = async (request: {
 }) => {
   try {
     const { data, error } = await supabase
-      .from('claim_requests')
+      .from("claim_requests")
       .insert({
         shop_id: request.shopId,
         user_id: request.userId,
         business_email: request.businessEmail,
         role: request.role,
-        social_link: request.socialLink
+        social_link: request.socialLink,
       })
       .select()
       .single();
@@ -501,7 +1158,7 @@ export const submitClaimRequest = async (request: {
     if (error) throw error;
     return { success: true, request: data };
   } catch (error) {
-    console.error('Error submitting claim request:', error);
+    console.error("Error submitting claim request:", error);
     return { success: false, error };
   }
 };
@@ -509,59 +1166,771 @@ export const submitClaimRequest = async (request: {
 export const fetchClaimRequests = async () => {
   try {
     const { data, error } = await supabase
-      .from('claim_requests')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .from("claim_requests")
+      .select("*")
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('Error fetching claim requests:', error);
+    console.error("Error fetching claim requests:", error);
     return [];
   }
 };
 
-export const approveClaimRequest = async (requestId: string) => {
+export const fetchUserClaimRequests = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("claim_requests")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching user claim requests:", error);
+    return [];
+  }
+};
+
+export const markClaimRequest = async (
+  requestId: string,
+  status: "approved" | "rejected"
+) => {
   try {
     // Get the request details
     const { data: request, error: fetchError } = await supabase
-      .from('claim_requests')
-      .select('*')
-      .eq('id', requestId)
+      .from("claim_requests")
+      .select("*")
+      .eq("id", requestId)
       .single();
 
     if (fetchError) throw fetchError;
 
     // Update request status
-    const { error: updateError } = await supabase
-      .from('claim_requests')
-      .update({ status: 'approved' })
-      .eq('id', requestId);
+    const { data: updateData, error: updateError } = await supabase
+      .from("claim_requests")
+      .update({ status: status })
+      .eq("id", requestId)
+      .select();
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error("Error updating claim request status:", updateError);
+      throw updateError;
+    }
 
-    // Update shop to mark as claimed
-    const { error: shopError } = await supabase
-      .from('shops')
-      .update({
-        is_claimed: true,
-        claimed_by: request.user_id
-      })
-      .eq('id', request.shop_id);
+    console.log("Claim request updated:", updateData);
 
-    if (shopError) throw shopError;
+    // Only update shop and user if approved
+    if (status === "approved") {
+      // Update shop to mark as claimed
+      const { error: shopError } = await supabase
+        .from("shops")
+        .update({
+          is_claimed: true,
+          claimed_by: request.user_id,
+        })
+        .eq("id", request.shop_id);
 
-    // Update user to business owner
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({ is_business_owner: true })
-      .eq('id', request.user_id);
+      if (shopError) throw shopError;
 
-    if (profileError) throw profileError;
+      // Update user to business owner
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ is_business_owner: true })
+        .eq("id", request.user_id);
+
+      if (profileError) throw profileError;
+    }
 
     return { success: true };
   } catch (error) {
-    console.error('Error approving claim request:', error);
+    console.error("Error marking claim request:", error);
     return { success: false, error };
+  }
+};
+
+// ============================================
+// EVENTS
+// ============================================
+
+
+
+// ==================== EVENT ATTENDEES ====================
+
+export const joinEvent = async (eventId: string, userId: string) => {
+  try {
+    const { error } = await supabase
+      .from("event_attendees")
+      .insert({ event_id: eventId, user_id: userId });
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error joining event:", error);
+    return { success: false, error };
+  }
+};
+
+export const leaveEvent = async (eventId: string, userId: string) => {
+  try {
+    const { error } = await supabase
+      .from("event_attendees")
+      .delete()
+      .eq("event_id", eventId)
+      .eq("user_id", userId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error leaving event:", error);
+    return { success: false, error };
+  }
+};
+
+export const fetchEventAttendees = async (eventId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("event_attendees")
+      .select(`
+        user_id,
+        created_at,
+        profiles (
+          id,
+          username,
+          avatar_url
+        )
+      `)
+      .eq("event_id", eventId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching event attendees:", error);
+    return [];
+  }
+};
+
+export const fetchEvents = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("calendar_events")
+      .select(`
+        *,
+        event_attendees (
+          user_id,
+          profiles (
+            id,
+            username,
+            avatar_url
+          )
+        )
+      `)
+      .order("start_date_time", { ascending: true });
+
+    if (error) throw error;
+
+    // Process data to include attendee info directly
+    const eventsWithAttendees = data?.map(event => ({
+      ...event,
+      attendees: event.event_attendees?.map((a: any) => ({
+        userId: a.user_id,
+        avatarUrl: a.profiles?.avatar_url,
+        username: a.profiles?.username
+      })) || [],
+      attendeeCount: event.event_attendees?.length || 0
+    }));
+
+    return eventsWithAttendees || [];
+  } catch (error) {
+    console.error("Error fetching events:", error);
+    return [];
+  }
+};
+
+export const createEvent = async (eventData: {
+  shop_id: string;
+  title: string;
+  description?: string;
+  event_type: string;
+  start_date_time: string;
+  end_date_time: string;
+  location?: string;
+  ticket_link?: string;
+  cover_image_url?: string;
+  is_published?: boolean;
+  slug?: string;
+  created_by: string;
+  status: 'pending' | 'approved' | 'rejected';
+}) => {
+  try {
+    const { data, error } = await supabase
+      .from("calendar_events")
+      .insert([eventData])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error("Error creating event:", error);
+    return { success: false, error };
+  }
+};
+
+export const updateEventStatus = async (eventId: string, status: 'approved' | 'rejected') => {
+  try {
+    const updates: any = { status };
+    if (status === 'approved') {
+      updates.is_published = true; // Auto-publish on approval
+    }
+
+    const { error } = await supabase
+      .from("calendar_events")
+      .update(updates)
+      .eq("id", eventId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating event status:", error);
+    return { success: false, error };
+  }
+};
+
+export const updateEvent = async (eventId: string, updates: any) => {
+  try {
+    const { data, error } = await supabase
+      .from("calendar_events")
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq("id", eventId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error("Error updating event:", error);
+    return { success: false, error };
+  }
+};
+
+export const deleteEvent = async (eventId: string) => {
+  try {
+    const { error } = await supabase
+      .from("calendar_events")
+      .delete()
+      .eq("id", eventId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting event:", error);
+    return { success: false, error };
+  }
+};
+
+// ==================== COFFEE DATES ====================
+
+export const createCoffeeDate = async (
+  dateData: {
+    shop_id: string;
+    created_by: string;
+    starts_at: string;
+    duration_minutes: number;
+    timezone: string;
+    tone_preset: string;
+    message: string;
+  },
+  invites: {
+    invite_type: 'user' | 'email' | 'phone';
+    invitee_user_id?: string;
+    invitee_email?: string;
+    invitee_phone?: string;
+  }[]
+) => {
+  try {
+    // 1. Create the Date
+    const { data: date, error: dateError } = await supabase
+      .from('coffee_dates')
+      .insert([dateData])
+      .select()
+      .single();
+
+    if (dateError) throw dateError;
+
+    // 2. Create the Invites
+    if (invites && invites.length > 0) {
+      const invitesWithDateId = invites.map(invite => ({
+        ...invite,
+        coffee_date_id: date.id
+      }));
+
+      const { data: createdInvites, error: inviteError } = await supabase
+        .from('coffee_date_invites')
+        .insert(invitesWithDateId)
+        .select();
+
+      if (inviteError) throw inviteError;
+
+      return { success: true, data: date, invites: createdInvites };
+    }
+
+    return { success: true, data: date, invites: [] };
+  } catch (error) {
+    console.error("Error creating coffee date:", error);
+    return { success: false, error };
+  }
+};
+
+export const getCoffeeDateByInviteToken = async (token: string) => {
+  try {
+    // Get invite
+    const { data: invite, error: inviteError } = await supabase
+      .from('coffee_date_invites')
+      .select('*, coffee_dates(*, router_shop:shops(*))') // Join date and shop
+      .eq('invite_token', token)
+      .single();
+
+    if (inviteError) throw inviteError;
+
+    // Fetch creator profile to get their email
+    if (invite && invite.coffee_dates && invite.coffee_dates.created_by) {
+      const { data: creatorProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', invite.coffee_dates.created_by)
+        .single();
+      invite.coffee_dates.creator = creatorProfile;
+    }
+
+    return { success: true, data: invite };
+  } catch (error) {
+    console.error("Error fetching invite:", error);
+    return { success: false, error };
+  }
+};
+
+export const acceptCoffeeDateInvite = async (inviteId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('coffee_date_invites')
+      .update({
+        invite_status: 'accepted',
+        responded_at: new Date().toISOString()
+      })
+      .eq('id', inviteId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error("Error accepting invite:", error);
+    return { success: false, error };
+  }
+};
+
+export const fetchShopCommunity = async (shopId: string) => {
+  try {
+    const [saversResult, visitorsResult] = await Promise.all([
+      supabase
+        .from("saved_shops")
+        .select("user_id, profiles(id, username, avatar_url)")
+        .eq("shop_id", shopId),
+      supabase
+        .from("visited_shops")
+        .select("user_id, profiles(id, username, avatar_url)")
+        .eq("shop_id", shopId)
+    ]);
+
+    const savers = saversResult.data?.map((r: any) => ({
+      id: r.profiles?.id,
+      username: r.profiles?.username,
+      avatarUrl: r.profiles?.avatar_url
+    })).filter((u: any) => u.id) || [];
+
+    const visitors = visitorsResult.data?.map((r: any) => ({
+      id: r.profiles?.id,
+      username: r.profiles?.username,
+      avatarUrl: r.profiles?.avatar_url
+    })).filter((u: any) => u.id) || [];
+
+    return { savers, visitors };
+  } catch (error) {
+    console.error("Error fetching shop community:", error);
+    return { savers: [], visitors: [] };
+  }
+};
+
+// ==================== EXPERIENCE LOGS (FEAT-014) ====================
+
+/**
+ * Submit an Experience Log (+ Private Feedback)
+ */
+export const submitExperienceLog = async (
+  shopId: string,
+  userId: string,
+  data: {
+    overallQuality: number;
+    bringFriendScore: number;
+    vibeEnergy?: number | null;
+    coffeeStyle?: number | null;
+    specialtyDrink?: number | null;
+    matchaProfile?: number | null;
+    pastryCraft?: number | null;
+    parkingEase?: number | null;
+    laptopFriendly?: number | null;
+    quickTake?: string;
+    privateFeedback?: string;
+  }
+) => {
+  try {
+    // 1. Upsert Log
+    const { data: log, error: logError } = await supabase
+      .from("experience_logs")
+      .upsert({
+        shop_id: shopId,
+        user_id: userId,
+        overall_quality: data.overallQuality,
+        bring_friend_score: data.bringFriendScore,
+        vibe_energy: data.vibeEnergy,
+        coffee_style: data.coffeeStyle,
+        specialty_drink: data.specialtyDrink,
+        matcha_profile: data.matchaProfile,
+        pastry_craft: data.pastryCraft,
+        parking_ease: data.parkingEase,
+        laptop_friendly: data.laptopFriendly,
+        quick_take: data.quickTake,
+      }, { onConflict: 'shop_id, user_id' })
+      .select()
+      .single();
+
+    if (logError) throw logError;
+
+    // 2. Insert Private Feedback (if any)
+    if (data.privateFeedback && data.privateFeedback.trim()) {
+      const { error: feedbackError } = await supabase
+        .from("private_shop_feedback")
+        .insert({
+          shop_id: shopId,
+          user_id: userId,
+          experience_log_id: log.id,
+          feedback: data.privateFeedback
+        });
+
+      if (feedbackError) {
+        console.error("Error saving private feedback:", feedbackError);
+        // Don't fail the whole operation if feedback fails, but log it
+      }
+    }
+
+    // 3. Mark as Visited automatically
+    // Use upsert or ignore duplicates safely
+    const { error: visitError } = await supabase
+      .from("visited_shops")
+      .upsert({ user_id: userId, shop_id: shopId }, { onConflict: 'user_id,shop_id', ignoreDuplicates: true });
+
+    if (visitError) {
+      // Non-fatal error, just log it
+    }
+
+    // Award Gamification Points
+    await awardPoints(userId, 'submit_experience_log', 20, log.id);
+
+    return { success: true, log };
+  } catch (error: any) {
+    console.error("Error submitting experience log:", error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Get Shop Aggregate Data (Drip Score)
+ */
+export const getShopAggregate = async (shopId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("shop_aggregates")
+      .select("*")
+      .eq("shop_id", shopId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error; // Ignore not found
+    if (!data) return null;
+
+    return {
+      shopId: data.shop_id,
+      logCount: data.log_count,
+      avgOverallQuality: data.avg_overall_quality,
+      npsScore: data.nps_score,
+      npsNormalized: data.nps_normalized,
+      dripScore: data.drip_score,
+      avgVibeEnergy: data.avg_vibe_energy,
+      avgCoffeeStyle: data.avg_coffee_style,
+      avgMatchaProfile: data.avg_matcha_profile,
+      avgLaptopFriendly: data.avg_laptop_friendly,
+      avgParkingEase: data.avg_parking_ease,
+      trait1: data.trait_1,
+      trait2: data.trait_2,
+      updatedAt: data.updated_at,
+    };
+  } catch (error) {
+    console.error("Error fetching shop aggregate:", error);
+    return null;
+  }
+};
+
+/**
+ * Fetch all experience logs by a specific user (for their profile page)
+ */
+export const fetchUserExperienceLogs = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("experience_logs")
+      .select(`
+        *,
+        shops!inner(
+          id,
+          name,
+          city,
+          state,
+          shop_images(url)
+        )
+      `)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    // Map data to a structure convenient for the UI
+    return (data || []).map((log: any) => {
+      // Find the first owner image if available, else first image
+      const images = log.shops?.shop_images || [];
+      const coverImage = images.length > 0 ? images[0].url : undefined;
+
+      return {
+        id: log.id,
+        shopId: log.shop_id,
+        userId: log.user_id,
+        shopName: log.shops?.name,
+        shopCity: log.shops?.city,
+        shopState: log.shops?.state,
+        shopCoverImage: coverImage,
+        overallQuality: log.overall_quality,
+        bringFriendScore: log.bring_friend_score,
+        vibeEnergy: log.vibe_energy,
+        coffeeStyle: log.coffee_style,
+        specialtyDrink: log.specialty_drink,
+        matchaProfile: log.matcha_profile,
+        pastryCraft: log.pastry_craft,
+        parkingEase: log.parking_ease,
+        laptopFriendly: log.laptop_friendly,
+        quickTake: log.quick_take,
+        createdAt: log.created_at,
+      };
+    });
+  } catch (error) {
+    console.error("Error fetching user experience logs:", error);
+    return [];
+  }
+};
+
+// ==============================================================================
+// GAMIFICATION & SOCIAL
+// ==============================================================================
+
+export const awardPoints = async (userId: string, actionType: string, points: number, targetId?: string) => {
+  try {
+    const { error } = await supabase.from('user_points').insert({
+      user_id: userId,
+      action_type: actionType,
+      points,
+      target_id: targetId || null
+    });
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to award points', error);
+    return { success: false, error };
+  }
+};
+
+export const checkHasFollowed = async (followerId: string, followingId: string) => {
+  try {
+    const { data } = await supabase
+      .from('user_follows')
+      .select('follower_id')
+      .eq('follower_id', followerId)
+      .eq('following_id', followingId)
+      .single();
+    return !!data;
+  } catch {
+    return false;
+  }
+};
+
+export const toggleFollow = async (followerId: string, followingId: string) => {
+  try {
+    const isFollowing = await checkHasFollowed(followerId, followingId);
+    if (isFollowing) {
+      await supabase.from('user_follows').delete().match({ follower_id: followerId, following_id: followingId });
+      return { success: true, isFollowing: false };
+    } else {
+      await supabase.from('user_follows').insert({ follower_id: followerId, following_id: followingId });
+
+      // Award Gamification Points
+      await awardPoints(followerId, 'follow_user', 5, followingId);
+
+      // Create Notification for the person being followed
+      await createNotification(followingId, followerId, 'follow');
+
+      return { success: true, isFollowing: true };
+    }
+  } catch (error) {
+    console.error('Failed to toggle follow', error);
+    return { success: false, error };
+  }
+};
+
+export const toggleExperienceLogLike = async (logId: string, userId: string) => {
+  try {
+    const { data } = await supabase.from('experience_log_likes').select('log_id').match({ log_id: logId, user_id: userId }).single();
+    if (data) {
+      await supabase.from('experience_log_likes').delete().match({ log_id: logId, user_id: userId });
+      return { success: true, isLiked: false };
+    } else {
+      await supabase.from('experience_log_likes').insert({ log_id: logId, user_id: userId });
+
+      // Notify the log creator
+      const { data: logData } = await supabase.from('experience_logs').select('user_id').eq('id', logId).single();
+      if (logData && logData.user_id) {
+        await createNotification(logData.user_id, userId, 'like', logId);
+      }
+
+      return { success: true, isLiked: true };
+    }
+  } catch (error) {
+    return { success: false, error };
+  }
+};
+
+export const createNotification = async (
+  userId: string,
+  actorId: string | null,
+  type: 'like' | 'follow' | 'badge',
+  entityId?: string
+) => {
+  if (userId === actorId) return { success: true }; // Don't notify self
+  try {
+    const { error } = await supabase.from('notifications').insert({
+      user_id: userId,
+      actor_id: actorId,
+      type,
+      entity_id: entityId || null
+    });
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to create notification', error);
+    return { success: false, error };
+  }
+};
+
+export const fetchNotifications = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*, actor:profiles!actor_id(username, avatar_url)')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(30);
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Failed to fetch notifications', error);
+    return [];
+  }
+};
+
+export const markNotificationRead = async (notificationId: string) => {
+  try {
+    await supabase.from('notifications').update({ is_read: true }).eq('id', notificationId);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error };
+  }
+};
+
+export const getLeaderboard = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('user_drip_scores')
+      .select('*')
+      .order('total_score', { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Failed to get leaderboard', error);
+    return [];
+  }
+};
+
+export const fetchFollowingFeed = async (userId: string) => {
+  try {
+    const { data: follows } = await supabase
+      .from("user_follows")
+      .select("following_id")
+      .eq("follower_id", userId);
+
+    if (!follows || follows.length === 0) return [];
+
+    const followingIds = follows.map(f => f.following_id);
+
+    const { data, error } = await supabase
+      .from("experience_logs")
+      .select(`
+        *,
+        shops(id, name, city, state, shop_images(url)),
+        profiles:user_id(username, avatar_url)
+      `)
+      .in("user_id", followingIds)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (error) throw error;
+
+    return (data || []).map((log: any) => {
+      const images = log.shops?.shop_images || [];
+      const coverImage = images.length > 0 ? images[0].url : undefined;
+      return {
+        id: log.id,
+        shopId: log.shop_id,
+        userId: log.user_id,
+        shopName: log.shops?.name,
+        shopCity: log.shops?.city,
+        shopState: log.shops?.state,
+        shopCoverImage: coverImage,
+        overallQuality: log.overall_quality,
+        bringFriendScore: log.bring_friend_score,
+        vibeEnergy: log.vibe_energy,
+        coffeeStyle: log.coffee_style,
+        specialtyDrink: log.specialty_drink,
+        matchaProfile: log.matcha_profile,
+        pastryCraft: log.pastry_craft,
+        parkingEase: log.parking_ease,
+        laptopFriendly: log.laptop_friendly,
+        quickTake: log.quick_take,
+        createdAt: log.created_at,
+        userName: log.profiles?.username,
+        userAvatar: log.profiles?.avatar_url,
+      };
+    });
+  } catch (error) {
+    console.error("Failed to fetch following feed", error);
+    return [];
   }
 };

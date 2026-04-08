@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { supabase } from '../lib/supabase';
 import { resetSupabaseAuthState } from '../lib/authUtils';
-import { Shop, Vibe, ShopImage } from '../types';
+import { Shop, Vibe, ShopImage, Brand } from '../types';
 import { ALL_VIBES, CHEEKY_VIBES_OPTIONS } from '../constants';
 import { generateShopDescription } from '../services/geminiService';
 import { uploadImages } from '../services/storageService';
@@ -14,18 +14,32 @@ import LocationPicker from '../components/LocationPicker';
 import { useToast } from '../context/ToastContext';
 
 const AddSpot: React.FC = () => {
-  const { addShop, user, loading } = useApp();
+  const { addShop, addBrand, user, loading, shops, brands } = useApp();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ completed: 0, total: 0 });
   const [sessionIssue, setSessionIssue] = useState<string | null>(null);
-  
-  const [formData, setFormData] = useState({
+  const [similarShops, setSimilarShops] = useState<typeof shops>([]);
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
+
+  // Brand State — explicit 3-way mode
+  type BrandMode = 'independent' | 'existing' | 'new';
+  const [brandMode, setBrandMode] = useState<BrandMode>('independent');
+  const [newBrandData, setNewBrandData] = useState({
     name: '',
+    description: '',
+    websiteUrl: ''
+  });
+
+  const [formData, setFormData] = useState({
+    brandId: '',
+    name: '',
+    locationName: '',
     city: '',
     state: '',
+    country: '',
     address: '',
     description: '',
   });
@@ -52,6 +66,27 @@ const AddSpot: React.FC = () => {
       navigate('/auth');
     }
   }, [user, navigate, loading]);
+
+  // Check for duplicate/similar shop names
+  useEffect(() => {
+    if (formData.name.length < 3) {
+      setSimilarShops([]);
+      setShowDuplicateWarning(false);
+      return;
+    }
+
+    const searchName = formData.name.toLowerCase().trim();
+    const matches = shops.filter(shop => {
+      const shopName = shop.name.toLowerCase();
+      // Check for exact match or if names are very similar
+      return shopName === searchName ||
+             shopName.includes(searchName) ||
+             searchName.includes(shopName);
+    });
+
+    setSimilarShops(matches);
+    setShowDuplicateWarning(matches.length > 0);
+  }, [formData.name, shops]);
 
   // If the app is still hydrating/loading session, don't render the form yet.
   if (loading) {
@@ -165,46 +200,43 @@ const AddSpot: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      // Log current auth/session + profile immediately before upload so we can debug first-attempt issues
-      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-      console.log('createSpot (pre-upload) user:', currentUser, userError);
-
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', currentUser?.id)
-        .single();
-      console.log('createSpot (pre-upload) profile:', profile, profileError);
-
-      // Check for mismatch between the AppContext user and the supabase client user
-      if (currentUser?.id && user && currentUser.id !== user.id) {
-        console.warn('Detected mismatch between app user and auth user before upload', { appUser: user.id, authUser: currentUser.id });
-        // Try one session refresh attempt to re-hydrate session if the token is stale
-        const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
-        if (refreshError || !refreshedSession) {
-          console.error('Session refresh failed while attempting to correct mismatch:', refreshError);
-          
-          // Reset auth state to clear corrupted/stale tokens
-          await resetSupabaseAuthState();
-          
-          const message = 'Session mismatch detected and could not be refreshed. Please log in again.';
-          toast.error(message);
-          setSessionIssue(message);
-          setIsSubmitting(false);
-          return;
-        }
-        console.log('Session refreshed successfully after mismatch; proceeding with uploads');
+      if (!user) {
+        toast.error('Please log in to add a shop.');
+        setIsSubmitting(false);
+        return;
       }
 
-      console.log('Starting image upload...', uploadedImages.length, 'images');
-      
       // Upload images to Supabase Storage
       const imageFiles = uploadedImages.map(img => img.file);
-      // Upload images sequentially. Pass progress callback so UI can show per-file progress.
+
+      // Get the auth token ONCE here with a generous timeout, then pass it
+      // directly to the upload functions so they never call getSession() themselves.
+      // getSession() can make a slow network call on mobile (token refresh) — doing
+      // it once here is safer than doing it inside each file's upload loop.
+      let accessToken: string | undefined;
+      try {
+        const sessionResult = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('session_timeout')), 20000)
+          )
+        ]);
+        accessToken = sessionResult.data.session?.access_token ?? undefined;
+      } catch (err: any) {
+        if (err?.message === 'session_timeout') {
+          throw new Error('Could not connect to the authentication server. Please check your internet connection and try again.');
+        }
+        throw err;
+      }
+
+      if (!accessToken) {
+        throw new Error('Could not authenticate. Please log out and log back in, then try again.');
+      }
+
       setUploadProgress({ completed: 0, total: imageFiles.length });
       const uploadResult = await uploadImages(imageFiles, 'shops', (completed, total) => {
         setUploadProgress({ completed, total });
-      });
+      }, accessToken);
 
       console.log('Upload result:', uploadResult);
 
@@ -216,16 +248,47 @@ const AddSpot: React.FC = () => {
         type: 'owner'
       }));
 
+      // Handle Brand Logic
+      let finalBrandId = formData.brandId;
+      let finalShopName = formData.name;
+
+      if (brandMode === 'new') {
+        if (!newBrandData.name) {
+          toast.error("Please enter a Brand Name.");
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Create new Brand
+        finalBrandId = `brand-${Math.random().toString(36).substr(2, 9)}`;
+        const newBrand: Brand = {
+          id: finalBrandId,
+          name: newBrandData.name,
+          slug: newBrandData.name.toLowerCase().replace(/\s+/g, '-'),
+          description: newBrandData.description || undefined,
+          websiteUrl: newBrandData.websiteUrl || undefined,
+          logoUrl: galleryImages[0]?.url
+        };
+
+        addBrand(newBrand);
+        finalShopName = newBrandData.name;
+      } else if (brandMode === 'independent') {
+        finalBrandId = '';
+      }
+
       // Create shop
       await addShop({
-        name: formData.name,
+        name: finalShopName,
+        brandId: finalBrandId || undefined,
+        locationName: formData.locationName || undefined,
         description: formData.description,
         location: {
           lat: location.lat,
           lng: location.lng,
           address: formData.address,
           city: formData.city,
-          state: formData.state
+          state: formData.state,
+          country: formData.country
         },
         gallery: galleryImages,
         vibes: selectedVibes,
@@ -234,8 +297,12 @@ const AddSpot: React.FC = () => {
         isClaimed: false,
         claimedBy: undefined
       });
-      
-      toast.success("Spot added successfully!");
+
+      if (brandMode === 'new') {
+        toast.success("Brand registered & spot added successfully!");
+      } else {
+        toast.success("Spot added successfully!");
+      }
       navigate('/');
     } catch (error: any) {
       // Surface the real reason to console so it's visible when debugging first-attempt failures
@@ -302,16 +369,179 @@ const AddSpot: React.FC = () => {
           {/* Section 1: Basic Info */}
           <section className="space-y-4">
              <h2 className="text-sm font-bold text-coffee-400 uppercase tracking-wider border-b border-coffee-100 pb-2">The Basics</h2>
+
+             {/* Brand / Chain Association */}
+             <div>
+                 <label className="block text-sm font-bold text-coffee-900 mb-3">Brand / Chain Association</label>
+
+                 {/* 3-option radio group */}
+                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                   {[
+                     { value: 'independent', label: 'Independent Spot', icon: 'fa-store', desc: 'One-of-a-kind shop, no chain' },
+                     { value: 'existing', label: 'Existing Brand', icon: 'fa-link', desc: 'Add a location to a brand already on DripMap' },
+                     { value: 'new', label: 'Register New Brand', icon: 'fa-plus-circle', desc: 'Create a new brand / chain' },
+                   ].map(opt => {
+                     const active = brandMode === opt.value;
+                     return (
+                       <button
+                         key={opt.value}
+                         type="button"
+                         onClick={() => {
+                           setBrandMode(opt.value as BrandMode);
+                           // Reset dependent state when switching modes
+                           if (opt.value !== 'existing') {
+                             setFormData(prev => ({ ...prev, brandId: '' }));
+                           }
+                           if (opt.value !== 'new') {
+                             setNewBrandData({ name: '', description: '', websiteUrl: '' });
+                           }
+                           if (opt.value === 'independent') {
+                             setFormData(prev => ({ ...prev, name: '' }));
+                           }
+                         }}
+                         className={`flex flex-col items-start gap-1 p-4 rounded-xl border-2 text-left transition-all ${
+                           active
+                             ? 'border-volt-400 bg-coffee-50'
+                             : 'border-coffee-100 bg-white hover:border-coffee-300'
+                         }`}
+                       >
+                         <div className="flex items-center gap-2">
+                           <i className={`fas ${opt.icon} ${active ? 'text-volt-500' : 'text-coffee-400'}`} />
+                           <span className={`text-sm font-bold ${active ? 'text-coffee-900' : 'text-coffee-600'}`}>
+                             {opt.label}
+                           </span>
+                         </div>
+                         <span className="text-xs text-coffee-400 leading-tight">{opt.desc}</span>
+                       </button>
+                     );
+                   })}
+                 </div>
+
+                 {/* Existing brand dropdown */}
+                 {brandMode === 'existing' && (
+                   <div>
+                     {brands.length === 0 ? (
+                       <p className="text-sm text-coffee-400 italic">
+                         No brands registered yet.{' '}
+                         <button
+                           type="button"
+                           className="text-volt-500 font-bold hover:underline"
+                           onClick={() => { setBrandMode('new'); setFormData(prev => ({ ...prev, brandId: '', name: '' })); }}
+                         >
+                           Register the first one →
+                         </button>
+                       </p>
+                     ) : (
+                       <div className="space-y-2">
+                         <label className="block text-xs font-bold text-coffee-700 uppercase tracking-wider">Select Brand</label>
+                         <select
+                           className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none appearance-none"
+                           value={formData.brandId}
+                           onChange={e => {
+                             const selectedBrand = brands.find(b => b.id === e.target.value);
+                             setFormData(prev => ({
+                               ...prev,
+                               brandId: e.target.value,
+                               name: selectedBrand ? selectedBrand.name : prev.name,
+                             }));
+                           }}
+                         >
+                           <option value="">— Select a brand —</option>
+                           {brands.map(b => (
+                             <option key={b.id} value={b.id}>{b.name}</option>
+                           ))}
+                         </select>
+                         {formData.brandId && (
+                           <p className="text-xs text-volt-600 font-semibold">
+                             ✓ This location will be added to the <strong>{brands.find(b => b.id === formData.brandId)?.name}</strong> brand.
+                           </p>
+                         )}
+                       </div>
+                     )}
+                   </div>
+                 )}
+
+                 {/* New brand form */}
+                 {brandMode === 'new' && (
+                   <div className="bg-coffee-50 border border-coffee-200 rounded-xl p-4 space-y-4 animate-in fade-in duration-300">
+                       <div className="flex items-center gap-2 text-coffee-500 text-xs font-bold uppercase tracking-wider mb-2">
+                           <i className="fas fa-plus-circle text-volt-500"></i> Creating New Brand
+                       </div>
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           <div>
+                               <label className="block text-xs font-bold text-coffee-900 mb-1">Brand Name</label>
+                               <input
+                                   required={brandMode === 'new'}
+                                   placeholder="e.g. Blue Bottle Coffee"
+                                   className="w-full px-3 py-2 bg-white border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
+                                   value={newBrandData.name}
+                                   onChange={e => setNewBrandData({...newBrandData, name: e.target.value})}
+                               />
+                           </div>
+                           <div>
+                               <label className="block text-xs font-bold text-coffee-900 mb-1">Brand Website <span className="text-coffee-400 font-normal">(Optional)</span></label>
+                               <input
+                                   placeholder="https://..."
+                                   className="w-full px-3 py-2 bg-white border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
+                                   value={newBrandData.websiteUrl}
+                                   onChange={e => setNewBrandData({...newBrandData, websiteUrl: e.target.value})}
+                               />
+                           </div>
+                       </div>
+                       <div>
+                           <label className="block text-xs font-bold text-coffee-900 mb-1">Brand Description <span className="text-coffee-400 font-normal">(Optional)</span></label>
+                           <input
+                               placeholder="Short slogan or story about the brand"
+                               className="w-full px-3 py-2 bg-white border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
+                               value={newBrandData.description}
+                               onChange={e => setNewBrandData({...newBrandData, description: e.target.value})}
+                           />
+                       </div>
+                   </div>
+                 )}
+             </div>
+
+
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label className="block text-sm font-bold text-coffee-900 mb-2">Shop Name</label>
+                    <label className="block text-sm font-bold text-coffee-900 mb-2">
+                      Shop Name
+                      {brandMode === 'existing' && formData.brandId && <span className="text-xs font-normal text-coffee-400 ml-2">(auto-filled from brand)</span>}
+                      {brandMode === 'new' && <span className="text-xs font-normal text-coffee-400 ml-2">(uses brand name)</span>}
+                    </label>
                     <input
                         required
-                        placeholder="e.g. The Daily Grind"
-                        className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
-                        value={formData.name}
-                        onChange={e => setFormData({...formData, name: e.target.value})}
+                        placeholder={brandMode === 'new' ? "Will use Brand Name" : "e.g. The Daily Grind"}
+                        className={`w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none ${(brandMode === 'existing' && !!formData.brandId) || brandMode === 'new' ? 'opacity-75 bg-gray-100 cursor-not-allowed' : ''}`}
+                        value={brandMode === 'new' ? newBrandData.name : formData.name}
+                        onChange={e => brandMode === 'independent' && setFormData({...formData, name: e.target.value})}
+                        readOnly={(brandMode === 'existing' && !!formData.brandId) || brandMode === 'new'}
                     />
+                    {showDuplicateWarning && similarShops.length > 0 && (
+                      <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p className="text-sm text-amber-800 font-medium mb-2">
+                          <i className="fas fa-exclamation-triangle mr-2"></i>
+                          Similar shop(s) already exist:
+                        </p>
+                        <ul className="space-y-1">
+                          {similarShops.slice(0, 3).map(shop => (
+                            <li key={shop.id} className="text-sm text-amber-700 flex items-center justify-between">
+                              <span>{shop.name} - {shop.location.city}</span>
+                              <button
+                                type="button"
+                                onClick={() => navigate(`/shop/${shop.id}`)}
+                                className="text-xs text-amber-600 hover:text-amber-800 underline"
+                              >
+                                View
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="text-xs text-amber-600 mt-2">
+                          If this is the same shop, please don't create a duplicate.
+                        </p>
+                      </div>
+                    )}
                 </div>
                 <div>
                     <label className="block text-sm font-bold text-coffee-900 mb-2">City</label>
@@ -322,6 +552,26 @@ const AddSpot: React.FC = () => {
                         value={formData.city}
                         onChange={e => setFormData({...formData, city: e.target.value})}
                     />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-bold text-coffee-900 mb-2">State</label>
+                        <input
+                            placeholder="e.g. California"
+                            className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                            value={formData.state}
+                            onChange={e => setFormData({...formData, state: e.target.value})}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-coffee-900 mb-2">Country</label>
+                        <input
+                            placeholder="e.g. USA"
+                            className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                            value={formData.country}
+                            onChange={e => setFormData({...formData, country: e.target.value})}
+                        />
+                    </div>
                 </div>
              </div>
           </section>
@@ -498,6 +748,10 @@ const AddSpot: React.FC = () => {
                     accept="image/*"
                 />
             </div>
+             <p className="text-xs text-coffee-400 mt-2">
+               <i className="fas fa-info-circle mr-1"></i>
+               Photos are auto-compressed. Max 3MB per image after compression. For large phone photos, they will be resized automatically.
+             </p>
           </section>
 
           <div className="pt-4">
@@ -508,7 +762,11 @@ const AddSpot: React.FC = () => {
               disabled={!allPreviewsReady}
             >
                 {isSubmitting 
-                  ? (uploadProgress.total > 0 ? `Uploading... (${uploadProgress.completed}/${uploadProgress.total})` : 'Uploading...') 
+                  ? (uploadProgress.total > 0 && uploadProgress.completed < uploadProgress.total
+                      ? `Uploading photos... (${uploadProgress.completed}/${uploadProgress.total})`
+                      : uploadProgress.completed > 0
+                        ? 'Saving spot...' 
+                        : 'Uploading...')
                   : 'Submit Spot'}
                 <i className="fas fa-arrow-right ml-2"></i>
             </Button>
