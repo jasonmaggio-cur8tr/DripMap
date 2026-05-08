@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
+import { fetchDraftCounts } from '../../services/shopDraftService';
 import Button from '../../components/Button';
 
 const AdminDashboard: React.FC = () => {
     const { claimRequests, markClaimRequest, shops } = useApp();
     const [loading, setLoading] = useState(false);
+    const [draftCounts, setDraftCounts] = useState<Record<string, number>>({});
 
     const updateClaimRequest = async (
         requestId: string,
@@ -15,25 +18,34 @@ const AdminDashboard: React.FC = () => {
         setLoading(false);
     };
 
+    useEffect(() => {
+        fetchDraftCounts().then(setDraftCounts);
+    }, []);
+
     const pendingRequests = claimRequests.filter(r => r.status === "pending");
     const approvedRequests = claimRequests.filter(r => r.status === "approved");
 
     return (
         <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Link to="/admin/shop-queue" className="bg-white p-6 rounded-xl border border-coffee-100 shadow-sm hover:border-volt-400 transition-colors">
+                    <h3 className="text-sm font-bold text-coffee-500 uppercase mb-2">Pending Review</h3>
+                    <p className="text-3xl font-black text-coffee-900">{draftCounts.pending_review ?? '—'}</p>
+                </Link>
+
                 <div className="bg-white p-6 rounded-xl border border-coffee-100 shadow-sm">
-                    <h3 className="text-sm font-bold text-coffee-500 uppercase mb-2">Pending Drafts</h3>
-                    <p className="text-3xl font-black text-coffee-900">0</p>
+                    <h3 className="text-sm font-bold text-coffee-500 uppercase mb-2">Approved (Awaiting Email)</h3>
+                    <p className="text-3xl font-black text-coffee-900">{draftCounts.approved ?? '—'}</p>
                 </div>
 
                 <div className="bg-white p-6 rounded-xl border border-coffee-100 shadow-sm">
-                    <h3 className="text-sm font-bold text-coffee-500 uppercase mb-2">Curator Runs (Today)</h3>
-                    <p className="text-3xl font-black text-coffee-900">0</p>
+                    <h3 className="text-sm font-bold text-coffee-500 uppercase mb-2">Published</h3>
+                    <p className="text-3xl font-black text-green-600">{draftCounts.published ?? '—'}</p>
                 </div>
 
                 <div className="bg-white p-6 rounded-xl border border-coffee-100 shadow-sm">
-                    <h3 className="text-sm font-bold text-coffee-500 uppercase mb-2">Approved Shops</h3>
-                    <p className="text-3xl font-black text-coffee-900">--</p>
+                    <h3 className="text-sm font-bold text-coffee-500 uppercase mb-2">Total Live Shops</h3>
+                    <p className="text-3xl font-black text-coffee-900">{shops.length}</p>
                 </div>
             </div>
 

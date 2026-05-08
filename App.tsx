@@ -13,8 +13,8 @@ import Profile from './pages/Profile';
 import ClaimShop from './pages/ClaimShop';
 import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
-import Curator from './pages/admin/Curator';
-import ShopDrafts from './pages/admin/ShopDrafts';
+import ShopQueue from './pages/admin/ShopQueue';
+import ShopQueueDetail from './pages/admin/ShopQueueDetail';
 import AdminEvents from './pages/admin/AdminEvents';
 import EventsFeed from './pages/EventsFeed';
 import DripClub from './pages/DripClub';
@@ -47,8 +47,8 @@ const App: React.FC = () => {
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
-            <Route path="curator" element={<Curator />} />
-            <Route path="drafts" element={<ShopDrafts />} />
+            <Route path="shop-queue" element={<ShopQueue />} />
+            <Route path="shop-queue/:id" element={<ShopQueueDetail />} />
             <Route path="events" element={<AdminEvents />} />
           </Route>
 

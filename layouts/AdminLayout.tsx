@@ -21,8 +21,7 @@ const AdminLayout: React.FC = () => {
 
     const navItems = [
         { label: 'Dashboard', path: '/admin', icon: 'fa-chart-line' },
-        { label: 'Curator', path: '/admin/curator', icon: 'fa-robot' },
-        { label: 'Shop Drafts', path: '/admin/drafts', icon: 'fa-file-alt' },
+        { label: 'Shop Queue', path: '/admin/shop-queue', icon: 'fa-store' },
         { label: 'Events', path: '/admin/events', icon: 'fa-calendar-alt' },
         { label: 'Users', path: '/admin/users', icon: 'fa-users' },
     ];
@@ -43,7 +42,7 @@ const AdminLayout: React.FC = () => {
                         <Link
                             key={item.path}
                             to={item.path}
-                            className={`flex items-center px-4 py-3 hover:bg-coffee-800 transition-colors ${location.pathname === item.path ? 'bg-coffee-800 text-volt-400 border-r-4 border-volt-400' : 'text-coffee-200'}`}
+                            className={`flex items-center px-4 py-3 hover:bg-coffee-800 transition-colors ${(location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(item.path + '/'))) ? 'bg-coffee-800 text-volt-400 border-r-4 border-volt-400' : 'text-coffee-200'}`}
                         >
                             <i className={`fas ${item.icon} w-6 text-center`}></i>
                             {isSidebarOpen && <span className="ml-3 font-medium">{item.label}</span>}
@@ -68,7 +67,7 @@ const AdminLayout: React.FC = () => {
             <main className="flex-1 overflow-auto">
                 <header className="bg-white border-b border-coffee-100 p-4 sticky top-0 z-10">
                     <h2 className="text-lg font-bold text-coffee-900">
-                        {navItems.find(i => i.path === location.pathname)?.label || 'Admin'}
+                        {navItems.find(i => location.pathname === i.path || location.pathname.startsWith(i.path + '/'))?.label || 'Admin'}
                     </h2>
                 </header>
                 <div className="p-6">
