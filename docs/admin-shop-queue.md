@@ -45,15 +45,12 @@ Agent POSTs draft via Edge Function
 
 `Authorization: Bearer <AGENT_API_KEY>`
 
-The API key is set as a Supabase Edge Function secret. Generate one with:
+The API key is set as a Supabase Edge Function secret. Generate and save it in one step:
 ```bash
-openssl rand -hex 32
+KEY=$(openssl rand -hex 32) && echo "$KEY" && supabase secrets set AGENT_API_KEY="$KEY"
 ```
 
-Then set it:
-```bash
-supabase secrets set AGENT_API_KEY=<your-key>
-```
+Save the printed value in 1Password (or similar) under "DripMap Agent API Key" — the Cowork agent will need it to authenticate.
 
 ### Submit a Draft
 
@@ -193,3 +190,40 @@ Set these as Supabase Edge Function secrets:
 - `shop_draft_audit_log` — every status change and edit is logged
 
 Run `migrations/007_shop_drafts_and_queue.sql` in the Supabase SQL Editor.
+
+## Loops Email Templates (required before first approval)
+
+Create these two events in the Loops.so dashboard before approving your first draft:
+
+### `shop_listed`
+Fires when a draft is published and the shop has an email address.
+
+Contact properties available in the template:
+- `shopName`
+- `shopDripmapUrl`
+- `shopClaimUrl`
+- `neighborhood`
+- `city`
+
+### `shop_listed_late`
+Fires when an email is added to an already-published draft. Same template variables as above. Separate event name so you can track late-outreach performance in Loops analytics.
+
+If these events don't exist in Loops when the code fires, the API call will succeed but no email will be sent.
+
+## Deployment Checklist
+
+1. Run migration 007 in Supabase SQL Editor
+2. Generate and store the agent API key:
+   ```bash
+   KEY=$(openssl rand -hex 32) && echo "$KEY" && supabase secrets set AGENT_API_KEY="$KEY"
+   ```
+3. Save the key in 1Password under "DripMap Agent API Key"
+4. Deploy the Edge Function:
+   ```bash
+   supabase functions deploy shop-drafts
+   ```
+5. Create `shop_listed` and `shop_listed_late` events in Loops dashboard
+6. Smoke test with the curl example above (replace `YOUR_AGENT_API_KEY`)
+7. Check `/admin/shop-queue` — the test draft should appear
+8. Share the function URL with Cowork for agent integration:
+   `https://zxetnactllyzslievgxj.supabase.co/functions/v1/shop-drafts`
