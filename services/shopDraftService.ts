@@ -388,7 +388,7 @@ async function triggerOutreachEmail(
     .eq('id', draftId);
 
   try {
-    await loopService.sendEvent(email, 'shop_listed', {
+    await loopService.sendTransactionalEmail(email, 'cmoxfdi3p06np0i0tuaow5yw4', {
       shopName,
       shopDripmapUrl: `${APP_URL}/shop/${slug}`,
       shopClaimUrl: `${APP_URL}/shop/${slug}?claim=1`,
@@ -404,7 +404,7 @@ async function triggerOutreachEmail(
       })
       .eq('id', draftId);
 
-    await logAudit(draftId, 'system', 'outreach_triggered', { email, event: 'shop_listed' });
+    await logAudit(draftId, 'system', 'outreach_triggered', { email, transactionalId: 'cmoxfdi3p06np0i0tuaow5yw4' });
   } catch (err) {
     console.error('[ShopDraftService] outreach email failed:', err);
     await supabase
@@ -428,7 +428,7 @@ export async function triggerLateOutreachEmail(draftId: string, userId: string):
     .eq('id', draftId);
 
   try {
-    await loopService.sendEvent(draft.email, 'shop_listed_late', {
+    await loopService.sendTransactionalEmail(draft.email, 'cmoxfngrk08jk0iy5w6o1d55a', {
       shopName: sd.name,
       shopDripmapUrl: `${APP_URL}/shop/${slug}`,
       shopClaimUrl: `${APP_URL}/shop/${slug}?claim=1`,
@@ -444,7 +444,7 @@ export async function triggerLateOutreachEmail(draftId: string, userId: string):
       })
       .eq('id', draftId);
 
-    await logAudit(draftId, `admin:${userId}`, 'outreach_triggered', { email: draft.email, event: 'shop_listed_late' });
+    await logAudit(draftId, `admin:${userId}`, 'outreach_triggered', { email: draft.email, transactionalId: 'cmoxfngrk08jk0iy5w6o1d55a' });
     return true;
   } catch (err) {
     console.error('[ShopDraftService] late outreach email failed:', err);
