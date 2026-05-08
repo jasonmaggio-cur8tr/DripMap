@@ -230,6 +230,7 @@ export interface Shop {
   customVibes?: string[];
   spotifyPlaylistUrl?: string;
   websiteUrl?: string;
+  instagramUrl?: string;
   mapsUrl?: string;
   onlineOrderUrl?: string;
   happeningNow?: HappeningNowStatus;
@@ -376,48 +377,77 @@ export const DEFAULT_PRICING: SubscriptionPricing = {
 };
 
 // =====================================================
-// Auto-Listing Agent (Curator) Types
+// Shop Draft Queue Types
 // =====================================================
 
-export type AgentRunMode = 'INSTAGRAM' | 'CITY_SCOUT';
-export type AgentRunStatus = 'RUNNING' | 'COMPLETED' | 'FAILED';
+export type ShopDraftStatus = 'pending_review' | 'approved' | 'rejected' | 'published' | 'needs_more_info';
+export type OutreachEmailStatus = 'not_sent' | 'queued' | 'sent' | 'failed' | 'skipped';
+export type OutreachDmStatus = 'not_sent' | 'sent_manually' | 'skipped';
+export type EmailSource = 'website' | 'yelp' | 'instagram_bio' | 'google' | 'manual';
+export type PhotoSource = 'instagram' | 'yelp' | 'website' | 'google' | 'other';
 
-export interface AgentRun {
-  id: string;
-  mode: AgentRunMode;
-  status: AgentRunStatus;
-  inputParams: any;
-  metrics: {
-    candidates_found: number;
-    drafted: number;
-    rejected: number;
-  };
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
+export interface ShopDraftData {
+  name: string;
+  slug?: string;
+  neighborhood: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  address?: string;
+  lat?: number;
+  lng?: number;
+  description: string;
+  website_url?: string;
+  instagram_url: string;
+  yelp_url?: string;
+  google_maps_url?: string;
+  phone?: string;
+  hours?: Record<string, string>;
+  known_for?: string[];
+  vibe_tags?: string[];
 }
-
-export type ShopDraftStatus = 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED' | 'NEEDS_INFO';
 
 export interface ShopDraft {
   id: string;
-  runId: string;
+  shopData: ShopDraftData;
   status: ShopDraftStatus;
-  data: Partial<Shop>; // The proposed shop data
-  score: number;
-  scoreBreakdown: any;
-  sourceUrls: string[];
-  disqualifiers: string[];
+  submittedBy: string;
+  agentRunId?: string;
+  reviewNotes?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+
+  email?: string;
+  emailSource?: EmailSource;
+  dmTemplate?: string;
+  outreachEmailStatus: OutreachEmailStatus;
+  outreachEmailSentAt?: string;
+  outreachDmStatus: OutreachDmStatus;
+
+  publishedShopId?: string;
+  photos: ShopDraftPhoto[];
+
   createdAt: string;
   updatedAt: string;
 }
 
-export interface DraftImage {
+export interface ShopDraftPhoto {
   id: string;
-  draftId: string;
-  originalUrl: string;
-  source?: string;
-  status: 'CANDIDATE' | 'SELECTED' | 'REJECTED';
-  caption?: string;
+  shopDraftId: string;
+  url: string;
+  source?: PhotoSource;
+  sourceUrl?: string;
+  attribution?: string;
+  position: number;
+  isPrimary: boolean;
+  createdAt: string;
+}
+
+export interface ShopDraftAuditEntry {
+  id: string;
+  shopDraftId: string;
+  actor: string;
+  action: string;
+  payload?: Record<string, unknown>;
   createdAt: string;
 }

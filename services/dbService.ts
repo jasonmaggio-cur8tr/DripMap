@@ -382,6 +382,7 @@ export const fetchShops = async (): Promise<Shop[]> => {
           locationName: shop.location_name,
           customVibes: shop.custom_vibes || [],
           spotifyPlaylistUrl: shop.spotify_playlist_url,
+          instagramUrl: shop.instagram_url,
           websiteUrl: shop.website_url,
           mapsUrl: shop.maps_url,
           onlineOrderUrl: shop.online_order_url,
@@ -540,6 +541,7 @@ export const fetchShopBySlug = async (slugOrId: string): Promise<Shop | null> =>
       locationName: shop.location_name,
       customVibes: shop.custom_vibes || [],
       spotifyPlaylistUrl: shop.spotify_playlist_url,
+      instagramUrl: shop.instagram_url,
       websiteUrl: shop.website_url,
       mapsUrl: shop.maps_url,
       onlineOrderUrl: shop.online_order_url,
@@ -923,6 +925,7 @@ export const updateVeganOptions = async (
 export const updatePremiumLinks = async (
   shopId: string,
   links: {
+    instagramUrl?: string;
     websiteUrl?: string;
     mapsUrl?: string;
     onlineOrderUrl?: string;
@@ -933,6 +936,7 @@ export const updatePremiumLinks = async (
     const { error } = await supabase
       .from("shops")
       .update({
+        instagram_url: links.instagramUrl || null,
         website_url: links.websiteUrl || null,
         maps_url: links.mapsUrl || null,
         online_order_url: links.onlineOrderUrl || null,
