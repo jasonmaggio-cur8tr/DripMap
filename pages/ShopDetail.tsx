@@ -1307,6 +1307,45 @@ const ShopDetail: React.FC = () => {
                   )}
                 </div>
 
+                {/* Social Links */}
+                {(shop.instagramUrl || shop.websiteUrl || shop.mapsUrl) && (
+                  <div className="flex items-center gap-3 mb-6">
+                    {shop.instagramUrl && (
+                      <a
+                        href={shop.instagramUrl.startsWith('http') ? shop.instagramUrl : `https://instagram.com/${shop.instagramUrl.replace(/^@/, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-10 h-10 rounded-full bg-coffee-50 flex items-center justify-center transition-all hover:scale-110 hover:bg-white hover:shadow-md border border-transparent hover:border-coffee-100 text-pink-600"
+                        title="Instagram"
+                      >
+                        <i className="fab fa-instagram text-lg"></i>
+                      </a>
+                    )}
+                    {shop.websiteUrl && (
+                      <a
+                        href={shop.websiteUrl.startsWith('http') ? shop.websiteUrl : `https://${shop.websiteUrl}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-10 h-10 rounded-full bg-coffee-50 flex items-center justify-center transition-all hover:scale-110 hover:bg-white hover:shadow-md border border-transparent hover:border-coffee-100 text-coffee-900"
+                        title="Website"
+                      >
+                        <i className="fas fa-globe text-lg"></i>
+                      </a>
+                    )}
+                    {shop.mapsUrl && (
+                      <a
+                        href={shop.mapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-10 h-10 rounded-full bg-coffee-50 flex items-center justify-center transition-all hover:scale-110 hover:bg-white hover:shadow-md border border-transparent hover:border-coffee-100 text-coffee-900"
+                        title="Google Maps"
+                      >
+                        <i className="fas fa-map-marker-alt text-lg"></i>
+                      </a>
+                    )}
+                  </div>
+                )}
+
                 <div className="space-y-3">
                   {isOwner && (
                     <Button
