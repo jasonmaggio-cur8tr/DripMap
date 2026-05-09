@@ -217,30 +217,28 @@ async function getSessionToken(): Promise<string | null> {
 }
 
 export async function uploadDraftPhotoFile(file: File): Promise<{ url: string; error?: string }> {
-  const token = await getSessionToken();
-  if (!token) return { url: '', error: 'Not authenticated' };
-
   if (file.size > 8 * 1024 * 1024) return { url: '', error: 'File too large (max 8MB)' };
   if (!file.type.startsWith('image/')) return { url: '', error: 'File must be an image' };
 
-  const form = new FormData();
-  form.append('file', file);
-  form.append('source', 'manual');
-  form.append('attribution', 'Added by admin');
+  const now = new Date();
+  const datePath = `${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, '0')}/${String(now.getUTCDate()).padStart(2, '0')}`;
+  const shortId = Math.random().toString(36).slice(2, 10);
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const storagePath = `${datePath}/${shortId}.${ext}`;
 
-  const res = await fetch(`${FUNCTION_URL}/upload-photo`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
-    body: form,
-  });
+  const { error: uploadError } = await supabase.storage
+    .from('agent-uploads')
+    .upload(storagePath, file, { contentType: file.type, upsert: false });
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: 'Upload failed' }));
-    return { url: '', error: err.error || `Upload failed (${res.status})` };
+  if (uploadError) {
+    return { url: '', error: `Storage error: ${uploadError.message}` };
   }
 
-  const data = await res.json();
-  return { url: data.url };
+  const { data: { publicUrl } } = supabase.storage
+    .from('agent-uploads')
+    .getPublicUrl(storagePath);
+
+  return { url: publicUrl };
 }
 
 export async function addDraftPhoto(
