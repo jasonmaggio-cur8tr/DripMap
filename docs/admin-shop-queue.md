@@ -191,24 +191,21 @@ Set these as Supabase Edge Function secrets:
 
 Run `migrations/007_shop_drafts_and_queue.sql` in the Supabase SQL Editor.
 
-## Loops Email Templates (required before first approval)
+## Loops Transactional Emails (required before first approval)
 
-Create these two events in the Loops.so dashboard before approving your first draft:
+Two transactional emails in Loops.so power outreach:
 
-### `shop_listed`
-Fires when a draft is published and the shop has an email address.
+### "Shop Listed Notification"
+- **Transactional ID:** `cmoxfdi3p06np0i0tuaow5yw4`
+- Fires when a draft is published and the shop has an email address.
 
-Contact properties available in the template:
-- `shopName`
-- `shopDripmapUrl`
-- `shopClaimUrl`
-- `neighborhood`
-- `city`
+### "Shop Listed Late Notification"
+- **Transactional ID:** `cmoxfngrk08jk0iy5w6o1d55a`
+- Fires when an email is added to an already-published draft.
 
-### `shop_listed_late`
-Fires when an email is added to an already-published draft. Same template variables as above. Separate event name so you can track late-outreach performance in Loops analytics.
+Both use the same template with data variables: `shopName`, `shopClaimUrl`, `neighborhood`, `city`.
 
-If these events don't exist in Loops when the code fires, the API call will succeed but no email will be sent.
+The code calls the Loops Transactional API (via `loops-proxy` Edge Function), not the Events API.
 
 ## Deployment Checklist
 
@@ -218,11 +215,11 @@ If these events don't exist in Loops when the code fires, the API call will succ
    KEY=$(openssl rand -hex 32) && echo "$KEY" && supabase secrets set AGENT_API_KEY="$KEY"
    ```
 3. Save the key in 1Password under "DripMap Agent API Key"
-4. Deploy the Edge Function:
+4. Deploy the Edge Function (must use `--no-verify-jwt` since the function handles its own Bearer token auth):
    ```bash
-   supabase functions deploy shop-drafts
+   supabase functions deploy shop-drafts --no-verify-jwt
    ```
-5. Create `shop_listed` and `shop_listed_late` events in Loops dashboard
+5. Create Loops transactional emails "Shop Listed Notification" and "Shop Listed Late Notification"
 6. Smoke test with the curl example above (replace `YOUR_AGENT_API_KEY`)
 7. Check `/admin/shop-queue` — the test draft should appear
 8. Share the function URL with Cowork for agent integration:
