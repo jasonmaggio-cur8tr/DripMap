@@ -157,9 +157,16 @@ const ShopQueue: React.FC = () => {
 
                     {/* Status */}
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${STATUS_COLORS[draft.status] || 'bg-gray-100 text-gray-600'}`}>
-                        {draft.status.replace(/_/g, ' ')}
-                      </span>
+                      <div className="flex flex-wrap items-center gap-1">
+                        <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${STATUS_COLORS[draft.status] || 'bg-gray-100 text-gray-600'}`}>
+                          {draft.status.replace(/_/g, ' ')}
+                        </span>
+                        {draft.photos.length < 3 && draft.status !== 'rejected' && (
+                          <span className="px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-orange-100 text-orange-700">
+                            <i className="fas fa-camera mr-1 text-[10px]"></i>Needs photos
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Date */}
