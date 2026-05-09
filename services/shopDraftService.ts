@@ -61,6 +61,13 @@ function mapAuditRow(row: any): ShopDraftAuditEntry {
   };
 }
 
+function validatePhotosForApproval(photos: { isPrimary: boolean }[]): string | null {
+  if (photos.length < 3) return `Needs at least 3 photos (has ${photos.length})`;
+  const primaryCount = photos.filter(p => p.isPrimary).length;
+  if (primaryCount !== 1) return `Exactly 1 primary photo required (found ${primaryCount})`;
+  return null;
+}
+
 // ==================== Fetching ====================
 
 export async function fetchDrafts(statusFilter?: ShopDraftStatus): Promise<ShopDraft[]> {
@@ -198,6 +205,149 @@ export async function updateDraftPhotos(
   return true;
 }
 
+// ==================== Photo Management ====================
+
+const FUNCTION_URL = import.meta.env.VITE_SUPABASE_URL
+  ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/shop-drafts`
+  : '';
+
+async function getSessionToken(): Promise<string | null> {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token || null;
+}
+
+export async function uploadDraftPhotoFile(file: File): Promise<{ url: string; error?: string }> {
+  const token = await getSessionToken();
+  if (!token) return { url: '', error: 'Not authenticated' };
+
+  if (file.size > 8 * 1024 * 1024) return { url: '', error: 'File too large (max 8MB)' };
+  if (!file.type.startsWith('image/')) return { url: '', error: 'File must be an image' };
+
+  const form = new FormData();
+  form.append('file', file);
+  form.append('source', 'manual');
+  form.append('attribution', 'Added by admin');
+
+  const res = await fetch(`${FUNCTION_URL}/upload-photo`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Upload failed' }));
+    return { url: '', error: err.error || `Upload failed (${res.status})` };
+  }
+
+  const data = await res.json();
+  return { url: data.url };
+}
+
+export async function addDraftPhoto(
+  draftId: string,
+  photo: { url: string; source?: string; attribution?: string; is_primary?: boolean },
+  actor: string
+): Promise<{ data: ShopDraftPhoto | null; error?: string }> {
+  const token = await getSessionToken();
+  if (!token) return { data: null, error: 'Not authenticated' };
+
+  const res = await fetch(`${FUNCTION_URL}/${draftId}/photos`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(photo),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to add photo' }));
+    return { data: null, error: err.error || `Failed (${res.status})` };
+  }
+
+  const row = await res.json();
+  await logAudit(draftId, actor, 'photo_added', { url: photo.url });
+  return { data: mapPhotoRow(row) };
+}
+
+export async function deleteDraftPhoto(
+  draftId: string,
+  photoId: string,
+  actor: string
+): Promise<{ deleted: boolean; wasPrimary: boolean; error?: string }> {
+  const token = await getSessionToken();
+  if (!token) return { deleted: false, wasPrimary: false, error: 'Not authenticated' };
+
+  const res = await fetch(`${FUNCTION_URL}/${draftId}/photos/${photoId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to delete' }));
+    return { deleted: false, wasPrimary: false, error: err.error };
+  }
+
+  const data = await res.json();
+  await logAudit(draftId, actor, 'photo_deleted', { photoId });
+  return { deleted: true, wasPrimary: data.was_primary };
+}
+
+export async function patchDraftPhoto(
+  draftId: string,
+  photoId: string,
+  updates: { is_primary?: boolean; position?: number; attribution?: string },
+  actor: string
+): Promise<{ data: ShopDraftPhoto | null; error?: string }> {
+  const token = await getSessionToken();
+  if (!token) return { data: null, error: 'Not authenticated' };
+
+  const res = await fetch(`${FUNCTION_URL}/${draftId}/photos/${photoId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(updates),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to update' }));
+    return { data: null, error: err.error };
+  }
+
+  const row = await res.json();
+  await logAudit(draftId, actor, 'photo_updated', { photoId, ...updates });
+  return { data: mapPhotoRow(row) };
+}
+
+export async function reorderDraftPhotos(
+  draftId: string,
+  order: string[],
+  actor: string
+): Promise<{ data: ShopDraftPhoto[]; error?: string }> {
+  const token = await getSessionToken();
+  if (!token) return { data: [], error: 'Not authenticated' };
+
+  const res = await fetch(`${FUNCTION_URL}/${draftId}/photos/reorder`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ order }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to reorder' }));
+    return { data: [], error: err.error };
+  }
+
+  const rows = await res.json();
+  await logAudit(draftId, actor, 'photos_reordered', { order });
+  return { data: (rows || []).map(mapPhotoRow) };
+}
+
 // ==================== Status Transitions ====================
 
 export async function rejectDraft(id: string, reviewNotes: string, userId: string): Promise<boolean> {
@@ -238,7 +388,13 @@ export async function requestMoreInfo(id: string, reviewNotes: string, userId: s
   return true;
 }
 
-export async function approveDraft(id: string, userId: string): Promise<boolean> {
+export async function approveDraft(id: string, userId: string): Promise<{ success: boolean; error?: string }> {
+  const draft = await fetchDraftById(id);
+  if (!draft) return { success: false, error: 'Draft not found' };
+
+  const photoError = validatePhotosForApproval(draft.photos);
+  if (photoError) return { success: false, error: photoError };
+
   const { error } = await supabase
     .from('shop_drafts')
     .update({
@@ -250,15 +406,18 @@ export async function approveDraft(id: string, userId: string): Promise<boolean>
 
   if (error) {
     console.error('[ShopDraftService] approveDraft error:', error);
-    return false;
+    return { success: false, error: error.message };
   }
   await logAudit(id, `admin:${userId}`, 'approved', {});
-  return true;
+  return { success: true };
 }
 
 export async function publishDraft(id: string, userId: string): Promise<{ success: boolean; shopId?: string; error?: string }> {
   const draft = await fetchDraftById(id);
   if (!draft) return { success: false, error: 'Draft not found' };
+
+  const photoError = validatePhotosForApproval(draft.photos);
+  if (photoError) return { success: false, error: photoError };
 
   const sd = draft.shopData;
 

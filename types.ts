@@ -384,7 +384,7 @@ export type ShopDraftStatus = 'pending_review' | 'approved' | 'rejected' | 'publ
 export type OutreachEmailStatus = 'not_sent' | 'queued' | 'sent' | 'failed' | 'skipped';
 export type OutreachDmStatus = 'not_sent' | 'sent_manually' | 'skipped';
 export type EmailSource = 'website' | 'yelp' | 'instagram_bio' | 'google' | 'manual';
-export type PhotoSource = 'instagram' | 'yelp' | 'website' | 'google' | 'other';
+export type PhotoSource = 'instagram' | 'yelp' | 'website' | 'google' | 'manual' | 'other';
 
 export interface ShopDraftData {
   name: string;
