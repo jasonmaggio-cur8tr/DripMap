@@ -419,19 +419,19 @@ export async function publishDraft(id: string, userId: string): Promise<{ succes
 
   const sd = draft.shopData;
 
-  // 1. Geocode if lat/lng missing
-  let lat = sd.lat;
-  let lng = sd.lng;
-  if ((!lat || !lng) && sd.address && MAPBOX_TOKEN) {
+  if (!sd.address?.trim()) {
+    return { success: false, error: 'Cannot publish without a full address.' };
+  }
+
+  // Geocode if lat/lng missing — best-effort, not required
+  let lat = sd.lat || 0;
+  let lng = sd.lng || 0;
+  if ((!sd.lat || !sd.lng) && sd.address && MAPBOX_TOKEN) {
     const geo = await geocodeAddress(sd.address);
     if (geo) {
       lat = geo.lat;
       lng = geo.lng;
     }
-  }
-
-  if (!lat || !lng) {
-    return { success: false, error: 'Cannot publish without coordinates. Geocode the address first.' };
   }
 
   // 2. Copy photos to Supabase Storage
