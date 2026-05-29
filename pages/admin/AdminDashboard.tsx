@@ -2,12 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { fetchDraftCounts } from '../../services/shopDraftService';
+import { cleanupOrphanedUploads, CleanupResult } from '../../services/storageCleanupService';
 import Button from '../../components/Button';
 
 const AdminDashboard: React.FC = () => {
     const { claimRequests, markClaimRequest, shops } = useApp();
     const [loading, setLoading] = useState(false);
     const [draftCounts, setDraftCounts] = useState<Record<string, number>>({});
+    const [cleanupLoading, setCleanupLoading] = useState(false);
+    const [cleanupResult, setCleanupResult] = useState<CleanupResult | null>(null);
+    const [cleanupError, setCleanupError] = useState<string | null>(null);
 
     const updateClaimRequest = async (
         requestId: string,
@@ -21,6 +25,20 @@ const AdminDashboard: React.FC = () => {
     useEffect(() => {
         fetchDraftCounts().then(setDraftCounts);
     }, []);
+
+    const handleCleanup = async () => {
+        setCleanupLoading(true);
+        setCleanupResult(null);
+        setCleanupError(null);
+        try {
+            const result = await cleanupOrphanedUploads();
+            setCleanupResult(result);
+        } catch (err: any) {
+            setCleanupError(err.message || 'Cleanup failed');
+        } finally {
+            setCleanupLoading(false);
+        }
+    };
 
     const pendingRequests = claimRequests.filter(r => r.status === "pending");
     const approvedRequests = claimRequests.filter(r => r.status === "approved");
@@ -135,6 +153,62 @@ const AdminDashboard: React.FC = () => {
                                 </div>
                             );
                         })}
+                    </div>
+                )}
+            </div>
+
+            {/* Storage Cleanup */}
+            <div className="bg-white rounded-3xl shadow-sm border border-coffee-100 overflow-hidden">
+                <div className="p-6 border-b border-coffee-100 flex items-center justify-between">
+                    <div>
+                        <h2 className="text-lg font-bold text-coffee-900">Storage Cleanup</h2>
+                        <p className="text-sm text-coffee-400 mt-1">
+                            Remove orphaned photos from agent-uploads older than 30 days
+                        </p>
+                    </div>
+                    <Button
+                        variant="outline"
+                        disabled={cleanupLoading}
+                        onClick={handleCleanup}
+                    >
+                        {cleanupLoading ? (
+                            <><i className="fas fa-spinner fa-spin mr-2"></i> Scanning...</>
+                        ) : (
+                            <><i className="fas fa-broom mr-2"></i> Clean Up Orphaned Uploads</>
+                        )}
+                    </Button>
+                </div>
+                {cleanupError && (
+                    <div className="p-4 bg-red-50 border-b border-red-100 text-red-700 text-sm">
+                        <i className="fas fa-exclamation-triangle mr-2"></i>{cleanupError}
+                    </div>
+                )}
+                {cleanupResult && (
+                    <div className="p-6">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="text-center">
+                                <p className="text-2xl font-black text-coffee-900">{cleanupResult.orphaned_found}</p>
+                                <p className="text-xs text-coffee-400 uppercase font-bold mt-1">Orphaned Found</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-2xl font-black text-green-600">{cleanupResult.deleted}</p>
+                                <p className="text-xs text-coffee-400 uppercase font-bold mt-1">Deleted</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-2xl font-black text-coffee-900">{cleanupResult.referenced_count}</p>
+                                <p className="text-xs text-coffee-400 uppercase font-bold mt-1">Referenced (kept)</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-2xl font-black text-coffee-500">{cleanupResult.cutoff_date}</p>
+                                <p className="text-xs text-coffee-400 uppercase font-bold mt-1">Cutoff Date</p>
+                            </div>
+                        </div>
+                        {cleanupResult.errors > 0 && (
+                            <p className="text-sm text-red-600 mt-3 text-center">
+                                <i className="fas fa-exclamation-circle mr-1"></i>
+                                {cleanupResult.errors} file(s) failed to delete
+                            </p>
+                        )}
                     </div>
                 )}
             </div>

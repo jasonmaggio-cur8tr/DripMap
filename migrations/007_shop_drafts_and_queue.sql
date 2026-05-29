@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS shop_draft_photos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   shop_draft_id UUID NOT NULL REFERENCES shop_drafts(id) ON DELETE CASCADE,
   url TEXT NOT NULL,
-  source TEXT CHECK (source IN ('instagram', 'yelp', 'website', 'google', 'other') OR source IS NULL),
+  source TEXT CHECK (source IN ('instagram', 'yelp', 'website', 'google', 'other', 'manual') OR source IS NULL),
   source_url TEXT,
   attribution TEXT,
   position INT NOT NULL DEFAULT 0,
