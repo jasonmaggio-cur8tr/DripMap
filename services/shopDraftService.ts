@@ -434,11 +434,17 @@ export async function publishDraft(id: string, userId: string): Promise<{ succes
     }
   }
 
-  // 2. Copy photos to Supabase Storage
-  const primaryPhoto = draft.photos.find(p => p.isPrimary) || draft.photos[0];
+  // 2. Copy photos to Supabase Storage.
+  // Order: the admin-selected primary first, then by position — so the hero image
+  // in the apps (which sort by sort_order asc) matches the primary pick.
+  const orderedPhotos = [...draft.photos].sort((a, b) => {
+    if (a.isPrimary && !b.isPrimary) return -1;
+    if (!a.isPrimary && b.isPrimary) return 1;
+    return a.position - b.position;
+  });
   const shopImages: { url: string; type: 'owner' }[] = [];
 
-  for (const photo of draft.photos.sort((a, b) => a.position - b.position)) {
+  for (const photo of orderedPhotos) {
     try {
       const cdnUrl = await copyPhotoToStorage(photo.url, sd.slug || sd.name);
       if (cdnUrl) {
@@ -484,10 +490,11 @@ export async function publishDraft(id: string, userId: string): Promise<{ succes
 
   // 5. Insert shop images
   if (shopImages.length > 0) {
-    const imageRows = shopImages.map(img => ({
+    const imageRows = shopImages.map((img, index) => ({
       shop_id: newShop.id,
       url: img.url,
       type: img.type,
+      sort_order: index,
     }));
     await supabase.from('shop_images').insert(imageRows);
   }
