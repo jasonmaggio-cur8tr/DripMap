@@ -16,6 +16,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import ShopQueue from './pages/admin/ShopQueue';
 import ShopQueueDetail from './pages/admin/ShopQueueDetail';
 import AdminEvents from './pages/admin/AdminEvents';
+import AdminCampaigns from './pages/admin/AdminCampaigns';
 import EventsFeed from './pages/EventsFeed';
 import DripClub from './pages/DripClub';
 import ScoutBounty from './pages/ScoutBounty';
@@ -50,6 +51,7 @@ const App: React.FC = () => {
             <Route path="shop-queue" element={<ShopQueue />} />
             <Route path="shop-queue/:id" element={<ShopQueueDetail />} />
             <Route path="events" element={<AdminEvents />} />
+            <Route path="campaigns" element={<AdminCampaigns />} />
           </Route>
 
           <Route path="/events" element={<EventsFeed />} />
