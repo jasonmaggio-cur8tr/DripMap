@@ -65,15 +65,15 @@ export default function TermsOfService() {
           </p>
         </Section>
 
-        <Section title="4. POURN Feature">
+        <Section title="4. Drips Feature">
           <p>
-            The POURN feature allows you to photograph and share drinks from coffee shops. When using this feature:
+            The Drips feature allows you to photograph and share drinks from coffee shops. When using this feature:
           </p>
           <ul>
             <li>Only post photos you have taken yourself or have rights to share</li>
             <li>Do not post photos that include identifiable individuals without their consent</li>
             <li>Posts should be genuine — do not fabricate experiences or misrepresent shops</li>
-            <li>We may remove POURNs that violate these Terms or our community standards</li>
+            <li>We may remove Drips that violate these Terms or our community standards</li>
           </ul>
         </Section>
 
