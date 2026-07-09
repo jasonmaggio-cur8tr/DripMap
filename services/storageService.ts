@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { resetSupabaseAuthState } from '../lib/authUtils';
+import { resetSupabaseAuthState, getAccessTokenFast } from '../lib/authUtils';
 
 const BUCKET_NAME = 'shop-images';
 
@@ -196,15 +196,12 @@ export const uploadImage = async (
   console.log('Uploading to:', fileName);
 
   try {
-    // Use the pre-fetched token if provided; otherwise fetch session (with 5s timeout as fallback)
+    // Use the pre-fetched token if provided; otherwise resolve one via
+    // getAccessTokenFast (short getSession race + localStorage fallback,
+    // immune to the getSession cross-tab-lock hang).
     let sessionToken = accessToken;
     if (!sessionToken) {
-      const sessionTimeout = <T>(p: Promise<T>): Promise<T> =>
-        Promise.race([p, new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Auth check timed out. Please check your connection.')), 5000)
-        )]);
-      const { data: { session: fetchedSession } } = await sessionTimeout(supabase.auth.getSession());
-      sessionToken = fetchedSession?.access_token;
+      sessionToken = await getAccessTokenFast(5000);
     }
 
     if (!sessionToken) {

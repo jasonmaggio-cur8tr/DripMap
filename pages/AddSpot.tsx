@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { supabase } from '../lib/supabase';
-import { resetSupabaseAuthState } from '../lib/authUtils';
+import { resetSupabaseAuthState, getAccessTokenFast } from '../lib/authUtils';
 import { Shop, Vibe, ShopImage, Brand } from '../types';
 import { ALL_VIBES, CHEEKY_VIBES_OPTIONS } from '../constants';
 import { generateShopDescription } from '../services/geminiService';
@@ -209,25 +209,12 @@ const AddSpot: React.FC = () => {
       // Upload images to Supabase Storage
       const imageFiles = uploadedImages.map(img => img.file);
 
-      // Get the auth token ONCE here with a generous timeout, then pass it
-      // directly to the upload functions so they never call getSession() themselves.
-      // getSession() can make a slow network call on mobile (token refresh) — doing
-      // it once here is safer than doing it inside each file's upload loop.
-      let accessToken: string | undefined;
-      try {
-        const sessionResult = await Promise.race([
-          supabase.auth.getSession(),
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('session_timeout')), 20000)
-          )
-        ]);
-        accessToken = sessionResult.data.session?.access_token ?? undefined;
-      } catch (err: any) {
-        if (err?.message === 'session_timeout') {
-          throw new Error('Could not connect to the authentication server. Please check your internet connection and try again.');
-        }
-        throw err;
-      }
+      // Get the auth token ONCE here and pass it directly to the upload
+      // functions so they never call getSession() themselves. Uses
+      // getAccessTokenFast(): getSession() can hang on its cross-tab lock
+      // (the "submit keeps timing out" bug), so after a short race it falls
+      // back to the token persisted in localStorage.
+      const accessToken = await getAccessTokenFast();
 
       if (!accessToken) {
         throw new Error('Could not authenticate. Please log out and log back in, then try again.');
