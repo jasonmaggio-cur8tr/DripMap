@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import Button from '../components/Button';
 import { useToast } from '../context/ToastContext';
@@ -13,17 +13,20 @@ const Auth: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showVerifyEmail, setShowVerifyEmail] = useState(false);
+  const [otp, setOtp] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
-  const { login, signup, resetPassword, user, isPasswordResetting } = useApp();
+  const { login, signup, resetPassword, verifyEmailOtp, resendVerification, user, isPasswordResetting } = useApp();
 
-  // Redirect to home if user is already logged in
+  // Redirect back to where the user came from (e.g. /events RSVP), or home
   useEffect(() => {
     if (user && !showVerifyEmail && !loading && !isPasswordResetting) {
-      console.log('[Auth] User logged in, redirecting home...');
-      navigate('/');
+      const returnTo = (location.state as { from?: string } | null)?.from || '/';
+      console.log('[Auth] User logged in, redirecting to', returnTo);
+      navigate(returnTo);
     }
-  }, [user, navigate, showVerifyEmail, loading, isPasswordResetting]);
+  }, [user, navigate, location.state, showVerifyEmail, loading, isPasswordResetting]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,7 +90,42 @@ const Auth: React.FC = () => {
     }
   };
 
-  // Show verify email screen after successful signup
+  // Verify the 6-digit code from the signup email. The confirmation email sends
+  // a code (not a clickable link), so we collect it here and call verifyOtp.
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otp.trim().length < 6) {
+      toast.error('Please enter the 6-digit code from your email');
+      return;
+    }
+    setLoading(true);
+    try {
+      const result = await verifyEmailOtp(email, otp.trim());
+      if (result.success) {
+        toast.success('Email verified! Welcome to DripMap.');
+        setShowVerifyEmail(false);
+        setOtp('');
+      } else {
+        toast.error(result.error?.message || 'Invalid or expired code');
+      }
+    } catch (error) {
+      console.error('[Auth] OTP verify error:', error);
+      toast.error('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    const result = await resendVerification(email);
+    if (result.success) {
+      toast.success('New code sent — check your email.');
+    } else {
+      toast.error(result.error?.message || 'Could not resend the code');
+    }
+  };
+
+  // Show 6-digit code entry after successful signup
   if (showVerifyEmail) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-coffee-50 px-4">
@@ -99,19 +137,45 @@ const Auth: React.FC = () => {
             Check Your Email
           </h1>
           <p className="text-coffee-600 mb-6">
-            We've sent a verification link to <span className="font-bold text-coffee-900">{email}</span>.
-            Please check your inbox and click the link to verify your account.
+            We've sent a 6-digit verification code to <span className="font-bold text-coffee-900">{email}</span>.
+            Enter it below to finish creating your account.
           </p>
-          <p className="text-sm text-coffee-400 mb-6">
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <input
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none font-bold text-center text-2xl tracking-[0.5em]"
+              placeholder="000000"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+              disabled={loading}
+              autoFocus
+            />
+            <Button type="submit" className="w-full py-4" isLoading={loading}>
+              {loading ? 'Verifying...' : 'Verify & Continue'}
+            </Button>
+          </form>
+          <p className="text-sm text-coffee-400 mt-4 mb-3">
             Don't see it? Check your spam folder.
           </p>
           <button
+            type="button"
+            onClick={handleResend}
+            className="text-coffee-900 font-bold hover:underline block mx-auto mb-4"
+          >
+            Resend code
+          </button>
+          <button
+            type="button"
             onClick={() => {
               setShowVerifyEmail(false);
               setMode('login');
               setPassword('');
+              setOtp('');
             }}
-            className="text-coffee-900 font-bold hover:underline"
+            className="text-coffee-500 text-sm font-bold hover:underline"
           >
             Back to Login
           </button>
