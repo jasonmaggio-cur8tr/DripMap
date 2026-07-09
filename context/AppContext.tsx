@@ -41,6 +41,8 @@ interface AppContextType {
   updateUserProfile: (updates: Partial<User>) => Promise<{ success: boolean; error?: any }>;
   resetPassword: (email: string) => Promise<{ success: boolean; error?: any }>;
   updatePassword: (password: string) => Promise<{ success: boolean; error?: any }>;
+  verifyEmailOtp: (email: string, token: string) => Promise<{ success: boolean; error?: any }>;
+  resendVerification: (email: string) => Promise<{ success: boolean; error?: any }>;
   addShop: (
     shop: Omit<Shop, "id" | "rating" | "reviewCount" | "reviews" | "stampCount">
   ) => Promise<void>;
@@ -411,6 +413,39 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       return { success: true };
     } catch (error) {
       console.error("Update password error:", error);
+      return { success: false, error };
+    }
+  };
+
+  // Verify the 6-digit code from the signup confirmation email. The Supabase
+  // "Confirm sign up" template sends a code ({{ .Token }}), not a link, so the
+  // web confirms via verifyOtp rather than a clicked URL.
+  const verifyEmailOtp = async (email: string, token: string) => {
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: 'signup',
+      });
+
+      if (error) throw error;
+      if (data.user) {
+        await loadUserProfile(data.user.id);
+      }
+      return { success: true };
+    } catch (error) {
+      console.error("Verify email OTP error:", error);
+      return { success: false, error };
+    }
+  };
+
+  const resendVerification = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resend({ type: 'signup', email });
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      console.error("Resend verification error:", error);
       return { success: false, error };
     }
   };
@@ -797,6 +832,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         logout,
         resetPassword,
         updatePassword,
+        verifyEmailOtp,
+        resendVerification,
         updateUserProfile,
         isPasswordResetting,
         addShop,

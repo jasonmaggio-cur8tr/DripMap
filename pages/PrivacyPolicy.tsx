@@ -36,7 +36,7 @@ export default function PrivacyPolicy() {
             <ul>
               <li><strong>Account information:</strong> Email address, username, and password when you create an account.</li>
               <li><strong>Profile information:</strong> Avatar photo, bio, and social links (Instagram, X) if you choose to add them.</li>
-              <li><strong>Content you post:</strong> Photos, drink names, notes, reviews ("POURNs"), and experience logs you submit.</li>
+              <li><strong>Content you post:</strong> Photos, drink names, notes, reviews ("Drips"), and experience logs you submit.</li>
               <li><strong>Shop data:</strong> If you add or claim a coffee shop, we collect the shop name, address, photos, and other details you provide.</li>
               <li><strong>Coffee Date invitations:</strong> If you use the Coffee Date feature and grant contacts permission, we access your device contacts only to help you invite friends. We do not store your contacts on our servers.</li>
               <li><strong>Payment information:</strong> Subscription purchases are processed by Apple's App Store. We do not receive or store your payment card details. We receive confirmation of purchase status from Apple and RevenueCat.</li>
@@ -54,7 +54,7 @@ export default function PrivacyPolicy() {
         <Section title="2. How We Use Your Information">
           <ul>
             <li>To create and manage your account</li>
-            <li>To display your profile, POURNs, reviews, and public activity to other users</li>
+            <li>To display your profile, Drips, reviews, and public activity to other users</li>
             <li>To show coffee shops near you on the map</li>
             <li>To send push notifications you have opted into</li>
             <li>To process and verify subscription status (DripClub)</li>
@@ -68,7 +68,7 @@ export default function PrivacyPolicy() {
         <Section title="3. How We Share Your Information">
           <p>We do not sell your personal information. We share information only in these limited circumstances:</p>
           <ul>
-            <li><strong>Publicly:</strong> Your username, profile photo, POURNs, reviews, and experience logs are visible to all users of the Service (logged in or not).</li>
+            <li><strong>Publicly:</strong> Your username, profile photo, Drips, reviews, and experience logs are visible to all users of the Service (logged in or not).</li>
             <li><strong>Service providers:</strong> We use Supabase (database and authentication), Mapbox (mapping), RevenueCat (subscription management), and Expo (app delivery). These providers process data on our behalf under appropriate data security standards.</li>
             <li><strong>Legal requirements:</strong> We may disclose information if required by law, subpoena, or to protect the rights, safety, or property of DripMap, our users, or the public.</li>
             <li><strong>Business transfers:</strong> In the event of a merger, acquisition, or sale of assets, your information may be transferred as part of that transaction.</li>
