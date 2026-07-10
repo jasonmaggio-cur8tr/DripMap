@@ -36,6 +36,7 @@ import EventsSection from "../components/EventsSection";
 const ExpandableLogCard = ({ log }: { log: any }) => {
   const [expanded, setExpanded] = useState(false);
   const { user } = useApp();
+  const { toast } = useToast();
   const [isLiked, setIsLiked] = useState<boolean>(log.isLiked || false);
   const [likesCount, setLikesCount] = useState<number>(log.likesCount || 0);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
@@ -43,7 +44,7 @@ const ExpandableLogCard = ({ log }: { log: any }) => {
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user) {
-      alert("Please log in to like this log.");
+      toast.error("Please log in to like this log.");
       return;
     }
     if (isLikeLoading) return;
@@ -197,6 +198,7 @@ const ShopDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const {
     shops,
+    shopsLoading,
     user,
     toggleSaveShop,
     toggleVisitedShop,
@@ -292,8 +294,22 @@ const ShopDetail: React.FC = () => {
     fetchCommunity();
   }, [shop?.id, getShopCommunity]);
 
+  // Shops load asynchronously; don't flash "not found" while the initial fetch
+  // is still running (this is the shared-link entry path).
+  if (shopsLoading && !shop) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-coffee-200 border-t-volt-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
   if (!shop) {
-    return <div className="p-10 text-center">Shop not found</div>;
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 p-10 text-center">
+        <p className="text-coffee-500 font-medium">Shop not found.</p>
+        <Link to="/" className="text-volt-500 font-bold hover:underline">Back to map</Link>
+      </div>
+    );
   }
   const isSaved = user?.savedShops.includes(shop.id);
   const isVisited = user?.visitedShops.includes(shop.id);

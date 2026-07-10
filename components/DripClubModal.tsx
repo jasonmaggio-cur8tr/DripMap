@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BillingInterval } from '../types';
 import { formatPrice, getPricing, isStripeConfigured } from '../services/subscriptionService';
+import { useToast } from '../context/ToastContext';
 
 interface DripClubModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ const DripClubModal: React.FC<DripClubModalProps> = ({
   isLoading = false,
 }) => {
   const [billingCycle, setBillingCycle] = useState<BillingInterval>('annual');
+  const { toast } = useToast();
 
   if (!isOpen) return null;
 
@@ -28,7 +30,7 @@ const DripClubModal: React.FC<DripClubModalProps> = ({
 
   const handleSubscribe = () => {
     if (!stripeReady) {
-      alert('Stripe is not configured. Please contact support.');
+      toast.error('Stripe is not configured. Please contact support.');
       return;
     }
     onSubscribe(billingCycle);

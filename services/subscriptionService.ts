@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { getAccessTokenFast } from '../lib/authUtils';
 import {
   DripClubMembership,
   SubscriptionTier,
@@ -229,8 +230,8 @@ export const createShopCheckoutSession = async (
     }
 
     // Verify user is authenticated
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) {
+    const token = await getAccessTokenFast();
+    if (!token) {
       return { error: 'Please sign in to continue.' };
     }
 
@@ -245,7 +246,7 @@ export const createShopCheckoutSession = async (
         cancelUrl: `${config.appUrl}/#/shop/${shopId}?subscription=canceled`,
       },
       headers: {
-        Authorization: `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -306,8 +307,8 @@ export const createDripClubCheckoutSession = async (
     }
 
     // Verify user is authenticated before calling edge function
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) {
+    const token = await getAccessTokenFast();
+    if (!token) {
       return { error: 'Please sign in to continue.' };
     }
 
@@ -322,7 +323,7 @@ export const createDripClubCheckoutSession = async (
         cancelUrl: `${config.appUrl}/#/dripclub?checkout=canceled`,
       },
       headers: {
-        Authorization: `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -353,8 +354,8 @@ export const cancelSubscription = async (
   cancelAtPeriodEnd: boolean = true
 ): Promise<boolean> => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) {
+    const token = await getAccessTokenFast();
+    if (!token) {
       console.error('[subscriptionService] Not authenticated');
       return false;
     }
@@ -365,7 +366,7 @@ export const cancelSubscription = async (
         cancelAtPeriodEnd,
       },
       headers: {
-        Authorization: `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -383,8 +384,8 @@ export const getCustomerPortalUrl = async (
   returnUrl: string
 ): Promise<{ url: string } | { error: string }> => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) {
+    const token = await getAccessTokenFast();
+    if (!token) {
       return { error: 'Please sign in to continue.' };
     }
 
@@ -394,7 +395,7 @@ export const getCustomerPortalUrl = async (
         returnUrl,
       },
       headers: {
-        Authorization: `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
