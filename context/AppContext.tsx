@@ -190,7 +190,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
           setIsPasswordResetting(true);
         }
 
-        const { data: { session } } = await supabase.auth.getSession();
+        // getSession() can hang on a stuck cross-tab lock; race it against a
+        // timeout so bootstrap never wedges (which would leave the app stuck
+        // loading / appearing logged-out). onAuthStateChange (below) still fires
+        // with the real session shortly after, so timing out here is safe.
+        const sessionResult = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise<Awaited<ReturnType<typeof supabase.auth.getSession>>>((resolve) =>
+            setTimeout(() => resolve({ data: { session: null }, error: null } as any), 3000)
+          ),
+        ]);
+        const session = sessionResult.data.session;
         if (session?.user) {
           await loadUserProfile(session.user.id);
         }

@@ -16,7 +16,7 @@ const parseLocalDateTime = (dateTimeStr: string) => {
 };
 
 const EventsFeed: React.FC = () => {
-    const { events, shops, user } = useApp();
+    const { events, shops, user, shopsLoading } = useApp();
     const { toast } = useToast();
     const [filterType, setFilterType] = useState<EventType | 'All'>('All');
     const [search, setSearch] = useState('');
@@ -162,6 +162,10 @@ const EventsFeed: React.FC = () => {
                             {sections.upcoming.map(e => (
                                 <EventCard key={e.id} event={e} shop={shops.find(s => s.id === e.shopId)} />
                             ))}
+                        </div>
+                    ) : shopsLoading ? (
+                        <div className="text-center py-20">
+                            <div className="w-10 h-10 border-4 border-coffee-200 border-t-volt-500 rounded-full animate-spin mx-auto" />
                         </div>
                     ) : (
                         <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-coffee-200">

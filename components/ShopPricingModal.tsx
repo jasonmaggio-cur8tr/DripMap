@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BillingInterval, SubscriptionTier } from '../types';
 import { formatPrice, getPricing, isStripeConfigured } from '../services/subscriptionService';
+import { useToast } from '../context/ToastContext';
 
 interface ShopPricingModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ const ShopPricingModal: React.FC<ShopPricingModalProps> = ({
 }) => {
   const [billingCycle, setBillingCycle] = useState<BillingInterval>('monthly');
   const [proPlusDiscountEnabled, setProPlusDiscountEnabled] = useState(true);
+  const { toast } = useToast();
 
   if (!isOpen) return null;
 
@@ -37,7 +39,7 @@ const ShopPricingModal: React.FC<ShopPricingModalProps> = ({
 
   const handleSubscribe = (tier: 'pro' | 'pro_plus') => {
     if (!stripeReady) {
-      alert('Stripe is not configured. Please contact support.');
+      toast.error('Stripe is not configured. Please contact support.');
       return;
     }
     onSubscribe(tier, billingCycle);
