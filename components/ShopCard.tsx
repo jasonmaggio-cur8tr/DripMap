@@ -39,8 +39,10 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
         const deltaX = Math.abs(e.touches[0].clientX - touchStartX.current);
         const deltaY = Math.abs(e.touches[0].clientY - touchStartY.current);
 
-        // If moved more than 10px, treat as swipe/scroll
-        if (deltaX > 10 || deltaY > 10) {
+        // Only a HORIZONTAL drag is a gallery swipe that should suppress the
+        // tap-to-open. Vertical movement is the user scrolling the feed and must
+        // NOT block navigation — otherwise the card becomes unclickable after a scroll.
+        if (deltaX > 10 && deltaX > deltaY) {
             isSwiping.current = true;
         }
     };
@@ -64,20 +66,13 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
             className="block group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-coffee-100 hover:border-volt-400/50"
             onMouseEnter={handleInteraction}
             onFocus={handleInteraction}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
             onClick={handleClick}
         >
             <div
                 ref={scrollContainerRef}
                 className="relative aspect-[4/5] overflow-x-auto flex snap-x snap-mandatory no-scrollbar"
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onClick={(e) => {
-                    // Prevent click propagation from gallery if swiping, but allow if it's a tap
-                    if (isSwiping.current) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    }
-                }}
             >
                 {/* Always render the first image (Featured) */}
                 <div className="w-full flex-shrink-0 snap-center relative h-full">
