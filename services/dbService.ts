@@ -417,6 +417,8 @@ export const fetchShops = async (): Promise<Shop[]> => {
           plantMilks: shop.plant_milks || [],
           // Map Drip Score
           dripScore: shop.shop_aggregates?.drip_score,
+          // Listing recency (drives the "Just Added" badge)
+          createdAt: shop.created_at,
         }));
 
 

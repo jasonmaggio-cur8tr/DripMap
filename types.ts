@@ -256,6 +256,9 @@ export interface Shop {
   dripScore?: number; // 0-100, live score
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
+
+  // Listing recency (mapped from updated_at || created_at in dbService)
+  createdAt?: string;
 }
 
 export interface SocialLinks {

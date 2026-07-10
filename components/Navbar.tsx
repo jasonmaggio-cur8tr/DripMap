@@ -26,6 +26,9 @@ const Navbar: React.FC = () => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
+  // The Dark Roast Discover feed provides its own header + bottom tab bar.
+  if (isHome) return null;
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-coffee-200 h-14 sm:h-16">
       <div className="container mx-auto h-full px-3 sm:px-4 flex items-center justify-between">
