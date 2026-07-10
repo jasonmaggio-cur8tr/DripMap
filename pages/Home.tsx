@@ -9,6 +9,7 @@ import BottomTabBar from '../components/darkroast/BottomTabBar';
 import NotificationBell from '../components/NotificationBell';
 import { ALL_VIBES } from '../constants';
 import { Vibe } from '../types';
+import { fetchSaversForShops } from '../services/dbService';
 
 // Dark Roast Discover feed (design_handoff_dark_roast/README.md → Screens 1–3).
 // "Just Added" big-card feed + vibe filter + hamburger drawer + bottom tab bar.
@@ -90,6 +91,24 @@ const Home: React.FC = () => {
   }, [feedShops.length, viewMode]);
   const visibleShops = feedShops.slice(0, visibleCount);
 
+  // "Who likes this shop" — batched per page of cards, cached across pages.
+  const [saversByShop, setSaversByShop] = useState<Record<string, { id: string; username: string; avatarUrl?: string }[]>>({});
+  useEffect(() => {
+    const missing = visibleShops.map(s => s.id).filter(id => !(id in saversByShop));
+    if (missing.length === 0) return;
+    let cancelled = false;
+    fetchSaversForShops(missing).then(fetched => {
+      if (cancelled) return;
+      setSaversByShop(prev => {
+        const next = { ...prev };
+        missing.forEach(id => { next[id] = fetched[id] ?? []; });
+        return next;
+      });
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleCount, feedShops]);
+
   const distanceFor = (lat?: number, lng?: number): number | null => {
     if (!userLocation || lat == null || lng == null) return null;
     return getDistanceMiles(userLocation.lat, userLocation.lng, lat, lng);
@@ -106,6 +125,27 @@ const Home: React.FC = () => {
   };
 
   const isFiltered = activeVibe !== null;
+
+  // ── TEMP (design review — remove after Jason picks) ────────────────────
+  // First three cards demo capsule opacities 0.72 / 0.55 / 0.40, each with a
+  // mocked facepile so the "who likes" treatment is visible without the RLS
+  // policy change. Real savers data replaces this once approved.
+  const DEMO_ALPHAS = [0.72, 0.55, 0.4];
+  const DEMO_SAVERS = [
+    { id: 'demo-1', username: 'toni' },
+    { id: 'demo-2', username: 'jason' },
+    { id: 'demo-3', username: 'nancy' },
+    { id: 'demo-4', username: 'malik' },
+    { id: 'demo-5', username: 'riley' },
+    { id: 'demo-6', username: 'sam' },
+    { id: 'demo-7', username: 'ava' },
+    { id: 'demo-8', username: 'kai' },
+    { id: 'demo-9', username: 'mia' },
+    { id: 'demo-10', username: 'leo' },
+    { id: 'demo-11', username: 'zoe' },
+    { id: 'demo-12', username: 'max' },
+  ];
+  // ────────────────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-dvh" style={{ background: '#1e1712' }}>
@@ -278,6 +318,8 @@ const Home: React.FC = () => {
                   distanceMi={distanceFor(shop.location?.lat, shop.location?.lng)}
                   categoryBadge={isFiltered ? String(activeVibe) : null}
                   eager={i < 2}
+                  savers={!isFiltered && i < 3 ? DEMO_SAVERS : saversByShop[shop.id]}
+                  demoAlpha={!isFiltered && i < 3 ? DEMO_ALPHAS[i] : undefined}
                 />
               ))}
               {visibleCount < feedShops.length && (

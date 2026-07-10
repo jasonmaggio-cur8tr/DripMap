@@ -2,6 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shop } from '../../types';
 import { sizedImageUrl } from '../../lib/imageUrl';
+import { countryFlag } from '../../lib/countryFlag';
+
+// Glass capsule background opacity (Jason iterating on this — spec was 0.72).
+const CAPSULE_ALPHA = 0.55;
 
 // Dark Roast big shop card (design_handoff_dark_roast/README.md → Screen 1).
 // Full-bleed photo, top badge + save heart, bottom glass detail capsule.
@@ -35,9 +39,13 @@ interface DiscoverCardProps {
   categoryBadge?: string | null;
   /** Eagerly load the first cards (above the fold); rest lazy-load. */
   eager?: boolean;
+  /** Users who saved ("like") this shop — shown as a facepile in the capsule. */
+  savers?: { id: string; username: string; avatarUrl?: string }[];
+  /** TEMP (design review): override capsule opacity + show a corner label. */
+  demoAlpha?: number;
 }
 
-const DiscoverCard: React.FC<DiscoverCardProps> = ({ shop, isSaved, onToggleSave, distanceMi, categoryBadge, eager }) => {
+const DiscoverCard: React.FC<DiscoverCardProps> = ({ shop, isSaved, onToggleSave, distanceMi, categoryBadge, eager, savers, demoAlpha }) => {
   const photo = shop.gallery?.[0]?.url;
   const addedLabel = categoryBadge ? null : justAddedLabel(shop.createdAt);
   const tint = categoryBadge ? CATEGORY_TINTS[categoryBadge] ?? { bg: 'rgba(204,255,0,0.92)', text: '#231b15' } : null;
@@ -113,10 +121,21 @@ const DiscoverCard: React.FC<DiscoverCardProps> = ({ shop, isSaved, onToggleSave
         <i className={`${isSaved ? 'fas' : 'far'} fa-heart text-lg`} style={{ color: isSaved ? '#ccff00' : '#fff' }}></i>
       </button>
 
+      {/* TEMP (design review): variant label */}
+      {demoAlpha != null && (
+        <span
+          className="absolute right-4 top-16 rounded-full px-2.5 py-1 text-[10px] font-black uppercase"
+          style={{ background: '#fff', color: '#231b15', letterSpacing: '0.05em' }}
+        >
+          Opacity {demoAlpha}
+        </span>
+      )}
+
       {/* Glass detail capsule */}
       <div
         className="absolute inset-x-3.5 bottom-3.5 rounded-[20px] border border-white/10 px-[18px] py-4"
-        style={{ background: 'rgba(35,27,21,0.72)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)' }}
+        style={{ background: `rgba(35,27,21,${demoAlpha ?? CAPSULE_ALPHA})`, backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)' }}
+        data-capsule
       >
         <div className="flex items-start justify-between gap-3">
           <h3 className="font-serif text-2xl font-black leading-tight text-white" style={{ letterSpacing: '-0.02em' }}>
@@ -132,11 +151,46 @@ const DiscoverCard: React.FC<DiscoverCardProps> = ({ shop, isSaved, onToggleSave
             </span>
           ) : null}
         </div>
-        {metaParts.length > 0 && (
-          <p className="mt-1.5 text-xs font-medium" style={{ color: 'rgba(255,255,255,0.75)' }}>
-            <i className="fas fa-map-marker-alt mr-1.5"></i>
-            {metaParts.join(' · ')}
-          </p>
+        {(metaParts.length > 0 || (savers && savers.length > 0)) && (
+          <div className="mt-1.5 flex items-center justify-between gap-3">
+            <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.75)' }}>
+              <i className="fas fa-map-marker-alt mr-1.5"></i>
+              {countryFlag(shop.location?.country) && (
+                <span className="mr-1.5">{countryFlag(shop.location?.country)}</span>
+              )}
+              {metaParts.join(' · ')}
+            </p>
+            {savers && savers.length > 0 && (
+              <span className="flex shrink-0 items-center">
+                <span className="flex -space-x-2">
+                  {savers.slice(0, 3).map(s =>
+                    s.avatarUrl ? (
+                      <img
+                        key={s.id}
+                        src={sizedImageUrl(s.avatarUrl, { width: 48 })}
+                        alt={s.username}
+                        title={s.username}
+                        className="h-5 w-5 rounded-full object-cover"
+                        style={{ border: '1.5px solid rgba(35,27,21,0.9)' }}
+                      />
+                    ) : (
+                      <span
+                        key={s.id}
+                        title={s.username}
+                        className="flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-black uppercase"
+                        style={{ background: '#ccff00', color: '#231b15', border: '1.5px solid rgba(35,27,21,0.9)' }}
+                      >
+                        {s.username?.[0] ?? '?'}
+                      </span>
+                    )
+                  )}
+                </span>
+                <span className="ml-1.5 text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                  {savers.length}
+                </span>
+              </span>
+            )}
+          </div>
         )}
         {vibes.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-1.5">
