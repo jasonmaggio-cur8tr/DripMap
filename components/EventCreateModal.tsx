@@ -165,17 +165,18 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="rounded-3xl border border-white/[0.09] shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" style={{ background: '#221a14' }}>
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-coffee-100 p-6 flex justify-between items-center">
-          <h2 className="text-2xl font-serif font-bold text-coffee-900">
+        <div className="sticky top-0 border-b border-white/[0.07] p-6 flex justify-between items-center z-10" style={{ background: '#221a14' }}>
+          <h2 className="text-2xl font-serif font-black" style={{ color: '#f3efe0', letterSpacing: '-0.02em' }}>
             {isEditing ? 'Edit Event' : 'Suggest New Event'}
           </h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full hover:bg-coffee-100 flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400"
+            style={{ background: '#2b221b' }}
           >
-            <i className="fas fa-times text-coffee-600"></i>
+            <i className="fas fa-times" style={{ color: '#f3efe0' }}></i>
           </button>
         </div>
 
@@ -183,15 +184,15 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Cover Image */}
           <div>
-            <label className="block text-sm font-bold text-coffee-900 mb-2 uppercase tracking-wide">
+            <label className="block text-[10px] font-bold mb-2 uppercase tracking-[0.08em]" style={{ color: 'rgba(243,239,224,0.5)' }}>
               Cover Image
             </label>
             <div
               className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer ${isDragging
-                ? 'border-volt-500 bg-volt-50'
+                ? 'border-volt-400 bg-volt-400/10'
                 : uploadingImage
-                  ? 'border-coffee-300 bg-coffee-50'
-                  : 'border-coffee-200 hover:border-volt-400'
+                  ? 'border-white/[0.15] bg-[rgba(255,255,255,0.04)]'
+                  : 'border-white/[0.15] hover:border-volt-400'
                 }`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
@@ -222,17 +223,18 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
               ) : uploadingImage ? (
                 <div>
                   <i className="fas fa-spinner fa-spin text-4xl text-volt-400 mb-3"></i>
-                  <p className="text-sm text-coffee-600 mb-2">Uploading image...</p>
+                  <p className="text-sm mb-2" style={{ color: '#e4ddce' }}>Uploading image...</p>
                 </div>
               ) : (
                 <div>
-                  <i className="fas fa-image text-4xl text-coffee-300 mb-3"></i>
-                  <p className="text-sm text-coffee-600 mb-2">Click or Drag Image</p>
-                  <p className="text-xs text-coffee-400">Max 5MB (Pro Tip: Use landscape)</p>
+                  <i className="fas fa-image text-4xl mb-3" style={{ color: 'rgba(243,239,224,0.25)' }}></i>
+                  <p className="text-sm mb-2" style={{ color: '#e4ddce' }}>Click or Drag Image</p>
+                  <p className="text-xs" style={{ color: 'rgba(243,239,224,0.5)' }}>Max 5MB (Pro Tip: Use landscape)</p>
                   <input
                     type="text"
                     placeholder="Or paste image URL"
-                    className="mt-3 w-full px-3 py-2 border border-coffee-200 rounded-lg text-sm"
+                    className="mt-3 w-full px-3 py-2 rounded-lg border-none text-sm font-medium focus:outline-none focus:ring-2 focus:ring-volt-400"
+                    style={{ background: '#2f251d', color: '#f3efe0' }}
                     value={formData.coverImageUrl}
                     onChange={(e) => setFormData({ ...formData, coverImageUrl: e.target.value })}
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
@@ -244,7 +246,7 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
 
           {/* Shop Selection */}
           <div>
-            <label className="block text-sm font-bold text-coffee-900 mb-2 uppercase tracking-wide">
+            <label className="block text-[10px] font-bold mb-2 uppercase tracking-[0.08em]" style={{ color: 'rgba(243,239,224,0.5)' }}>
               Shop *
             </label>
             {/* Searchable Shop Input */}
@@ -253,7 +255,8 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
                 <input
                   type="text"
                   placeholder="Search for a shop..."
-                  className="w-full px-4 py-3 border border-coffee-200 rounded-xl focus:outline-none focus:border-volt-400 mb-2"
+                  className="w-full px-4 py-3 rounded-xl border-none text-sm font-medium focus:outline-none focus:ring-2 focus:ring-volt-400 mb-2"
+                  style={{ background: '#2f251d', color: '#f3efe0' }}
                   value={formData.shopId ? shops.find(s => s.id === formData.shopId)?.name : ''}
                   onChange={(e) => {
                     setFormData({ ...formData, shopId: '' });
@@ -270,8 +273,9 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
 
             <select
               required
-              className={`w-full px-4 py-3 border border-coffee-200 rounded-xl focus:outline-none focus:border-volt-400 ${isEditing || disableShopSelection ? 'bg-gray-50 cursor-not-allowed' : 'bg-white'
+              className={`w-full px-4 py-3 rounded-xl border-none text-sm font-medium focus:outline-none focus:ring-2 focus:ring-volt-400 ${isEditing || disableShopSelection ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
+              style={{ background: '#2f251d', color: '#f3efe0', colorScheme: 'dark' }}
               value={formData.shopId}
               onChange={(e) => setFormData({ ...formData, shopId: e.target.value })}
               disabled={isEditing || disableShopSelection}
@@ -285,7 +289,7 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
             </select>
 
             {(isEditing || disableShopSelection) && (
-              <p className="text-xs text-coffee-400 mt-1">
+              <p className="text-xs mt-1" style={{ color: 'rgba(243,239,224,0.5)' }}>
                 {isEditing ? 'Shop cannot be changed when editing' : 'Suggesting event for this shop'}
               </p>
             )}
@@ -293,14 +297,14 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
 
           {/* Title */}
           <div>
-            <label className="block text-sm font-bold text-coffee-900 mb-2 uppercase tracking-wide">
+            <label className="block text-[10px] font-bold mb-2 uppercase tracking-[0.08em]" style={{ color: 'rgba(243,239,224,0.5)' }}>
               Title *
             </label>
             <input
               type="text"
               required
               placeholder="e.g. Latte Art Throwdown"
-              className="w-full px-4 py-3 border border-coffee-200 rounded-xl focus:outline-none focus:border-volt-400"
+              className="w-full px-4 py-3 rounded-xl border-none text-sm font-medium focus:outline-none focus:ring-2 focus:ring-volt-400" style={{ background: '#2f251d', color: '#f3efe0', colorScheme: 'dark' }}
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             />
@@ -308,13 +312,13 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-bold text-coffee-900 mb-2 uppercase tracking-wide">
+            <label className="block text-[10px] font-bold mb-2 uppercase tracking-[0.08em]" style={{ color: 'rgba(243,239,224,0.5)' }}>
               Description
             </label>
             <textarea
               placeholder="Event details..."
               rows={4}
-              className="w-full px-4 py-3 border border-coffee-200 rounded-xl focus:outline-none focus:border-volt-400 resize-none"
+              className="w-full px-4 py-3 rounded-xl border-none text-sm font-medium focus:outline-none focus:ring-2 focus:ring-volt-400 resize-none" style={{ background: '#2f251d', color: '#f3efe0', colorScheme: 'dark' }}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             />
@@ -322,11 +326,11 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
 
           {/* Event Type */}
           <div>
-            <label className="block text-sm font-bold text-coffee-900 mb-2 uppercase tracking-wide">
+            <label className="block text-[10px] font-bold mb-2 uppercase tracking-[0.08em]" style={{ color: 'rgba(243,239,224,0.5)' }}>
               Event Type
             </label>
             <select
-              className="w-full px-4 py-3 border border-coffee-200 rounded-xl focus:outline-none focus:border-volt-400"
+              className="w-full px-4 py-3 rounded-xl border-none text-sm font-medium focus:outline-none focus:ring-2 focus:ring-volt-400" style={{ background: '#2f251d', color: '#f3efe0', colorScheme: 'dark' }}
               value={formData.eventType}
               onChange={(e) => setFormData({ ...formData, eventType: e.target.value as EventType })}
             >
@@ -339,24 +343,24 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
           {/* Date & Time */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold text-coffee-900 mb-2 uppercase tracking-wide">
+              <label className="block text-[10px] font-bold mb-2 uppercase tracking-[0.08em]" style={{ color: 'rgba(243,239,224,0.5)' }}>
                 Start Date & Time *
               </label>
               <input
                 type="datetime-local"
                 required
-                className="w-full px-4 py-3 border border-coffee-200 rounded-xl focus:outline-none focus:border-volt-400"
+                className="w-full px-4 py-3 rounded-xl border-none text-sm font-medium focus:outline-none focus:ring-2 focus:ring-volt-400" style={{ background: '#2f251d', color: '#f3efe0', colorScheme: 'dark' }}
                 value={formData.startDateTime}
                 onChange={(e) => setFormData({ ...formData, startDateTime: e.target.value })}
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-coffee-900 mb-2 uppercase tracking-wide">
+              <label className="block text-[10px] font-bold mb-2 uppercase tracking-[0.08em]" style={{ color: 'rgba(243,239,224,0.5)' }}>
                 End Date & Time
               </label>
               <input
                 type="datetime-local"
-                className="w-full px-4 py-3 border border-coffee-200 rounded-xl focus:outline-none focus:border-volt-400"
+                className="w-full px-4 py-3 rounded-xl border-none text-sm font-medium focus:outline-none focus:ring-2 focus:ring-volt-400" style={{ background: '#2f251d', color: '#f3efe0', colorScheme: 'dark' }}
                 value={formData.endDateTime}
                 onChange={(e) => setFormData({ ...formData, endDateTime: e.target.value })}
               />
@@ -365,13 +369,13 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
 
           {/* Location */}
           <div>
-            <label className="block text-sm font-bold text-coffee-900 mb-2 uppercase tracking-wide">
+            <label className="block text-[10px] font-bold mb-2 uppercase tracking-[0.08em]" style={{ color: 'rgba(243,239,224,0.5)' }}>
               Location (Optional)
             </label>
             <input
               type="text"
               placeholder="Event location if different from shop"
-              className="w-full px-4 py-3 border border-coffee-200 rounded-xl focus:outline-none focus:border-volt-400"
+              className="w-full px-4 py-3 rounded-xl border-none text-sm font-medium focus:outline-none focus:ring-2 focus:ring-volt-400" style={{ background: '#2f251d', color: '#f3efe0', colorScheme: 'dark' }}
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
             />
@@ -379,13 +383,13 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
 
           {/* Ticket Link */}
           <div>
-            <label className="block text-sm font-bold text-coffee-900 mb-2 uppercase tracking-wide">
+            <label className="block text-[10px] font-bold mb-2 uppercase tracking-[0.08em]" style={{ color: 'rgba(243,239,224,0.5)' }}>
               Ticket Link (Optional)
             </label>
             <input
               type="url"
               placeholder="https://eventbrite.com/..."
-              className="w-full px-4 py-3 border border-coffee-200 rounded-xl focus:outline-none focus:border-volt-400"
+              className="w-full px-4 py-3 rounded-xl border-none text-sm font-medium focus:outline-none focus:ring-2 focus:ring-volt-400" style={{ background: '#2f251d', color: '#f3efe0', colorScheme: 'dark' }}
               value={formData.ticketLink}
               onChange={(e) => setFormData({ ...formData, ticketLink: e.target.value })}
             />
@@ -393,22 +397,23 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
 
           {/* Publish Toggle - Only for Privileged Users */}
           {isPrivileged && (
-            <div className="flex items-center gap-3 p-4 bg-coffee-50 rounded-xl border border-coffee-100">
+            <div className="flex items-center gap-3 p-4 rounded-xl border border-white/[0.09]" style={{ background: '#2b221b' }}>
               <input
                 type="checkbox"
                 id="publish"
-                className="w-5 h-5 text-volt-400 rounded focus:ring-volt-400"
+                className="w-5 h-5 rounded focus:outline-none focus:ring-2 focus:ring-volt-400"
+                style={{ accentColor: '#ccff00' }}
                 checked={formData.isPublished}
                 onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
               />
-              <label htmlFor="publish" className="text-sm font-bold text-coffee-900">
+              <label htmlFor="publish" className="text-sm font-bold" style={{ color: '#f3efe0' }}>
                 Publish event immediately
               </label>
             </div>
           )}
 
           {!isPrivileged && !isEditing && (
-            <div className="p-4 bg-blue-50 text-blue-800 rounded-xl text-sm flex gap-3">
+            <div className="p-4 rounded-xl text-sm flex gap-3" style={{ background: 'rgba(96,165,250,0.12)', color: '#93c5fd' }}>
               <i className="fas fa-info-circle mt-0.5"></i>
               <div>
                 <p className="font-bold">Pending Review</p>
@@ -422,14 +427,16 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-3 border border-coffee-200 text-coffee-600 font-bold rounded-xl hover:bg-coffee-50 transition-colors"
+              className="flex-1 px-6 py-3 font-bold rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400"
+              style={{ background: '#2b221b', color: '#e4ddce', border: '1px solid rgba(255,255,255,0.09)' }}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-6 py-3 bg-volt-400 text-coffee-900 font-bold rounded-xl hover:bg-volt-500 transition-colors disabled:opacity-50"
+              className="flex-1 px-6 py-3 font-extrabold rounded-full transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-volt-400"
+              style={{ background: '#ccff00', color: '#231b15' }}
             >
               {loading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Event' : 'Suggest Event')}
             </button>

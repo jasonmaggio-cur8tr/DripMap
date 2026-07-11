@@ -58,22 +58,23 @@ const EventsSection: React.FC<EventsSectionProps> = ({ shopId, isPro, onUpgrade 
   };
 
   return (
-    <div className="relative bg-white rounded-3xl shadow-sm border border-coffee-100 overflow-hidden">
+    <div className="relative rounded-3xl border border-white/[0.07] overflow-hidden" style={{ background: '#2b221b' }}>
       {/* Removed LockedOverlay to allow public events */}
 
-      <div className="bg-coffee-900 p-6 flex justify-between items-center">
+      <div className="p-6 flex justify-between items-center border-b border-white/[0.07]" style={{ background: '#221a14' }}>
         <div>
-          <h2 className="text-xl font-bold text-volt-400 flex items-center gap-2">
+          <h2 className="text-xl font-serif font-black text-volt-400 flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
             <i className="fas fa-calendar-alt"></i> Events
           </h2>
-          <p className="text-coffee-200 text-sm mt-1">
+          <p className="text-sm mt-1" style={{ color: '#e4ddce' }}>
             Community workshops, tastings & meetups
           </p>
         </div>
 
         <button
           onClick={handleCreateClick}
-          className="px-4 py-2 bg-volt-400 text-coffee-900 font-bold rounded-lg hover:bg-volt-500 transition-colors flex items-center gap-2"
+          className="px-4 py-2 font-extrabold rounded-full transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-volt-400"
+          style={{ background: '#ccff00', color: '#231b15' }}
         >
           <i className="fas fa-plus"></i> {isPrivileged ? 'Create Event' : 'Suggest Event'}
         </button>
@@ -81,7 +82,7 @@ const EventsSection: React.FC<EventsSectionProps> = ({ shopId, isPro, onUpgrade 
 
       <div className="p-6">
         {visibleEvents.length === 0 ? (
-          <div className="text-center py-12 text-coffee-400">
+          <div className="text-center py-12" style={{ color: 'rgba(243,239,224,0.5)' }}>
             <i className="fas fa-calendar-times text-4xl mb-3 opacity-50"></i>
             <p className="font-medium">No events yet</p>
             <p className="text-sm mt-1">Be the first to create an event here!</p>
@@ -89,11 +90,11 @@ const EventsSection: React.FC<EventsSectionProps> = ({ shopId, isPro, onUpgrade 
         ) : (
           <div className="space-y-3">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-coffee-900">Upcoming Events ({upcomingEvents.length})</h3>
+              <h3 className="font-bold" style={{ color: '#f3efe0' }}>Upcoming Events ({upcomingEvents.length})</h3>
               {isPrivileged && (
                 <a
                   href="/admin/events"
-                  className="text-sm text-volt-500 hover:underline font-medium"
+                  className="text-sm text-volt-400 hover:underline font-medium"
                 >
                   Manage All →
                 </a>
@@ -101,31 +102,32 @@ const EventsSection: React.FC<EventsSectionProps> = ({ shopId, isPro, onUpgrade 
             </div>
 
             {upcomingEvents.length === 0 ? (
-              <p className="text-sm text-coffee-400">No upcoming events</p>
+              <p className="text-sm" style={{ color: 'rgba(243,239,224,0.5)' }}>No upcoming events</p>
             ) : (
               <div className="space-y-3">
                 {upcomingEvents.slice(0, 3).map(event => (
                   <div
                     key={event.id}
-                    className="p-4 border border-coffee-100 rounded-xl hover:border-volt-400 transition-colors"
+                    className="p-4 border border-white/[0.07] rounded-xl hover:border-volt-400 transition-colors"
+                    style={{ background: '#2f251d' }}
                   >
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-bold text-coffee-900">{event.title}</h4>
+                      <h4 className="font-bold" style={{ color: '#f3efe0' }}>{event.title}</h4>
                       <div className="flex gap-2">
                         {/* Status Badge */}
                         {(isPrivileged || event.createdByUserId === user?.id) && (
                           <span className={`text-xs px-2 py-1 rounded font-bold ${event.status === 'approved'
-                            ? 'bg-green-100 text-green-700'
+                            ? 'bg-green-400/10 text-green-400 border border-green-500/30'
                             : event.status === 'rejected'
-                              ? 'bg-red-100 text-red-700'
-                              : 'bg-yellow-100 text-yellow-700'
+                              ? 'bg-red-500/10 text-red-400 border border-red-500/30'
+                              : 'bg-yellow-400/10 text-yellow-400 border border-yellow-500/30'
                             }`}>
                             {event.status === 'approved' ? 'Active' : event.status === 'rejected' ? 'Rejected' : 'Pending Review'}
                           </span>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-coffee-600">
+                    <div className="flex items-center gap-4 text-sm" style={{ color: 'rgba(243,239,224,0.5)' }}>
                       <span className="flex items-center gap-1">
                         <i className="fas fa-calendar text-xs"></i>
                         {parseLocalDateTime(event.startDateTime).toLocaleDateString()}
@@ -134,7 +136,7 @@ const EventsSection: React.FC<EventsSectionProps> = ({ shopId, isPro, onUpgrade 
                         <i className="fas fa-clock text-xs"></i>
                         {parseLocalDateTime(event.startDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
-                      <span className="px-2 py-0.5 bg-coffee-50 rounded text-xs font-medium">
+                      <span className="px-2 py-0.5 bg-black/20 border border-white/[0.07] rounded text-xs font-medium">
                         {event.eventType}
                       </span>
                     </div>

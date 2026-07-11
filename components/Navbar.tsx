@@ -35,7 +35,14 @@ const Navbar: React.FC = () => {
     location.pathname.startsWith("/events") ||
     location.pathname.startsWith("/leaderboard") ||
     location.pathname.startsWith("/community") ||
-    location.pathname.startsWith("/profile")
+    location.pathname.startsWith("/profile") ||
+    location.pathname.startsWith("/add") ||
+    location.pathname.startsWith("/dripclub") ||
+    location.pathname.startsWith("/scout-bounty") ||
+    location.pathname.startsWith("/auth") ||
+    location.pathname.startsWith("/reset-password") ||
+    location.pathname.startsWith("/claim/") ||
+    location.pathname.startsWith("/coffee-date")
   )
     return null;
 

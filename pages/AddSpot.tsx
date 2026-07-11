@@ -11,7 +11,12 @@ import { uploadImages } from '../services/storageService';
 import Button from '../components/Button';
 import TagChip from '../components/TagChip';
 import LocationPicker from '../components/LocationPicker';
+import BottomTabBar from '../components/darkroast/BottomTabBar';
 import { useToast } from '../context/ToastContext';
+
+// Dark Roast input treatment (design_handoff_dark_roast/README.md → Design Tokens)
+const darkInput =
+  'w-full px-4 py-3 bg-[#2f251d] border border-white/[0.09] text-[#f3efe0] placeholder:text-[rgba(243,239,224,0.35)] rounded-xl focus:ring-2 focus:ring-volt-400 outline-none';
 
 const AddSpot: React.FC = () => {
   const { addShop, addBrand, user, loading, shops, brands } = useApp();
@@ -91,9 +96,9 @@ const AddSpot: React.FC = () => {
   // If the app is still hydrating/loading session, don't render the form yet.
   if (loading) {
     return (
-      <div className="min-h-screen bg-coffee-50 pt-24 pb-10 px-4 flex items-center justify-center">
-        <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-xl p-6 md:p-10 border border-coffee-100 text-center">
-          <p className="text-coffee-500">Preparing your session — please wait...</p>
+      <div className="min-h-screen bg-[#1e1712] pt-24 pb-[110px] px-4 flex items-center justify-center">
+        <div className="max-w-3xl mx-auto bg-[#2b221b] rounded-3xl p-6 md:p-10 border border-white/[0.09] text-center">
+          <p className="text-[rgba(243,239,224,0.5)]">Preparing your session — please wait...</p>
         </div>
       </div>
     );
@@ -315,14 +320,34 @@ const AddSpot: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-coffee-50 pt-24 pb-10 px-4">
-      <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-xl p-6 md:p-10 border border-coffee-100">
+    <div className="min-h-screen bg-[#1e1712] pt-24 pb-[110px] px-4">
+      {/* Sticky glass header */}
+      <header
+        className="fixed inset-x-0 top-0 z-30 border-b border-white/[0.07]"
+        style={{ background: 'rgba(23,18,14,0.82)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)' }}
+      >
+        <div className="mx-auto flex max-w-3xl items-center gap-3 px-5 py-3">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            aria-label="Go back"
+            className="flex h-9 w-9 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-volt-400"
+            style={{ background: '#2b221b' }}
+          >
+            <i className="fas fa-arrow-left text-sm" style={{ color: '#f3efe0' }}></i>
+          </button>
+          <h1 className="font-serif text-[19px] font-black" style={{ color: '#f3efe0', letterSpacing: '-0.02em' }}>
+            Add a Spot
+          </h1>
+        </div>
+      </header>
+      <div className="max-w-3xl mx-auto bg-[#2b221b] rounded-3xl p-6 md:p-10 border border-white/[0.09]">
         <div className="mb-8 text-center md:text-left">
-            <h1 className="text-3xl font-serif font-bold text-coffee-900 mb-2">Add a New Spot</h1>
-            <p className="text-coffee-500">Share a hidden gem with the DripMap community.</p>
+            <h1 className="text-3xl font-serif font-black text-[#f3efe0] mb-2" style={{ letterSpacing: '-0.02em' }}>Add a New Spot</h1>
+            <p className="text-[rgba(243,239,224,0.5)]">Share a hidden gem with the DripMap community.</p>
         </div>
         {sessionIssue && (
-          <div className="mb-6 p-4 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-900">
+          <div className="mb-6 p-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 text-yellow-200">
             <div className="flex items-center justify-between gap-4">
               <div className="text-sm">{sessionIssue}</div>
               <div className="flex gap-2">
@@ -337,13 +362,13 @@ const AddSpot: React.FC = () => {
                     // Force full reload to clear stale state
                     window.location.href = '/auth';
                   }}
-                  className="text-xs bg-yellow-700 text-white px-3 py-1 rounded-md"
+                  className="text-xs bg-yellow-600 text-[#1e1712] font-bold px-3 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-volt-400"
                 >
                   Log out & refresh
                 </button>
                 <button
                   onClick={() => setSessionIssue(null)}
-                  className="text-xs bg-white border border-yellow-200 px-3 py-1 rounded-md"
+                  className="text-xs bg-[#2f251d] text-[#e4ddce] border border-white/[0.09] px-3 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-volt-400"
                 >
                   Dismiss
                 </button>
@@ -355,11 +380,11 @@ const AddSpot: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Section 1: Basic Info */}
           <section className="space-y-4">
-             <h2 className="text-sm font-bold text-coffee-400 uppercase tracking-wider border-b border-coffee-100 pb-2">The Basics</h2>
+             <h2 className="text-sm font-bold text-[rgba(243,239,224,0.5)] uppercase tracking-wider border-b border-white/[0.07] pb-2">The Basics</h2>
 
              {/* Brand / Chain Association */}
              <div>
-                 <label className="block text-sm font-bold text-coffee-900 mb-3">Brand / Chain Association</label>
+                 <label className="block text-sm font-bold text-[#f3efe0] mb-3">Brand / Chain Association</label>
 
                  {/* 3-option radio group */}
                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
@@ -386,19 +411,19 @@ const AddSpot: React.FC = () => {
                              setFormData(prev => ({ ...prev, name: '' }));
                            }
                          }}
-                         className={`flex flex-col items-start gap-1 p-4 rounded-xl border-2 text-left transition-all ${
+                         className={`flex flex-col items-start gap-1 p-4 rounded-xl border-2 text-left transition-all focus:outline-none focus:ring-2 focus:ring-volt-400 ${
                            active
-                             ? 'border-volt-400 bg-coffee-50'
-                             : 'border-coffee-100 bg-white hover:border-coffee-300'
+                             ? 'border-volt-400 bg-[rgba(204,255,0,0.10)]'
+                             : 'border-white/[0.09] bg-[#2f251d] hover:border-white/[0.2]'
                          }`}
                        >
                          <div className="flex items-center gap-2">
-                           <i className={`fas ${opt.icon} ${active ? 'text-volt-500' : 'text-coffee-400'}`} />
-                           <span className={`text-sm font-bold ${active ? 'text-coffee-900' : 'text-coffee-600'}`}>
+                           <i className={`fas ${opt.icon} ${active ? 'text-volt-400' : 'text-[rgba(243,239,224,0.45)]'}`} />
+                           <span className={`text-sm font-bold ${active ? 'text-[#f3efe0]' : 'text-[#e4ddce]'}`}>
                              {opt.label}
                            </span>
                          </div>
-                         <span className="text-xs text-coffee-400 leading-tight">{opt.desc}</span>
+                         <span className="text-xs text-[rgba(243,239,224,0.5)] leading-tight">{opt.desc}</span>
                        </button>
                      );
                    })}
@@ -408,11 +433,11 @@ const AddSpot: React.FC = () => {
                  {brandMode === 'existing' && (
                    <div>
                      {brands.length === 0 ? (
-                       <p className="text-sm text-coffee-400 italic">
+                       <p className="text-sm text-[rgba(243,239,224,0.5)] italic">
                          No brands registered yet.{' '}
                          <button
                            type="button"
-                           className="text-volt-500 font-bold hover:underline"
+                           className="text-volt-400 font-bold hover:underline"
                            onClick={() => { setBrandMode('new'); setFormData(prev => ({ ...prev, brandId: '', name: '' })); }}
                          >
                            Register the first one →
@@ -420,9 +445,9 @@ const AddSpot: React.FC = () => {
                        </p>
                      ) : (
                        <div className="space-y-2">
-                         <label className="block text-xs font-bold text-coffee-700 uppercase tracking-wider">Select Brand</label>
+                         <label className="block text-[10px] font-bold text-[rgba(243,239,224,0.5)] uppercase tracking-[0.08em]">Select Brand</label>
                          <select
-                           className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none appearance-none"
+                           className={`${darkInput} appearance-none`}
                            value={formData.brandId}
                            onChange={e => {
                              const selectedBrand = brands.find(b => b.id === e.target.value);
@@ -439,7 +464,7 @@ const AddSpot: React.FC = () => {
                            ))}
                          </select>
                          {formData.brandId && (
-                           <p className="text-xs text-volt-600 font-semibold">
+                           <p className="text-xs text-volt-400 font-semibold">
                              ✓ This location will be added to the <strong>{brands.find(b => b.id === formData.brandId)?.name}</strong> brand.
                            </p>
                          )}
@@ -450,36 +475,36 @@ const AddSpot: React.FC = () => {
 
                  {/* New brand form */}
                  {brandMode === 'new' && (
-                   <div className="bg-coffee-50 border border-coffee-200 rounded-xl p-4 space-y-4 animate-in fade-in duration-300">
-                       <div className="flex items-center gap-2 text-coffee-500 text-xs font-bold uppercase tracking-wider mb-2">
-                           <i className="fas fa-plus-circle text-volt-500"></i> Creating New Brand
+                   <div className="bg-[#2f251d] border border-white/[0.09] rounded-xl p-4 space-y-4 animate-in fade-in duration-300">
+                       <div className="flex items-center gap-2 text-[rgba(243,239,224,0.5)] text-[10px] font-bold uppercase tracking-[0.08em] mb-2">
+                           <i className="fas fa-plus-circle text-volt-400"></i> Creating New Brand
                        </div>
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                            <div>
-                               <label className="block text-xs font-bold text-coffee-900 mb-1">Brand Name</label>
+                               <label className="block text-xs font-bold text-[#f3efe0] mb-1">Brand Name</label>
                                <input
                                    required={brandMode === 'new'}
                                    placeholder="e.g. Blue Bottle Coffee"
-                                   className="w-full px-3 py-2 bg-white border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
+                                   className="w-full px-3 py-2 bg-[#2b221b] border border-white/[0.09] text-[#f3efe0] placeholder:text-[rgba(243,239,224,0.35)] rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
                                    value={newBrandData.name}
                                    onChange={e => setNewBrandData({...newBrandData, name: e.target.value})}
                                />
                            </div>
                            <div>
-                               <label className="block text-xs font-bold text-coffee-900 mb-1">Brand Website <span className="text-coffee-400 font-normal">(Optional)</span></label>
+                               <label className="block text-xs font-bold text-[#f3efe0] mb-1">Brand Website <span className="text-[rgba(243,239,224,0.45)] font-normal">(Optional)</span></label>
                                <input
                                    placeholder="https://..."
-                                   className="w-full px-3 py-2 bg-white border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
+                                   className="w-full px-3 py-2 bg-[#2b221b] border border-white/[0.09] text-[#f3efe0] placeholder:text-[rgba(243,239,224,0.35)] rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
                                    value={newBrandData.websiteUrl}
                                    onChange={e => setNewBrandData({...newBrandData, websiteUrl: e.target.value})}
                                />
                            </div>
                        </div>
                        <div>
-                           <label className="block text-xs font-bold text-coffee-900 mb-1">Brand Description <span className="text-coffee-400 font-normal">(Optional)</span></label>
+                           <label className="block text-xs font-bold text-[#f3efe0] mb-1">Brand Description <span className="text-[rgba(243,239,224,0.45)] font-normal">(Optional)</span></label>
                            <input
                                placeholder="Short slogan or story about the brand"
-                               className="w-full px-3 py-2 bg-white border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
+                               className="w-full px-3 py-2 bg-[#2b221b] border border-white/[0.09] text-[#f3efe0] placeholder:text-[rgba(243,239,224,0.35)] rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
                                value={newBrandData.description}
                                onChange={e => setNewBrandData({...newBrandData, description: e.target.value})}
                            />
@@ -491,70 +516,70 @@ const AddSpot: React.FC = () => {
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label className="block text-sm font-bold text-coffee-900 mb-2">
+                    <label className="block text-sm font-bold text-[#f3efe0] mb-2">
                       Shop Name
-                      {brandMode === 'existing' && formData.brandId && <span className="text-xs font-normal text-coffee-400 ml-2">(auto-filled from brand)</span>}
-                      {brandMode === 'new' && <span className="text-xs font-normal text-coffee-400 ml-2">(uses brand name)</span>}
+                      {brandMode === 'existing' && formData.brandId && <span className="text-xs font-normal text-[rgba(243,239,224,0.45)] ml-2">(auto-filled from brand)</span>}
+                      {brandMode === 'new' && <span className="text-xs font-normal text-[rgba(243,239,224,0.45)] ml-2">(uses brand name)</span>}
                     </label>
                     <input
                         required
                         placeholder={brandMode === 'new' ? "Will use Brand Name" : "e.g. The Daily Grind"}
-                        className={`w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none ${(brandMode === 'existing' && !!formData.brandId) || brandMode === 'new' ? 'opacity-75 bg-gray-100 cursor-not-allowed' : ''}`}
+                        className={`${darkInput} ${(brandMode === 'existing' && !!formData.brandId) || brandMode === 'new' ? 'opacity-60 cursor-not-allowed' : ''}`}
                         value={brandMode === 'new' ? newBrandData.name : formData.name}
                         onChange={e => brandMode === 'independent' && setFormData({...formData, name: e.target.value})}
                         readOnly={(brandMode === 'existing' && !!formData.brandId) || brandMode === 'new'}
                     />
                     {showDuplicateWarning && similarShops.length > 0 && (
-                      <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                        <p className="text-sm text-amber-800 font-medium mb-2">
+                      <div className="mt-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                        <p className="text-sm text-amber-300 font-medium mb-2">
                           <i className="fas fa-exclamation-triangle mr-2"></i>
                           Similar shop(s) already exist:
                         </p>
                         <ul className="space-y-1">
                           {similarShops.slice(0, 3).map(shop => (
-                            <li key={shop.id} className="text-sm text-amber-700 flex items-center justify-between">
+                            <li key={shop.id} className="text-sm text-amber-200/80 flex items-center justify-between">
                               <span>{shop.name} - {shop.location.city}</span>
                               <button
                                 type="button"
                                 onClick={() => navigate(`/shop/${shop.id}`)}
-                                className="text-xs text-amber-600 hover:text-amber-800 underline"
+                                className="text-xs text-amber-300 hover:text-amber-200 underline"
                               >
                                 View
                               </button>
                             </li>
                           ))}
                         </ul>
-                        <p className="text-xs text-amber-600 mt-2">
+                        <p className="text-xs text-amber-300/70 mt-2">
                           If this is the same shop, please don't create a duplicate.
                         </p>
                       </div>
                     )}
                 </div>
                 <div>
-                    <label className="block text-sm font-bold text-coffee-900 mb-2">City</label>
+                    <label className="block text-sm font-bold text-[#f3efe0] mb-2">City</label>
                     <input
                         required
                         placeholder="e.g. Sacramento"
-                        className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                        className={darkInput}
                         value={formData.city}
                         onChange={e => setFormData({...formData, city: e.target.value})}
                     />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-bold text-coffee-900 mb-2">State</label>
+                        <label className="block text-sm font-bold text-[#f3efe0] mb-2">State</label>
                         <input
                             placeholder="e.g. California"
-                            className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                            className={darkInput}
                             value={formData.state}
                             onChange={e => setFormData({...formData, state: e.target.value})}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-coffee-900 mb-2">Country</label>
+                        <label className="block text-sm font-bold text-[#f3efe0] mb-2">Country</label>
                         <input
                             placeholder="e.g. USA"
-                            className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                            className={darkInput}
                             value={formData.country}
                             onChange={e => setFormData({...formData, country: e.target.value})}
                         />
@@ -565,13 +590,13 @@ const AddSpot: React.FC = () => {
 
           {/* Section 2: Location */}
           <section className="space-y-4">
-             <h2 className="text-sm font-bold text-coffee-400 uppercase tracking-wider border-b border-coffee-100 pb-2">Location</h2>
+             <h2 className="text-sm font-bold text-[rgba(243,239,224,0.5)] uppercase tracking-wider border-b border-white/[0.07] pb-2">Location</h2>
              <div>
-                <label className="block text-sm font-bold text-coffee-900 mb-2">Full Address</label>
+                <label className="block text-sm font-bold text-[#f3efe0] mb-2">Full Address</label>
                 <input
                     required
                     placeholder="123 Bean St, Sacramento, CA"
-                    className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none mb-4"
+                    className={`${darkInput} mb-4`}
                     value={formData.address}
                     onChange={e => setFormData({...formData, address: e.target.value})}
                 />
@@ -590,22 +615,25 @@ const AddSpot: React.FC = () => {
 
           {/* Section 3: Vibes & Description */}
           <section className="space-y-4">
-            <h2 className="text-sm font-bold text-coffee-400 uppercase tracking-wider border-b border-coffee-100 pb-2">The Vibe</h2>
+            <h2 className="text-sm font-bold text-[rgba(243,239,224,0.5)] uppercase tracking-wider border-b border-white/[0.07] pb-2">The Vibe</h2>
             
             <div>
-                <label className="block text-sm font-bold text-coffee-900 mb-3">Standard Vibes</label>
+                <label className="block text-sm font-bold text-[#f3efe0] mb-3">Standard Vibes</label>
                 <div className="flex flex-wrap gap-2 mb-1">
                     {ALL_VIBES.map(vibe => (
-                        <TagChip 
-                            key={vibe} 
-                            label={vibe} 
+                        <TagChip
+                            key={vibe}
+                            label={vibe}
                             isSelected={selectedVibes.includes(vibe)}
                             onClick={() => handleVibeToggle(vibe)}
                             type="button"
+                            className={selectedVibes.includes(vibe)
+                                ? '!bg-volt-400 !text-coffee-900 !border-volt-400 font-bold'
+                                : '!bg-[#2f251d] !text-[#e4ddce] !border-white/[0.09] hover:!border-white/[0.25] hover:!bg-[#2f251d]'}
                         />
                     ))}
                 </div>
-                <p className="text-xs text-coffee-500 mt-2">
+                <p className="text-xs text-[rgba(243,239,224,0.5)] mt-2">
                     {selectedVibes.length > 0 
                         ? `${selectedVibes.length} vibe${selectedVibes.length > 1 ? 's' : ''} selected` 
                         : 'Select at least one vibe'}
@@ -613,26 +641,26 @@ const AddSpot: React.FC = () => {
             </div>
 
             <div>
-                <label className="block text-sm font-bold text-coffee-900 mb-3">
-                    Cheeky Vibes <span className="text-coffee-400 font-normal">(Optional personality traits)</span>
+                <label className="block text-sm font-bold text-[#f3efe0] mb-3">
+                    Cheeky Vibes <span className="text-[rgba(243,239,224,0.45)] font-normal">(Optional personality traits)</span>
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {CHEEKY_VIBES_OPTIONS.map(vibe => (
                         <label 
                             key={vibe} 
-                            className="flex items-center gap-3 p-3 rounded-xl border-2 border-coffee-100 hover:border-volt-400 cursor-pointer transition-all bg-white"
+                            className="flex items-center gap-3 p-3 rounded-xl border-2 border-white/[0.09] hover:border-volt-400 cursor-pointer transition-all bg-[#2f251d]"
                         >
                             <input
                                 type="checkbox"
                                 checked={selectedCheekyVibes.includes(vibe)}
                                 onChange={() => handleCheekyVibeToggle(vibe)}
-                                className="w-5 h-5 rounded border-coffee-300 text-volt-400 focus:ring-2 focus:ring-volt-400 cursor-pointer"
+                                className="w-5 h-5 rounded border-white/[0.2] bg-[#1e1712] text-volt-400 focus:ring-2 focus:ring-volt-400 cursor-pointer"
                             />
-                            <span className="text-sm font-medium text-coffee-900">{vibe}</span>
+                            <span className="text-sm font-medium text-[#e4ddce]">{vibe}</span>
                         </label>
                     ))}
                 </div>
-                <p className="text-xs text-coffee-500 mt-2">
+                <p className="text-xs text-[rgba(243,239,224,0.5)] mt-2">
                     {selectedCheekyVibes.length > 0 
                         ? `${selectedCheekyVibes.length} cheeky vibe${selectedCheekyVibes.length > 1 ? 's' : ''} selected` 
                         : 'Add some personality to your spot'}
@@ -641,12 +669,12 @@ const AddSpot: React.FC = () => {
 
             <div>
                 <div className="flex justify-between items-end mb-2">
-                    <label className="block text-sm font-bold text-coffee-900">Description</label>
-                    <button 
+                    <label className="block text-sm font-bold text-[#f3efe0]">Description</label>
+                    <button
                         type="button"
                         onClick={handleAiGenerate}
                         disabled={!formData.name || !formData.city || isGenerating}
-                        className="text-xs text-volt-500 font-bold hover:underline disabled:opacity-50 flex items-center gap-1"
+                        className="text-xs text-volt-400 font-bold hover:underline disabled:opacity-50 flex items-center gap-1"
                     >
                         <i className="fas fa-magic"></i>
                         {isGenerating ? 'Generating...' : 'Generate with AI'}
@@ -655,7 +683,7 @@ const AddSpot: React.FC = () => {
                 <textarea
                     required
                     rows={4}
-                    className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                    className={darkInput}
                     value={formData.description}
                     onChange={e => setFormData({...formData, description: e.target.value})}
                     placeholder="Tell us what makes this place special..."
@@ -665,17 +693,17 @@ const AddSpot: React.FC = () => {
 
           {/* Section 4: Opening Hours */}
           <section className="space-y-4">
-            <h2 className="text-sm font-bold text-coffee-400 uppercase tracking-wider border-b border-coffee-100 pb-2">Opening Hours (Optional)</h2>
-            <p className="text-xs text-coffee-500">Leave blank for days you're closed. Example: "8:00 AM - 5:00 PM" or "Closed"</p>
+            <h2 className="text-sm font-bold text-[rgba(243,239,224,0.5)] uppercase tracking-wider border-b border-white/[0.07] pb-2">Opening Hours (Optional)</h2>
+            <p className="text-xs text-[rgba(243,239,224,0.5)]">Leave blank for days you're closed. Example: "8:00 AM - 5:00 PM" or "Closed"</p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
                 <div key={day}>
-                  <label className="block text-sm font-bold text-coffee-900 mb-2 capitalize">{day}</label>
+                  <label className="block text-sm font-bold text-[#f3efe0] mb-2 capitalize">{day}</label>
                   <input
                     type="text"
                     placeholder="e.g. 8:00 AM - 5:00 PM"
-                    className="w-full px-4 py-2 bg-coffee-50 border border-coffee-200 rounded-lg focus:ring-2 focus:ring-volt-400 outline-none text-sm"
+                    className="w-full px-4 py-2 bg-[#2f251d] border border-white/[0.09] text-[#f3efe0] placeholder:text-[rgba(243,239,224,0.35)] rounded-lg focus:ring-2 focus:ring-volt-400 outline-none text-sm"
                     value={openHours[day as keyof typeof openHours]}
                     onChange={(e) => setOpenHours({...openHours, [day]: e.target.value})}
                   />
@@ -686,15 +714,15 @@ const AddSpot: React.FC = () => {
 
           {/* Section 5: Photos */}
           <section className="space-y-4">
-            <h2 className="text-sm font-bold text-coffee-400 uppercase tracking-wider border-b border-coffee-100 pb-2">Photos</h2>
+            <h2 className="text-sm font-bold text-[rgba(243,239,224,0.5)] uppercase tracking-wider border-b border-white/[0.07] pb-2">Photos</h2>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {uploadedImages.map((img, idx) => (
-                  <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group bg-coffee-50 flex items-center justify-center">
+                  <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group bg-[#2f251d] flex items-center justify-center">
                     {img.preview && !img.loading ? (
                       <img src={img.preview} alt="Upload" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="flex flex-col items-center justify-center gap-2 text-coffee-400">
+                      <div className="flex flex-col items-center justify-center gap-2 text-[rgba(243,239,224,0.45)]">
                         <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -721,7 +749,7 @@ const AddSpot: React.FC = () => {
                 <button 
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="aspect-square rounded-xl border-2 border-dashed border-coffee-300 flex flex-col items-center justify-center text-coffee-400 hover:border-volt-400 hover:text-volt-500 hover:bg-coffee-50 transition-all"
+                    className="aspect-square rounded-xl border-2 border-dashed border-white/[0.15] flex flex-col items-center justify-center text-[rgba(243,239,224,0.45)] hover:border-volt-400 hover:text-volt-400 hover:bg-white/[0.03] transition-all focus:outline-none focus:ring-2 focus:ring-volt-400"
                 >
                     <i className="fas fa-camera text-2xl mb-2"></i>
                     <span className="text-xs font-bold">Add Photos</span>
@@ -735,16 +763,17 @@ const AddSpot: React.FC = () => {
                     accept="image/*"
                 />
             </div>
-             <p className="text-xs text-coffee-400 mt-2">
+             <p className="text-xs text-[rgba(243,239,224,0.45)] mt-2">
                <i className="fas fa-info-circle mr-1"></i>
                Photos are auto-compressed. Max 3MB per image after compression. For large phone photos, they will be resized automatically.
              </p>
           </section>
 
           <div className="pt-4">
-            <Button 
-              type="submit" 
-              className="w-full py-4 text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all"
+            <Button
+              type="submit"
+              variant="secondary"
+              className="w-full py-4 text-lg font-extrabold shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all"
               isLoading={isSubmitting}
               disabled={!allPreviewsReady}
             >
@@ -760,6 +789,7 @@ const AddSpot: React.FC = () => {
           </div>
         </form>
       </div>
+      <BottomTabBar />
     </div>
   );
 };

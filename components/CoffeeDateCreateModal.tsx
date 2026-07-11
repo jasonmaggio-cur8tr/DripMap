@@ -219,14 +219,14 @@ const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shop, onC
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
-            <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+            <div className="rounded-3xl border border-white/[0.09] w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]" style={{ background: '#221a14' }} onClick={e => e.stopPropagation()}>
                 {/* Header */}
-                <div className="p-6 bg-coffee-50 border-b border-coffee-200 flex justify-between items-center">
-                    <h2 className="text-2xl font-serif font-black text-coffee-900 flex items-center gap-2">
+                <div className="p-6 border-b border-white/[0.07] flex justify-between items-center" style={{ background: '#221a14' }}>
+                    <h2 className="text-2xl font-serif font-black flex items-center gap-2" style={{ color: '#f3efe0', letterSpacing: '-0.02em' }}>
                         <i className="fas fa-mug-hot text-volt-400"></i> Coffee Date
                     </h2>
-                    <button onClick={onClose} className="w-8 h-8 rounded-full bg-white hover:bg-coffee-100 flex items-center justify-center transition-colors">
-                        <i className="fas fa-times text-coffee-600"></i>
+                    <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400" style={{ background: '#2b221b' }}>
+                        <i className="fas fa-times" style={{ color: '#f3efe0' }}></i>
                     </button>
                 </div>
 
@@ -235,19 +235,19 @@ const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shop, onC
 
                     {/* 1. Tone Selector */}
                     <section>
-                        <label className="block text-xs font-bold text-coffee-500 uppercase tracking-widest mb-3">Vibe Check</label>
+                        <label className="block text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(243,239,224,0.5)' }}>Vibe Check</label>
                         <div className="grid grid-cols-2 gap-3">
                             {TONES.map(t => (
                                 <button
                                     key={t.id}
                                     onClick={() => handleToneChange(t.id)}
-                                    className={`p-3 rounded-xl border text-left transition-all relative overflow-hidden ${tone === t.id
-                                        ? 'bg-coffee-900 text-white border-coffee-900 shadow-lg'
-                                        : 'bg-white text-coffee-600 border-coffee-200 hover:border-coffee-400'
+                                    className={`p-3 rounded-xl border text-left transition-all relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-volt-400 ${tone === t.id
+                                        ? 'bg-volt-400/10 text-[#f3efe0] border-volt-400/50 shadow-lg'
+                                        : 'bg-[#2f251d] text-[#e4ddce] border-white/[0.09] hover:border-white/[0.2]'
                                         }`}
                                 >
                                     <div className="flex items-center gap-2 mb-1">
-                                        <i className={`fas fa-${t.icon} ${tone === t.id ? 'text-volt-400' : 'text-coffee-400'}`}></i>
+                                        <i className={`fas fa-${t.icon} ${tone === t.id ? 'text-volt-400' : 'text-[rgba(243,239,224,0.5)]'}`}></i>
                                         <span className="font-bold text-sm">{t.label}</span>
                                     </div>
                                     {tone === t.id && <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-white/10 to-transparent rounded-bl-full -mr-8 -mt-8"></div>}
@@ -258,11 +258,12 @@ const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shop, onC
 
                     {/* 2. Message */}
                     <section>
-                        <label className="block text-xs font-bold text-coffee-500 uppercase tracking-widest mb-3">The Pitch</label>
+                        <label className="block text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(243,239,224,0.5)' }}>The Pitch</label>
                         <textarea
                             value={message}
                             onChange={(e) => setMessage(e.target.value)}
-                            className="w-full p-4 bg-coffee-50 border border-coffee-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-volt-400 text-coffee-900 font-medium"
+                            className="w-full p-4 rounded-xl border-none font-medium focus:outline-none focus:ring-2 focus:ring-volt-400"
+                            style={{ background: '#2f251d', color: '#f3efe0' }}
                             rows={2}
                             placeholder="What's the plan?"
                         />
@@ -271,21 +272,23 @@ const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shop, onC
                     {/* 3. Date & Time */}
                     <section className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-bold text-coffee-500 uppercase tracking-widest mb-3">When?</label>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(243,239,224,0.5)' }}>When?</label>
                             <input
                                 type="date"
                                 value={date}
                                 onChange={e => setDate(e.target.value)}
-                                className="w-full p-3 bg-white border border-coffee-200 rounded-xl focus:outline-none focus:border-volt-400"
+                                className="w-full p-3 rounded-xl border-none text-sm font-medium focus:outline-none focus:ring-2 focus:ring-volt-400"
+                                style={{ background: '#2f251d', color: '#f3efe0', colorScheme: 'dark' }}
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-coffee-500 uppercase tracking-widest mb-3">Time?</label>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(243,239,224,0.5)' }}>Time?</label>
                             <input
                                 type="time"
                                 value={time}
                                 onChange={e => setTime(e.target.value)}
-                                className="w-full p-3 bg-white border border-coffee-200 rounded-xl focus:outline-none focus:border-volt-400"
+                                className="w-full p-3 rounded-xl border-none text-sm font-medium focus:outline-none focus:ring-2 focus:ring-volt-400"
+                                style={{ background: '#2f251d', color: '#f3efe0', colorScheme: 'dark' }}
                             />
                         </div>
                     </section>
@@ -293,39 +296,40 @@ const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shop, onC
                     {/* 4. Invitees */}
                     <section>
                         <div className="flex justify-between items-center mb-3">
-                            <label className="block text-xs font-bold text-coffee-500 uppercase tracking-widest">Who's Coming?</label>
-                            <button onClick={addInviteeRow} className="text-volt-600 font-bold text-xs hover:underline">+ Add Person</button>
+                            <label className="block text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(243,239,224,0.5)' }}>Who's Coming?</label>
+                            <button onClick={addInviteeRow} className="text-volt-400 font-bold text-xs hover:underline">+ Add Person</button>
                         </div>
 
                         <div className="space-y-3">
                             {invitees.map((invite, idx) => (
                                 <div key={idx} className="flex gap-2">
                                     <div className="relative flex-1">
-                                        <i className="fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-coffee-300"></i>
+                                        <i className="fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(243,239,224,0.35)' }}></i>
                                         <input
                                             type="text"
                                             value={invite}
                                             onChange={(e) => handleInviteeChange(idx, e.target.value)}
                                             placeholder="Email address (or @username coming soon)"
-                                            className="w-full pl-10 pr-4 py-3 bg-white border border-coffee-200 rounded-xl focus:outline-none focus:border-volt-400 text-sm"
+                                            className="w-full pl-10 pr-4 py-3 rounded-xl border-none text-sm font-medium focus:outline-none focus:ring-2 focus:ring-volt-400"
+                                            style={{ background: '#2f251d', color: '#f3efe0' }}
                                         />
                                     </div>
                                     {invitees.length > 1 && (
-                                        <button onClick={() => removeInviteeRow(idx)} className="w-10 h-10 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                                        <button onClick={() => removeInviteeRow(idx)} className="w-10 h-10 flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-colors">
                                             <i className="fas fa-trash-alt"></i>
                                         </button>
                                     )}
                                 </div>
                             ))}
                         </div>
-                        <p className="text-[10px] text-coffee-400 mt-2 ml-1">
+                        <p className="text-[10px] mt-2 ml-1" style={{ color: 'rgba(243,239,224,0.5)' }}>
                             * We'll send them an email invite with a link to join.
                         </p>
                     </section>
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 bg-white border-t border-coffee-100">
+                <div className="p-6 border-t border-white/[0.07]" style={{ background: '#221a14' }}>
                     <Button onClick={handleSubmit} disabled={loading} className="w-full py-4 text-lg shadow-xl shadow-volt-400/20">
                         {loading ? 'Sending Invites...' : 'Send Invites 🚀'}
                     </Button>

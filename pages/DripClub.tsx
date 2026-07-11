@@ -5,6 +5,8 @@ import { useToast } from '../context/ToastContext';
 import DripClubCard from '../components/DripClubCard';
 import LazyImage from '../components/LazyImage';
 import DripClubModal from '../components/DripClubModal';
+import BottomTabBar from '../components/darkroast/BottomTabBar';
+import { sizedImageUrl } from '../lib/imageUrl';
 import {
   getDripClubMembership,
   createDripClubCheckoutSession,
@@ -112,10 +114,10 @@ const DripClub: React.FC = () => {
   const isActiveMember = membership?.status === 'active';
 
   return (
-    <div className="min-h-screen bg-coffee-50">
+    <div className="min-h-screen pb-[110px]" style={{ background: '#1e1712' }}>
       {/* Success/Cancel Banner - Fixed below navbar */}
       {banner?.show && (
-        <div className={`fixed top-14 sm:top-16 left-0 right-0 z-40 ${
+        <div className={`fixed top-0 left-0 right-0 z-40 ${
           banner.type === 'success'
             ? 'bg-green-500'
             : 'bg-amber-500'
@@ -149,7 +151,7 @@ const DripClub: React.FC = () => {
       )}
 
       {/* Hero Section */}
-      <div className="bg-coffee-900 relative overflow-hidden">
+      <div className="relative overflow-hidden border-b border-white/[0.07]" style={{ background: '#231b15' }}>
         {/* Background effects */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-volt-400/10 rounded-full blur-[150px]"></div>
         <div className="absolute bottom-0 left-0 w-72 h-72 bg-coffee-800/50 rounded-full blur-[100px]"></div>
@@ -157,7 +159,8 @@ const DripClub: React.FC = () => {
         <div className="container mx-auto px-4 py-16 md:py-20 relative z-10">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 text-coffee-100 hover:text-white mb-8 transition-colors"
+            className="mb-8 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-volt-400"
+            style={{ background: '#2b221b', color: '#e4ddce', border: '1px solid rgba(255,255,255,0.09)' }}
           >
             <i className="fas fa-arrow-left"></i>
             Back to Home
@@ -169,7 +172,7 @@ const DripClub: React.FC = () => {
                 <i className="fas fa-crown text-coffee-900 text-3xl"></i>
               </div>
               <div>
-                <h1 className="text-4xl md:text-5xl font-serif font-black text-white">
+                <h1 className="text-4xl md:text-5xl font-serif font-black" style={{ color: '#f3efe0', letterSpacing: '-0.02em' }}>
                   DripClub
                 </h1>
                 <p className="text-volt-400 font-bold text-sm uppercase tracking-wider">
@@ -178,7 +181,7 @@ const DripClub: React.FC = () => {
               </div>
             </div>
 
-            <p className="text-xl text-coffee-100 mb-8 leading-relaxed">
+            <p className="text-xl mb-8 leading-relaxed" style={{ color: '#e4ddce' }}>
               Get <span className="text-volt-400 font-bold">10% off</span> at every PRO+
               coffee shop, plus exclusive perks and early access to events.
             </p>
@@ -186,7 +189,7 @@ const DripClub: React.FC = () => {
             {!isActiveMember && (
               <button
                 onClick={() => (user ? setShowModal(true) : navigate('/auth'))}
-                className="inline-flex items-center gap-3 bg-volt-400 text-coffee-900 px-8 py-4 rounded-2xl font-black text-lg hover:bg-volt-500 active:scale-[0.98] transition-all shadow-xl"
+                className="inline-flex items-center gap-3 bg-volt-400 text-coffee-900 px-8 py-4 rounded-full font-black text-lg hover:bg-volt-500 active:scale-[0.98] transition-all shadow-xl focus:outline-none focus:ring-2 focus:ring-volt-400"
               >
                 <i className="fas fa-crown"></i>
                 {user ? 'Join DripClub' : 'Sign in to Join'}
@@ -201,8 +204,8 @@ const DripClub: React.FC = () => {
           {/* Left Column - Membership Card or CTA */}
           <div className="lg:col-span-1">
             {isLoading ? (
-              <div className="bg-white rounded-3xl p-8 shadow-lg animate-pulse">
-                <div className="h-40 bg-coffee-100 rounded-xl"></div>
+              <div className="rounded-3xl p-8 animate-pulse border border-white/[0.07]" style={{ background: '#2b221b' }}>
+                <div className="h-40 rounded-xl" style={{ background: '#2f251d' }}></div>
               </div>
             ) : (
               <DripClubCard
@@ -213,17 +216,17 @@ const DripClub: React.FC = () => {
             )}
 
             {/* Benefits List */}
-            <div className="bg-white rounded-3xl p-6 shadow-lg border border-coffee-100 mt-6">
-              <h3 className="font-black text-coffee-900 mb-4">Member Benefits</h3>
+            <div className="rounded-3xl p-6 border border-white/[0.09] mt-6" style={{ background: '#2b221b' }}>
+              <h3 className="font-serif font-black mb-4" style={{ color: '#f3efe0' }}>Member Benefits</h3>
               <ul className="space-y-3">
                 {[
                   { icon: 'fa-percent', text: '10% off at all PRO+ locations', color: 'text-coffee-900 bg-volt-400' },
-                  { icon: 'fa-crown', text: 'Exclusive DripClub member badge', color: 'text-amber-600 bg-amber-100' },
-                  { icon: 'fa-ticket', text: 'Early access to tastings & events', color: 'text-coffee-900 bg-coffee-100' },
-                  { icon: 'fa-gift', text: 'Surprise perks from partner shops', color: 'text-rose-600 bg-rose-100' },
-                  { icon: 'fa-map-marker-alt', text: 'Discover new PRO+ shops', color: 'text-emerald-600 bg-emerald-100' },
+                  { icon: 'fa-crown', text: 'Exclusive DripClub member badge', color: 'text-amber-300 bg-amber-500/15' },
+                  { icon: 'fa-ticket', text: 'Early access to tastings & events', color: 'text-[#e4ddce] bg-[#2f251d]' },
+                  { icon: 'fa-gift', text: 'Surprise perks from partner shops', color: 'text-rose-300 bg-rose-500/15' },
+                  { icon: 'fa-map-marker-alt', text: 'Discover new PRO+ shops', color: 'text-emerald-300 bg-emerald-500/15' },
                 ].map((benefit, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm text-coffee-800">
+                  <li key={i} className="flex items-center gap-3 text-sm" style={{ color: '#e4ddce' }}>
                     <div className={`${benefit.color} w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0`}>
                       <i className={`fas ${benefit.icon} text-xs`}></i>
                     </div>
@@ -238,10 +241,10 @@ const DripClub: React.FC = () => {
           <div className="lg:col-span-2">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-serif font-black text-coffee-900">
+                <h2 className="text-2xl font-serif font-black" style={{ color: '#f3efe0', letterSpacing: '-0.02em' }}>
                   PRO+ Partner Shops
                 </h2>
-                <p className="text-coffee-800 text-sm">
+                <p className="text-sm" style={{ color: 'rgba(243,239,224,0.5)' }}>
                   {proShops.length} shops offering 10% DripClub discount
                 </p>
               </div>
@@ -252,23 +255,24 @@ const DripClub: React.FC = () => {
                 {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
-                    className="bg-white rounded-2xl p-4 shadow-lg animate-pulse"
+                    className="rounded-2xl p-4 animate-pulse border border-white/[0.07]"
+                    style={{ background: '#2b221b' }}
                   >
-                    <div className="h-32 bg-coffee-100 rounded-xl mb-3"></div>
-                    <div className="h-4 bg-coffee-100 rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-coffee-100 rounded w-1/2"></div>
+                    <div className="h-32 rounded-xl mb-3" style={{ background: '#2f251d' }}></div>
+                    <div className="h-4 rounded w-3/4 mb-2" style={{ background: '#2f251d' }}></div>
+                    <div className="h-3 rounded w-1/2" style={{ background: '#2f251d' }}></div>
                   </div>
                 ))}
               </div>
             ) : proShops.length === 0 ? (
-              <div className="bg-white rounded-3xl p-12 shadow-lg text-center">
-                <div className="bg-coffee-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <i className="fas fa-store text-coffee-800 text-3xl"></i>
+              <div className="rounded-3xl p-12 border border-white/[0.09] text-center" style={{ background: '#2b221b' }}>
+                <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: '#2f251d' }}>
+                  <i className="fas fa-store text-3xl" style={{ color: 'rgba(243,239,224,0.45)' }}></i>
                 </div>
-                <h3 className="text-xl font-bold text-coffee-900 mb-2">
+                <h3 className="text-xl font-serif font-black mb-2" style={{ color: '#f3efe0' }}>
                   Coming Soon!
                 </h3>
-                <p className="text-coffee-800 max-w-md mx-auto">
+                <p className="max-w-md mx-auto" style={{ color: '#e4ddce' }}>
                   PRO+ shops are joining DripClub. Check back soon to discover
                   partner locations offering member discounts.
                 </p>
@@ -279,18 +283,19 @@ const DripClub: React.FC = () => {
                   <Link
                     key={shop.id}
                     to={`/shop/${shop.id}`}
-                    className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow group"
+                    className="rounded-2xl overflow-hidden border border-white/[0.07] hover:border-volt-400/50 transition-colors group focus:outline-none focus:ring-2 focus:ring-volt-400"
+                    style={{ background: '#2b221b' }}
                   >
-                    <div className="h-32 bg-coffee-100 relative overflow-hidden">
+                    <div className="h-32 relative overflow-hidden" style={{ background: '#2f251d' }}>
                       {shop.gallery?.[0]?.url ? (
                         <LazyImage
-                          src={shop.gallery[0].url}
+                          src={sizedImageUrl(shop.gallery[0].url, { width: 1080 })!}
                           alt={shop.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <i className="fas fa-mug-hot text-coffee-800 text-4xl"></i>
+                          <i className="fas fa-mug-hot text-4xl" style={{ color: 'rgba(243,239,224,0.35)' }}></i>
                         </div>
                       )}
                       <div className="absolute top-3 right-3">
@@ -307,10 +312,10 @@ const DripClub: React.FC = () => {
                       )}
                     </div>
                     <div className="p-4">
-                      <h3 className="font-bold text-coffee-900 mb-1 group-hover:text-volt-500 transition-colors">
+                      <h3 className="font-bold mb-1 group-hover:text-volt-400 transition-colors" style={{ color: '#f3efe0' }}>
                         {shop.name}
                       </h3>
-                      <p className="text-coffee-800 text-xs flex items-center gap-1">
+                      <p className="text-xs flex items-center gap-1" style={{ color: 'rgba(243,239,224,0.5)' }}>
                         <i className="fas fa-map-marker-alt"></i>
                         {shop.city}, {shop.state}
                       </p>
@@ -322,6 +327,8 @@ const DripClub: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <BottomTabBar />
 
       {/* DripClub Modal */}
       <DripClubModal
