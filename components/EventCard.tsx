@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { CalendarEvent, Shop } from '../types';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AddToCalendar from './AddToCalendar';
 import LazyImage from './LazyImage';
 import { useApp } from '../context/AppContext';
 import { joinEvent, leaveEvent } from '../services/dbService';
 import { useToast } from '../context/ToastContext';
 import EventAttendeesModal from './EventAttendeesModal';
+import { sizedImageUrl } from '../lib/imageUrl';
 
 interface EventCardProps {
   event: CalendarEvent;
@@ -17,6 +18,7 @@ interface EventCardProps {
 const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) => {
   const { user } = useApp();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isJoining, setIsJoining] = useState(false);
   const [hasJoined, setHasJoined] = useState(false);
   const [attendeeCount, setAttendeeCount] = useState(event.attendeeCount || 0);
@@ -35,7 +37,8 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
   const handleJoinToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (!user) {
-      toast.error("Please login to join events");
+      toast.error("Create a free account to RSVP");
+      navigate('/auth', { state: { from: '/events' } });
       return;
     }
 
@@ -119,12 +122,15 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
   };
 
   return (
-    <div className={`bg-white rounded-2xl border border-coffee-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow group flex flex-col h-full ${compact ? 'text-sm' : ''}`}>
+    <div
+      className={`rounded-2xl border border-white/[0.06] overflow-hidden transition-shadow group flex flex-col h-full ${compact ? 'text-sm' : ''}`}
+      style={{ background: '#2b221b' }}
+    >
 
       {/* Image Header (if exists) */}
       {event.coverImage && (
-        <div className="relative w-full aspect-square overflow-hidden">
-          <LazyImage src={event.coverImage.url} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        <div className="relative w-full aspect-square overflow-hidden" style={{ background: '#2f251d' }}>
+          <LazyImage src={sizedImageUrl(event.coverImage.url, { width: 1080 }) || event.coverImage.url} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           <div className="absolute top-2 right-2">
             <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full shadow-sm ${typeColors[event.eventType] || typeColors['Other']}`}>
               {event.eventType}
@@ -138,16 +144,16 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
         {!event.coverImage && (
           <div className="flex justify-between items-start mb-2">
             <div className="flex items-center gap-2">
-              <div className="text-center bg-coffee-50 border border-coffee-100 rounded-lg p-1.5 min-w-[50px]">
-                <span className="block text-[10px] uppercase text-red-500 font-bold">{startDate.toLocaleDateString(undefined, { month: 'short' })}</span>
-                <span className="block text-lg font-black text-coffee-900 leading-none">{startDate.getDate()}</span>
+              <div className="text-center border border-white/[0.09] rounded-lg p-1.5 min-w-[50px]" style={{ background: '#2f251d' }}>
+                <span className="block text-[10px] uppercase font-bold" style={{ color: '#ccff00' }}>{startDate.toLocaleDateString(undefined, { month: 'short' })}</span>
+                <span className="block text-lg font-black leading-none" style={{ color: '#f3efe0' }}>{startDate.getDate()}</span>
               </div>
               <div>
-                <p className="text-xs font-bold text-gray-500 uppercase">{startDate.toLocaleDateString(undefined, { weekday: 'long' })}</p>
-                <p className="text-sm font-bold text-coffee-900">{timeStr}</p>
+                <p className="text-xs font-bold uppercase" style={{ color: 'rgba(243,239,224,0.5)' }}>{startDate.toLocaleDateString(undefined, { weekday: 'long' })}</p>
+                <p className="text-sm font-bold" style={{ color: '#f3efe0' }}>{timeStr}</p>
               </div>
             </div>
-            <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full border border-gray-100 ${typeColors[event.eventType] || typeColors['Other']}`}>
+            <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full ${typeColors[event.eventType] || typeColors['Other']}`}>
               {event.eventType}
             </span>
           </div>
@@ -156,24 +162,24 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
         {/* Content */}
         <div className="mb-3">
           {event.coverImage && (
-            <p className="text-xs font-bold text-volt-500 mb-1 uppercase tracking-wide">
+            <p className="text-xs font-bold mb-1 uppercase tracking-wide" style={{ color: '#ccff00' }}>
               {dateStr} &bull; {timeStr}
             </p>
           )}
-          <h3 className="font-serif font-bold text-lg text-coffee-900 leading-tight mb-1">
+          <h3 className="font-serif font-black text-lg leading-tight mb-1" style={{ color: '#f3efe0' }}>
             {event.title}
           </h3>
           {shop && (
-            <Link to={`/shop/${shop.id}`} className="text-xs font-medium text-coffee-500 hover:text-coffee-900 hover:underline flex items-center gap-1">
+            <Link to={`/shop/${shop.id}`} className="text-xs font-medium text-[#f3efe0]/55 hover:text-volt-400 hover:underline flex items-center gap-1">
               <i className="fas fa-map-marker-alt"></i> {shop.name}
             </Link>
           )}
           {event.locationName && !shop && (
-            <p className="text-xs text-coffee-500"><i className="fas fa-map-pin"></i> {event.locationName}</p>
+            <p className="text-xs" style={{ color: 'rgba(243,239,224,0.55)' }}><i className="fas fa-map-pin"></i> {event.locationName}</p>
           )}
         </div>
 
-        <p className="text-sm text-coffee-600 line-clamp-2 mb-4 flex-1">
+        <p className="text-sm line-clamp-2 mb-4 flex-1" style={{ color: '#e4ddce' }}>
           {event.description}
         </p>
 
@@ -184,7 +190,8 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
               href={event.ticketUrl}
               target="_blank"
               rel="noreferrer"
-              className="block w-full text-center bg-coffee-900/5 text-coffee-900 border border-coffee-200 text-xs font-bold py-2 rounded-lg hover:bg-coffee-100 transition-colors"
+              className="block w-full text-center border border-white/[0.09] text-xs font-bold py-2 rounded-lg hover:border-volt-400 transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400"
+              style={{ background: '#2f251d', color: '#f3efe0' }}
             >
               Get Tickets
             </a>
@@ -194,9 +201,9 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
             <button
               onClick={handleJoinToggle}
               disabled={isJoining}
-              className={`flex-1 py-3 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center gap-0.5 ${hasJoined
+              className={`flex-1 py-3 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center gap-0.5 focus:outline-none focus:ring-2 focus:ring-volt-400 ${hasJoined
                 ? 'bg-volt-400 text-coffee-900 shadow-sm hover:shadow-md'
-                : 'bg-coffee-900 text-volt-400 hover:bg-black'
+                : 'bg-[#2f251d] text-volt-400 border border-white/[0.09] hover:border-volt-400'
                 }`}
             >
               {isJoining ? (
@@ -222,20 +229,20 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
                   {recentAttendees.slice(0, 3).map((attendee, i) => (
                     <img
                       key={attendee.userId || i}
-                      src={attendee.avatarUrl || `https://ui-avatars.com/api/?name=User&background=random`}
+                      src={sizedImageUrl(attendee.avatarUrl, { width: 120 }) || `https://ui-avatars.com/api/?name=User&background=random`}
                       alt="Attendee"
-                      className="w-6 h-6 rounded-full border-2 border-white object-cover"
+                      className="w-6 h-6 rounded-full border-2 border-[#2b221b] object-cover"
                     />
                   ))}
                 </div>
-                <p className="text-[10px] items-center font-bold text-coffee-500 group-hover/attendees:text-volt-600 transition-colors">
+                <p className="text-[10px] items-center font-bold text-[#f3efe0]/55 group-hover/attendees:text-volt-400 transition-colors">
                   {hasJoined && recentAttendees.length === 1 ? 'You are going' :
                     hasJoined ? `You and ${attendeeCount - 1} others` :
                       `${attendeeCount} going`}
                 </p>
               </>
             ) : (
-              <p className="text-[10px] text-coffee-400 italic">Be the first to join!</p>
+              <p className="text-[10px] italic" style={{ color: 'rgba(243,239,224,0.45)' }}>Be the first to join!</p>
             )}
           </div>
         </div>

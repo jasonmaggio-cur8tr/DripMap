@@ -56,13 +56,13 @@ END:VCALENDAR`;
         href={googleUrl} 
         target="_blank" 
         rel="noopener noreferrer"
-        className="flex-1 bg-white border border-coffee-200 hover:border-coffee-900 text-coffee-900 text-xs font-bold py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
+        className="flex-1 bg-[#2f251d] border border-white/[0.09] hover:border-volt-400 text-[#f3efe0] text-xs font-bold py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400"
       >
         <i className="fab fa-google"></i> Google Cal
       </a>
-      <button 
+      <button
         onClick={downloadIcs}
-        className="flex-1 bg-white border border-coffee-200 hover:border-coffee-900 text-coffee-900 text-xs font-bold py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
+        className="flex-1 bg-[#2f251d] border border-white/[0.09] hover:border-volt-400 text-[#f3efe0] text-xs font-bold py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400"
       >
         <i className="fas fa-file-download"></i> .ICS
       </button>
