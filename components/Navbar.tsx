@@ -28,6 +28,8 @@ const Navbar: React.FC = () => {
 
   // The Dark Roast Discover feed provides its own header + bottom tab bar.
   if (isHome) return null;
+  // Dark Roast Shop Detail: hero glass back button replaces the navbar.
+  if (location.pathname.startsWith("/shop/")) return null;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-coffee-200 h-14 sm:h-16">
