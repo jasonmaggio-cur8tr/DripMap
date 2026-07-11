@@ -30,6 +30,14 @@ const Navbar: React.FC = () => {
   if (isHome) return null;
   // Dark Roast Shop Detail: hero glass back button replaces the navbar.
   if (location.pathname.startsWith("/shop/")) return null;
+  // Dark Roast core pages provide their own glass header + bottom tab bar.
+  if (
+    location.pathname.startsWith("/events") ||
+    location.pathname.startsWith("/leaderboard") ||
+    location.pathname.startsWith("/community") ||
+    location.pathname.startsWith("/profile")
+  )
+    return null;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-coffee-200 h-14 sm:h-16">

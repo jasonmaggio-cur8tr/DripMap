@@ -2,11 +2,16 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { fetchFollowingFeed, toggleExperienceLogLike } from "../services/dbService";
+import MenuDrawer from "../components/darkroast/MenuDrawer";
+import BottomTabBar from "../components/darkroast/BottomTabBar";
+import NotificationBell from "../components/NotificationBell";
+import { sizedImageUrl } from "../lib/imageUrl";
 
 const CommunityFeed: React.FC = () => {
     const { user } = useApp();
     const [logs, setLogs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [drawerOpen, setDrawerOpen] = useState(false);
 
     useEffect(() => {
         const fetchFeed = async () => {
@@ -50,126 +55,180 @@ const CommunityFeed: React.FC = () => {
         }
     };
 
-    if (!user) {
-        return (
-            <div className="min-h-screen bg-coffee-50 pt-20 px-4 text-center">
-                <h1 className="text-3xl font-serif font-bold text-coffee-900 mt-12 mb-4">Following Feed</h1>
-                <p className="text-coffee-600 mb-6">Please log in to see updates from the community.</p>
-                <Link to="/auth" className="inline-block bg-coffee-900 text-white px-6 py-2 rounded-xl">Log In</Link>
-            </div>
-        );
-    }
-
     return (
-        <div className="min-h-screen bg-coffee-50 pt-20 px-4 sm:px-6 pb-20">
-            <div className="container mx-auto max-w-2xl">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="flex text-volt-500 text-3xl h-8 overflow-visible" style={{ letterSpacing: "-0.25em" }}>
-                        <i className="fas fa-mug-hot relative z-10 scale-[0.8]"></i>
-                        <i className="fas fa-mug-hot relative z-30 scale-110 -ml-2 mb-1"></i>
-                        <i className="fas fa-mug-hot relative z-20 scale-[0.9] -ml-2"></i>
-                    </div>
-                    <div>
-                        <h1 className="text-3xl font-serif font-bold text-coffee-900">
-                            Following
+        <div className="min-h-screen" style={{ background: "#1e1712" }}>
+            {/* Sticky glass header */}
+            <header
+                className="fixed inset-x-0 top-0 z-30 border-b border-white/[0.07]"
+                style={{ background: "rgba(23,18,14,0.82)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)" }}
+            >
+                <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-3">
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setDrawerOpen(true)}
+                            aria-label="Open menu"
+                            className="flex h-9 w-9 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-volt-400"
+                            style={{ background: "#2b221b" }}
+                        >
+                            <i className="fas fa-bars" style={{ color: "#f3efe0" }}></i>
+                        </button>
+                        <h1 className="font-serif text-[19px] font-black" style={{ color: "#f3efe0", letterSpacing: "-0.02em" }}>
+                            Community
                         </h1>
-                        <p className="text-coffee-600 text-sm">
-                            Recent logs and activity from tastemakers you follow.
-                        </p>
                     </div>
+                    {user && <NotificationBell />}
                 </div>
+            </header>
 
-                {loading ? (
-                    <div className="flex justify-center py-12">
-                        <i className="fas fa-spinner fa-spin text-coffee-800 text-2xl"></i>
-                    </div>
-                ) : logs.length === 0 ? (
-                    <div className="bg-white rounded-3xl shadow-sm border border-coffee-100 p-8 text-center mt-8">
-                        <h2 className="text-xl font-bold text-coffee-900 mb-2">It's quiet here...</h2>
-                        <p className="text-coffee-600 mb-6">You aren't following anyone with recent logs yet.</p>
-                        <Link to="/leaderboard" className="inline-block border border-coffee-200 bg-coffee-50 hover:bg-white text-coffee-900 font-bold px-6 py-2 rounded-xl transition-colors">
-                            Discover Tastemakers
+            <div className="mx-auto max-w-2xl px-4 pb-[110px] pt-20 sm:px-6">
+                {!user ? (
+                    <div className="pt-12 text-center">
+                        <h2 className="mb-4 font-serif text-3xl font-black" style={{ color: "#f3efe0" }}>Following Feed</h2>
+                        <p className="mb-6" style={{ color: "rgba(243,239,224,0.55)" }}>
+                            Please log in to see updates from the community.
+                        </p>
+                        <Link
+                            to="/auth"
+                            className="inline-block rounded-full px-6 py-2.5 text-sm font-extrabold focus:outline-none focus:ring-2 focus:ring-volt-400"
+                            style={{ background: "#ccff00", color: "#231b15" }}
+                        >
+                            Log In
                         </Link>
                     </div>
                 ) : (
-                    <div className="space-y-4">
-                        {logs.map((log, index) => (
-                            <div key={log.id} className="p-5 rounded-2xl bg-white border border-coffee-100 shadow-sm relative">
+                    <>
+                        <p className="mb-5 text-sm" style={{ color: "rgba(243,239,224,0.55)" }}>
+                            Recent logs and activity from tastemakers you follow.
+                        </p>
 
-                                {/* Header: User Info */}
-                                <div className="flex justify-between items-start mb-3">
-                                    <div className="flex items-center gap-3">
-                                        <Link to={`/profile/${log.userId}`} className="block shrink-0">
-                                            <div className="w-10 h-10 rounded-full bg-coffee-100 overflow-hidden border border-coffee-200">
-                                                {log.userAvatar ? (
-                                                    <img src={log.userAvatar} alt={log.userName} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-coffee-400">
-                                                        <i className="fas fa-user"></i>
+                        {loading ? (
+                            <div className="flex justify-center py-12">
+                                <i className="fas fa-spinner fa-spin text-2xl" style={{ color: "rgba(243,239,224,0.45)" }}></i>
+                            </div>
+                        ) : logs.length === 0 ? (
+                            <div
+                                className="mt-8 rounded-3xl border border-white/[0.06] p-8 text-center"
+                                style={{ background: "#2b221b" }}
+                            >
+                                <h2 className="mb-2 text-xl font-bold" style={{ color: "#f3efe0" }}>It's quiet here...</h2>
+                                <p className="mb-6" style={{ color: "rgba(243,239,224,0.55)" }}>
+                                    You aren't following anyone with recent logs yet.
+                                </p>
+                                <Link
+                                    to="/leaderboard"
+                                    className="inline-block rounded-full border border-white/[0.09] px-6 py-2.5 text-sm font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400"
+                                    style={{ background: "#2f251d", color: "#ccff00" }}
+                                >
+                                    Discover Tastemakers
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {logs.map((log, index) => (
+                                    <div
+                                        key={log.id}
+                                        className="relative rounded-2xl border border-white/[0.06] p-5"
+                                        style={{ background: "#2b221b" }}
+                                    >
+
+                                        {/* Header: User Info */}
+                                        <div className="mb-3 flex items-start justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <Link to={`/profile/${log.userId}`} className="block shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-volt-400">
+                                                    <div className="h-10 w-10 overflow-hidden rounded-full border border-white/[0.09]" style={{ background: "#2f251d" }}>
+                                                        {log.userAvatar ? (
+                                                            <img src={sizedImageUrl(log.userAvatar, { width: 120 })} alt={log.userName} className="h-full w-full object-cover" />
+                                                        ) : (
+                                                            <div className="flex h-full w-full items-center justify-center" style={{ color: "rgba(243,239,224,0.45)" }}>
+                                                                <i className="fas fa-user"></i>
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                )}
+                                                </Link>
+                                                <div>
+                                                    <Link
+                                                        to={`/profile/${log.userId}`}
+                                                        className="block text-sm font-bold text-[#f3efe0] transition-colors hover:text-volt-400 focus:outline-none focus:ring-2 focus:ring-volt-400"
+                                                    >
+                                                        {log.userName}
+                                                    </Link>
+                                                    <div className="text-xs" style={{ color: "rgba(243,239,224,0.45)" }}>
+                                                        {new Date(log.createdAt).toLocaleDateString()}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div
+                                                className="flex items-center gap-1 rounded-md px-2 py-1"
+                                                style={{ background: "rgba(204,255,0,0.14)", color: "#ccff00" }}
+                                            >
+                                                <i className="fas fa-tint text-[10px]"></i>
+                                                <span className="text-sm font-bold">{log.overallQuality}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Shop Reference + Cover */}
+                                        <Link to={`/shop/${log.shopId}`} className="group mb-3 block rounded-xl focus:outline-none focus:ring-2 focus:ring-volt-400">
+                                            {log.shopCoverImage && (
+                                                <div className="mb-2 h-40 w-full overflow-hidden rounded-xl" style={{ background: "#2f251d" }}>
+                                                    <img
+                                                        src={sizedImageUrl(log.shopCoverImage, { width: 1080 })}
+                                                        alt={log.shopName}
+                                                        loading="lazy"
+                                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                    />
+                                                </div>
+                                            )}
+                                            <h3 className="font-serif text-lg font-black text-[#f3efe0] transition-colors group-hover:text-volt-400">
+                                                {log.shopName}
+                                            </h3>
+                                            <div className="text-xs font-bold uppercase" style={{ color: "rgba(243,239,224,0.55)" }}>
+                                                <i className="fas fa-map-marker-alt mr-1"></i>
+                                                {log.shopCity}, {log.shopState}
                                             </div>
                                         </Link>
-                                        <div>
-                                            <Link to={`/profile/${log.userId}`} className="font-bold text-coffee-900 text-sm hover:text-volt-600 block">
-                                                {log.userName}
-                                            </Link>
-                                            <div className="text-xs text-coffee-400">
-                                                {new Date(log.createdAt).toLocaleDateString()}
+
+                                        {/* Log Quick Take */}
+                                        {log.quickTake && (
+                                            <div
+                                                className="relative mb-3 rounded-r py-2 pl-3 pr-2"
+                                                style={{ borderLeft: "2px solid #ccff00", background: "rgba(255,255,255,0.04)" }}
+                                            >
+                                                <p className="text-sm italic" style={{ color: "#e4ddce" }}>"{log.quickTake}"</p>
                                             </div>
+                                        )}
+
+                                        {/* Action Bar */}
+                                        <div className="flex items-center justify-between border-t border-white/[0.06] pt-3">
+                                            <button
+                                                onClick={(e) => handleLike(e, log.id, index)}
+                                                className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400"
+                                                style={
+                                                    log.isLiked
+                                                        ? { background: "rgba(204,255,0,0.14)", color: "#ccff00" }
+                                                        : { background: "#2f251d", color: "rgba(243,239,224,0.55)" }
+                                                }
+                                            >
+                                                <i className={`${log.isLiked ? "fas" : "far"} fa-heart`}></i>
+                                                {log.likesCount > 0 && <span>{log.likesCount}</span>}
+                                            </button>
+                                            <Link
+                                                to={`/shop/${log.shopId}`}
+                                                className="text-[10px] font-bold uppercase text-[#f3efe0]/45 transition-colors hover:text-volt-400 focus:outline-none focus:ring-2 focus:ring-volt-400"
+                                            >
+                                                View Full Log <i className="fas fa-chevron-right ml-1"></i>
+                                            </Link>
                                         </div>
                                     </div>
-
-                                    <div className="flex items-center gap-1 bg-coffee-900 text-volt-400 px-2 py-1 rounded-md">
-                                        <i className="fas fa-tint text-[10px]"></i>
-                                        <span className="text-sm font-bold">{log.overallQuality}</span>
-                                    </div>
-                                </div>
-
-                                {/* Shop Reference + Cover */}
-                                <Link to={`/shop/${log.shopId}`} className="block group mb-3">
-                                    {log.shopCoverImage && (
-                                        <div className="h-40 w-full rounded-xl overflow-hidden mb-2">
-                                            <img src={log.shopCoverImage} alt={log.shopName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                        </div>
-                                    )}
-                                    <h3 className="font-serif font-bold text-lg text-coffee-900 group-hover:text-volt-600 transition-colors">
-                                        {log.shopName}
-                                    </h3>
-                                    <div className="text-xs text-coffee-500 uppercase font-bold">
-                                        <i className="fas fa-map-marker-alt mr-1"></i>
-                                        {log.shopCity}, {log.shopState}
-                                    </div>
-                                </Link>
-
-                                {/* Log Quick Take */}
-                                {log.quickTake && (
-                                    <div className="relative pl-3 border-l-2 border-volt-400 mb-3 bg-coffee-50/50 py-2 rounded-r pr-2">
-                                        <p className="text-coffee-700 italic text-sm">"{log.quickTake}"</p>
-                                    </div>
-                                )}
-
-                                {/* Action Bar */}
-                                <div className="flex items-center justify-between pt-3 border-t border-coffee-50">
-                                    <button
-                                        onClick={(e) => handleLike(e, log.id, index)}
-                                        className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full transition-colors ${log.isLiked
-                                            ? "bg-red-50 text-red-500 hover:bg-red-100"
-                                            : "bg-gray-50 text-gray-500 hover:bg-gray-100"
-                                            }`}
-                                    >
-                                        <i className={`${log.isLiked ? 'fas' : 'far'} fa-heart`}></i>
-                                        {log.likesCount > 0 && <span>{log.likesCount}</span>}
-                                    </button>
-                                    <Link to={`/shop/${log.shopId}`} className="text-[10px] text-coffee-400 font-bold uppercase hover:text-volt-500 transition-colors">
-                                        View Full Log <i className="fas fa-chevron-right ml-1"></i>
-                                    </Link>
-                                </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
+                        )}
+                    </>
                 )}
             </div>
+
+            <MenuDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+            <BottomTabBar />
         </div>
     );
 };

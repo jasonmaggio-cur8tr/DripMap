@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-import Button from "../components/Button";
 import { Vibe, User, Shop, DripClubMembership } from "../types";
 import { useToast } from "../context/ToastContext";
 import { uploadImage } from "../services/storageService";
@@ -13,6 +12,19 @@ import {
   getPricing,
 } from "../services/subscriptionService";
 import { fetchUserExperienceLogs } from "../services/dbService";
+import MenuDrawer from "../components/darkroast/MenuDrawer";
+import BottomTabBar from "../components/darkroast/BottomTabBar";
+import NotificationBell from "../components/NotificationBell";
+import { sizedImageUrl } from "../lib/imageUrl";
+
+// Dark Roast shared bits (design_handoff_dark_roast/README.md → Design Tokens)
+const SURFACE = "#2b221b";
+const TILE = "#2f251d";
+const TEXT = "#f3efe0";
+const TEXT_2 = "#e4ddce";
+const MUTED = "rgba(243,239,224,0.5)";
+const pillBtn =
+  "inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400";
 
 // --- ANIMATED DRIPCLUB BADGE COMPONENT ---
 const DripClubBadge: React.FC<{ username: string; onManage?: () => void }> = ({ username, onManage }) => {
@@ -105,6 +117,7 @@ const Profile: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // DripClub membership state
   const [dripClubMembership, setDripClubMembership] = useState<DripClubMembership | null>(null);
@@ -250,22 +263,58 @@ const Profile: React.FC = () => {
     }
   };
 
+  // Sticky glass header, shared across loading / error / loaded states
+  const pageHeader = (
+    <header
+      className="fixed inset-x-0 top-0 z-30 border-b border-white/[0.07]"
+      style={{ background: "rgba(23,18,14,0.82)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)" }}
+    >
+      <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-3">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Open menu"
+            className="flex h-9 w-9 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-volt-400"
+            style={{ background: SURFACE }}
+          >
+            <i className="fas fa-bars" style={{ color: TEXT }}></i>
+          </button>
+          <h1 className="font-serif text-[19px] font-black" style={{ color: TEXT, letterSpacing: "-0.02em" }}>
+            {isOwnProfile ? "Your Drips" : viewedUser ? `@${viewedUser.username}` : "Drips"}
+          </h1>
+        </div>
+        {currentUser && <NotificationBell />}
+      </div>
+    </header>
+  );
+
   if (loading)
     return (
-      <div className="min-h-screen pt-20 text-center text-coffee-500">
-        <div className="inline-block w-8 h-8 border-4 border-coffee-300 border-t-4 border-t-volt-400 rounded-full animate-spin"></div>
+      <div className="min-h-screen" style={{ background: "#1e1712" }}>
+        {pageHeader}
+        <div className="pt-32 text-center">
+          <i className="fas fa-spinner fa-spin text-2xl" style={{ color: "rgba(243,239,224,0.45)" }}></i>
+        </div>
+        <MenuDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+        <BottomTabBar />
       </div>
     );
   if (!viewedUser) {
     return (
-      <div className="min-h-screen pt-20 text-center">
-        <p className="text-coffee-500">Unable to load profile</p>
-        <button
-          onClick={() => navigate("/")}
-          className="mt-4 text-volt-500 hover:underline"
-        >
-          Return to Home
-        </button>
+      <div className="min-h-screen" style={{ background: "#1e1712" }}>
+        {pageHeader}
+        <div className="pt-32 text-center">
+          <p style={{ color: MUTED }}>Unable to load profile</p>
+          <button
+            onClick={() => navigate("/")}
+            className="mt-4 hover:underline focus:outline-none focus:ring-2 focus:ring-volt-400 rounded"
+            style={{ color: "#ccff00" }}
+          >
+            Return to Home
+          </button>
+        </div>
+        <MenuDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+        <BottomTabBar />
       </div>
     );
   }
@@ -494,7 +543,7 @@ const Profile: React.FC = () => {
     url: string | undefined,
     iconClass: string,
     label: string,
-    colorClass: string = "text-coffee-900"
+    colorClass: string = "text-[#e4ddce]"
   ) => {
     if (!url) return null;
 
@@ -516,7 +565,8 @@ const Profile: React.FC = () => {
         href={safeUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className={`w-10 h-10 rounded-full bg-coffee-50 flex items-center justify-center transition-all hover:scale-110 hover:bg-white hover:shadow-md border border-transparent hover:border-coffee-100 ${colorClass}`}
+        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 border border-white/[0.09] hover:border-volt-400 focus:outline-none focus:ring-2 focus:ring-volt-400 ${colorClass}`}
+        style={{ background: TILE }}
         title={label}
       >
         <i className={`${iconClass} text-lg`}></i>
@@ -524,16 +574,30 @@ const Profile: React.FC = () => {
     );
   };
 
+  // Eyebrow-style section heading
+  const sectionTitle = (icon: string, label: React.ReactNode) => (
+    <h2 className="text-lg sm:text-xl font-serif font-black mb-3 sm:mb-4 flex items-center gap-2" style={{ color: TEXT }}>
+      <i className={`${icon}`} style={{ color: "rgba(243,239,224,0.35)" }}></i> {label}
+    </h2>
+  );
+
   return (
-    <div className="min-h-screen bg-coffee-50 pt-16 sm:pt-20 px-3 sm:px-4">
-      <div className="container mx-auto max-w-4xl">
+    <div className="min-h-screen px-3 sm:px-4" style={{ background: "#1e1712" }}>
+      {pageHeader}
+      <div className="container mx-auto max-w-4xl pt-20 pb-[110px]">
         {/* Header Card */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-6 md:p-8 border border-coffee-100 flex flex-col md:flex-row items-start gap-4 sm:gap-6 md:gap-8 relative mb-6 sm:mb-8">
+        <div
+          className="rounded-2xl sm:rounded-3xl border border-white/[0.06] p-4 sm:p-6 md:p-8 flex flex-col md:flex-row items-start gap-4 sm:gap-6 md:gap-8 relative mb-6 sm:mb-8"
+          style={{ background: SURFACE }}
+        >
           {/* Avatar Section */}
           <div className="flex-shrink-0 mx-auto md:mx-0 relative group">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-3 sm:border-4 border-coffee-100 shadow-sm">
+            <div
+              className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full overflow-hidden"
+              style={{ border: "2px solid #ccff00", background: TILE }}
+            >
               <img
-                src={isEditing ? editData.avatarUrl : viewedUser.avatarUrl}
+                src={isEditing ? editData.avatarUrl : sizedImageUrl(viewedUser.avatarUrl, { width: 120 })}
                 alt={viewedUser.username}
                 className="w-full h-full object-cover"
               />
@@ -541,7 +605,7 @@ const Profile: React.FC = () => {
             {isEditing && (
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-volt-400"
               >
                 <i className="fas fa-camera text-2xl"></i>
               </button>
@@ -560,7 +624,7 @@ const Profile: React.FC = () => {
             {isEditing ? (
               <div className="space-y-4 max-w-md">
                 <div>
-                  <label className="block text-xs font-bold text-coffee-400 uppercase mb-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.08em] mb-1" style={{ color: MUTED }}>
                     Username
                   </label>
                   <input
@@ -569,11 +633,12 @@ const Profile: React.FC = () => {
                     onChange={e =>
                       setEditData({ ...editData, username: e.target.value })
                     }
-                    className="w-full px-4 py-2 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none font-bold text-coffee-900"
+                    className="w-full px-4 py-2 border border-white/[0.09] rounded-xl focus:ring-2 focus:ring-volt-400 outline-none font-bold"
+                    style={{ background: TILE, color: TEXT }}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-coffee-400 uppercase mb-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.08em] mb-1" style={{ color: MUTED }}>
                     Bio
                   </label>
                   <textarea
@@ -582,18 +647,19 @@ const Profile: React.FC = () => {
                       setEditData({ ...editData, bio: e.target.value })
                     }
                     rows={3}
-                    className="w-full px-4 py-2 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none text-sm text-coffee-800"
+                    className="w-full px-4 py-2 border border-white/[0.09] rounded-xl focus:ring-2 focus:ring-volt-400 outline-none text-sm"
+                    style={{ background: TILE, color: TEXT_2 }}
                     placeholder="Tell us about your coffee journey..."
                   />
                 </div>
 
-                <div className="pt-2 border-t border-coffee-100">
-                  <label className="block text-xs font-bold text-coffee-400 uppercase mb-3">
+                <div className="pt-2 border-t border-white/[0.07]">
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.08em] mb-3" style={{ color: MUTED }}>
                     Social Connections
                   </label>
                   <div className="grid grid-cols-1 gap-3">
                     <div className="relative">
-                      <i className="fab fa-instagram absolute left-3 top-1/2 -translate-y-1/2 text-coffee-400"></i>
+                      <i className="fab fa-instagram absolute left-3 top-1/2 -translate-y-1/2" style={{ color: MUTED }}></i>
                       <input
                         type="text"
                         placeholder="Instagram username"
@@ -601,24 +667,26 @@ const Profile: React.FC = () => {
                         onChange={e =>
                           handleSocialChange("instagram", e.target.value)
                         }
-                        className="w-full pl-9 pr-3 py-2 text-sm bg-coffee-50 border border-coffee-200 rounded-lg focus:ring-1 focus:ring-volt-400 outline-none"
+                        className="w-full pl-9 pr-3 py-2 text-sm border border-white/[0.09] rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
+                        style={{ background: TILE, color: TEXT }}
                       />
                     </div>
                     <div className="relative">
-                      <i className="fab fa-x-twitter absolute left-3 top-1/2 -translate-y-1/2 text-coffee-400"></i>
+                      <i className="fab fa-x-twitter absolute left-3 top-1/2 -translate-y-1/2" style={{ color: MUTED }}></i>
                       <input
                         type="text"
                         placeholder="X username"
                         value={editData.socialLinks.x}
                         onChange={e => handleSocialChange("x", e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 text-sm bg-coffee-50 border border-coffee-200 rounded-lg focus:ring-1 focus:ring-volt-400 outline-none"
+                        className="w-full pl-9 pr-3 py-2 text-sm border border-white/[0.09] rounded-lg focus:ring-2 focus:ring-volt-400 outline-none"
+                        style={{ background: TILE, color: TEXT }}
                       />
                     </div>
                   </div>
                 </div>
 
                 <div className="flex gap-3 pt-4 justify-center md:justify-start">
-                  <Button onClick={handleSave} size="sm">
+                  <button onClick={handleSave} className={pillBtn} style={{ background: "#ccff00", color: "#231b15" }}>
                     {uploadingAvatar ? (
                       <>
                         <i className="fas fa-spinner fa-spin mr-2"></i>
@@ -627,37 +695,47 @@ const Profile: React.FC = () => {
                     ) : (
                       "Save Profile"
                     )}
-                  </Button>
-                  <Button onClick={handleCancel} variant="ghost" size="sm">
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    className={`${pillBtn} border border-white/[0.09]`}
+                    style={{ background: TILE, color: TEXT_2 }}
+                  >
                     Cancel
-                  </Button>
+                  </button>
                 </div>
               </div>
             ) : (
               <>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2 justify-center sm:justify-start">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-coffee-900">
+                  <h1 className="text-2xl sm:text-3xl font-serif font-black" style={{ color: TEXT }}>
                     @{viewedUser.username}
                   </h1>
                   {isOwnProfile && (
-                    <span className="text-coffee-500 text-xs sm:text-sm bg-coffee-50 px-2 py-1 rounded-lg">
+                    <span
+                      className="text-xs sm:text-sm px-2 py-1 rounded-lg"
+                      style={{ background: TILE, color: MUTED }}
+                    >
                       {viewedUser.email}
                     </span>
                   )}
 
                   {/* Drip Score Pill */}
-                  <div className="ml-0 sm:ml-4 flex items-center gap-1 bg-coffee-900 text-volt-400 px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold shadow-lg">
+                  <div
+                    className="ml-0 sm:ml-4 flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold"
+                    style={{ background: "rgba(204,255,0,0.14)", color: "#ccff00" }}
+                  >
                     <i className="fas fa-bolt"></i>
                     <span>{dripScore} DripScore</span>
                   </div>
                 </div>
 
                 {viewedUser.bio ? (
-                  <p className="text-sm sm:text-base text-coffee-700 italic mb-4 max-w-lg mx-auto sm:mx-0">
+                  <p className="text-sm sm:text-base italic mb-4 max-w-lg mx-auto sm:mx-0" style={{ color: TEXT_2 }}>
                     "{viewedUser.bio}"
                   </p>
                 ) : (
-                  <p className="text-coffee-400 text-xs sm:text-sm mb-4">
+                  <p className="text-xs sm:text-sm mb-4" style={{ color: "rgba(243,239,224,0.45)" }}>
                     No bio yet.
                   </p>
                 )}
@@ -669,47 +747,47 @@ const Profile: React.FC = () => {
                         viewedUser.socialLinks.instagram,
                         "fab fa-instagram",
                         "Instagram",
-                        "text-pink-600"
+                        "text-pink-400"
                       )}
                       {renderSocialIcon(
                         viewedUser.socialLinks.x,
                         "fab fa-x-twitter",
                         "X",
-                        "text-black"
+                        "text-white"
                       )}
                     </div>
                   )}
 
-                <div className="flex justify-center sm:justify-start gap-3 sm:gap-4 mb-6 pt-2 border-t border-coffee-50 sm:border-none flex-wrap">
+                <div className="flex justify-center sm:justify-start gap-3 sm:gap-4 mb-6 pt-2 border-t border-white/[0.06] sm:border-none flex-wrap">
                   <div className="text-center sm:text-left">
-                    <span className="block font-bold text-lg sm:text-xl text-coffee-900">
+                    <span className="block font-serif font-black text-lg sm:text-xl" style={{ color: TEXT }}>
                       {savedSpots.length}
                     </span>
-                    <span className="text-[10px] sm:text-xs text-coffee-500 uppercase tracking-wide">
+                    <span className="text-[10px] sm:text-xs uppercase tracking-wide" style={{ color: MUTED }}>
                       Saved
                     </span>
                   </div>
-                  <div className="text-center sm:text-left pl-3 sm:pl-4 border-l border-coffee-100">
-                    <span className="block font-bold text-lg sm:text-xl text-coffee-900">
+                  <div className="text-center sm:text-left pl-3 sm:pl-4 border-l border-white/[0.06]">
+                    <span className="block font-serif font-black text-lg sm:text-xl" style={{ color: TEXT }}>
                       {visitedSpots.length}
                     </span>
-                    <span className="text-[10px] sm:text-xs text-coffee-500 uppercase tracking-wide">
+                    <span className="text-[10px] sm:text-xs uppercase tracking-wide" style={{ color: MUTED }}>
                       Visited
                     </span>
                   </div>
-                  <div className="text-center sm:text-left pl-3 sm:pl-4 border-l border-coffee-100">
-                    <span className="block font-bold text-lg sm:text-xl text-coffee-900">
+                  <div className="text-center sm:text-left pl-3 sm:pl-4 border-l border-white/[0.06]">
+                    <span className="block font-serif font-black text-lg sm:text-xl" style={{ color: TEXT }}>
                       {claimedSpots.length}
                     </span>
-                    <span className="text-[10px] sm:text-xs text-coffee-500 uppercase tracking-wide">
+                    <span className="text-[10px] sm:text-xs uppercase tracking-wide" style={{ color: MUTED }}>
                       Owned
                     </span>
                   </div>
-                  <div className="text-center sm:text-left pl-3 sm:pl-4 border-l border-coffee-100">
-                    <span className="block font-bold text-lg sm:text-xl text-coffee-900">
+                  <div className="text-center sm:text-left pl-3 sm:pl-4 border-l border-white/[0.06]">
+                    <span className="block font-serif font-black text-lg sm:text-xl" style={{ color: TEXT }}>
                       {viewedUser.followerIds?.length || 0}
                     </span>
-                    <span className="text-[10px] sm:text-xs text-coffee-500 uppercase tracking-wide">
+                    <span className="text-[10px] sm:text-xs uppercase tracking-wide" style={{ color: MUTED }}>
                       Followers
                     </span>
                   </div>
@@ -718,58 +796,59 @@ const Profile: React.FC = () => {
                 <div className="flex gap-2 sm:gap-3 justify-center sm:justify-start flex-wrap">
                   {isOwnProfile ? (
                     <>
-                      <Button
-                        variant="outline"
-                        size="sm"
+                      <button
                         onClick={startEditing}
+                        className={`${pillBtn} border border-white/[0.09]`}
+                        style={{ background: TILE, color: TEXT }}
                       >
                         <i className="fas fa-edit mr-2"></i> Edit Profile
-                      </Button>
-                      <Button
-                        variant="outline" // or ghost, consistent with design
-                        size="sm"
+                      </button>
+                      <button
                         onClick={() => navigate('/reset-password', { state: { returnPath: '/profile' } })}
-                        className="text-coffee-700 hover:bg-coffee-50"
+                        className={`${pillBtn} border border-white/[0.09]`}
+                        style={{ background: TILE, color: TEXT_2 }}
                       >
                         <i className="fas fa-lock mr-2"></i> Change Password
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      </button>
+                      <button
                         onClick={handleShareProfile}
-                        className="text-volt-500 hover:bg-volt-50"
+                        className={`${pillBtn} border border-white/[0.09]`}
+                        style={{ background: TILE, color: "#ccff00" }}
                       >
                         <i className="fas fa-share mr-2"></i> Share Profile
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      </button>
+                      <button
                         onClick={logout}
-                        className="text-red-500 hover:bg-red-50"
+                        className={`${pillBtn} border border-white/[0.09]`}
+                        style={{ background: TILE, color: "#f87171" }}
                       >
                         Log Out
-                      </Button>
+                      </button>
                     </>
                   ) : (
                     <>
-                      <Button
-                        variant={isFollowing ? "secondary" : "primary"}
-                        size="sm"
+                      <button
                         onClick={handleToggleFollow}
+                        className={`${pillBtn} ${isFollowing ? "border border-white/[0.09]" : ""}`}
+                        style={
+                          isFollowing
+                            ? { background: TILE, color: TEXT }
+                            : { background: "#ccff00", color: "#231b15" }
+                        }
                       >
                         <i
                           className={`fas ${isFollowing ? "fa-user-check" : "fa-user-plus"
                             } mr-2`}
                         ></i>
                         {isFollowing ? "Following" : "Follow"}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      </button>
+                      <button
                         onClick={handleShareProfile}
+                        className={`${pillBtn} border border-white/[0.09]`}
+                        style={{ background: TILE, color: "#ccff00" }}
                       >
                         <i className="fas fa-share mr-2"></i> Share Profile
-                      </Button>
+                      </button>
                     </>
                   )}
                 </div>
@@ -781,45 +860,48 @@ const Profile: React.FC = () => {
         {/* GAMIFICATION: Badges */}
         <div className="mb-6 sm:mb-10">
           <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-            <h2 className="text-lg sm:text-xl font-serif font-bold text-coffee-900">
+            <h2 className="text-lg sm:text-xl font-serif font-black" style={{ color: TEXT }}>
               Achievements
             </h2>
-            <span className="bg-volt-400/20 text-coffee-900 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+            <span
+              className="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider"
+              style={{ background: "rgba(204,255,0,0.14)", color: "#ccff00" }}
+            >
               Beta
             </span>
           </div>
 
-          <div className="bg-white p-3 sm:p-4 md:p-6 rounded-2xl sm:rounded-3xl shadow-sm border border-coffee-100">
+          <div className="p-3 sm:p-4 md:p-6 rounded-2xl sm:rounded-3xl border border-white/[0.06]" style={{ background: SURFACE }}>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
               {/* Leaderboard Badges */}
               {viewedUser.leaderboardBadges?.map(badge => {
-                let badgeColors = "bg-yellow-50 border-yellow-400 text-yellow-900";
-                let iconColors = "bg-yellow-900 text-yellow-400";
-                let textColors = "text-yellow-700";
+                let borderColor = "rgba(250,204,21,0.6)"; // gold
+                let iconColors = "bg-yellow-400/15 text-yellow-400";
+                let textColor = "#facc15";
 
                 if (badge.rank === 2) {
-                  badgeColors = "bg-gray-50 border-gray-400 text-gray-900";
-                  iconColors = "bg-gray-800 text-gray-300";
-                  textColors = "text-gray-600";
+                  borderColor = "rgba(209,213,219,0.5)";
+                  iconColors = "bg-gray-300/15 text-gray-300";
+                  textColor = "#d1d5db";
                 } else if (badge.rank === 3) {
-                  badgeColors = "bg-amber-50 border-amber-600 text-amber-900";
-                  iconColors = "bg-amber-900 text-amber-500";
-                  textColors = "text-amber-700";
+                  borderColor = "rgba(217,119,6,0.6)";
+                  iconColors = "bg-amber-500/15 text-amber-500";
+                  textColor = "#f59e0b";
                 }
 
                 return (
                   <div
                     key={badge.id}
-                    className={`aspect-square rounded-2xl flex flex-col items-center justify-center p-3 text-center border-2 transition-all duration-300 group shadow-md scale-105 relative overflow-hidden ${badgeColors}`}
+                    className="aspect-square rounded-2xl flex flex-col items-center justify-center p-3 text-center border-2 transition-all duration-300 group scale-105 relative overflow-hidden"
+                    style={{ background: TILE, borderColor }}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-transparent"></div>
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 text-xl relative z-10 shadow-inner ${iconColors}`}>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 text-xl relative z-10 ${iconColors}`}>
                       <i className="fas fa-mug-hot"></i>
                     </div>
-                    <h3 className="font-bold text-[10px] leading-tight mb-1 relative z-10">
+                    <h3 className="font-bold text-[10px] leading-tight mb-1 relative z-10" style={{ color: TEXT }}>
                       {badge.title}
                     </h3>
-                    <p className={`text-[9px] font-bold relative z-10 ${textColors}`}>
+                    <p className="text-[9px] font-bold relative z-10" style={{ color: textColor }}>
                       {badge.month}/{badge.year}
                     </p>
                   </div>
@@ -830,28 +912,30 @@ const Profile: React.FC = () => {
               {BADGES.map(badge => (
                 <div
                   key={badge.id}
-                  className={`aspect-square rounded-2xl flex flex-col items-center justify-center p-3 text-center border-2 transition-all duration-300 group ${badge.unlocked
-                    ? "bg-coffee-50 border-volt-400 shadow-md scale-105"
-                    : "bg-gray-50 border-gray-100 grayscale opacity-60"
+                  className={`aspect-square rounded-2xl flex flex-col items-center justify-center p-3 text-center border-2 transition-all duration-300 group ${badge.unlocked ? "border-volt-400 scale-105" : "border-white/[0.06] opacity-50"
                     }`}
+                  style={{ background: TILE }}
                 >
                   <div
                     className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 text-xl ${badge.unlocked
-                      ? "bg-coffee-900 text-volt-400"
-                      : "bg-gray-200 text-gray-400"
+                      ? "bg-volt-400 text-coffee-900"
+                      : "bg-white/[0.06] text-[#f3efe0]/40"
                       }`}
                   >
                     <i className={badge.icon}></i>
                   </div>
-                  <h3 className="font-bold text-coffee-900 text-xs mb-1">
+                  <h3 className="font-bold text-xs mb-1" style={{ color: TEXT }}>
                     {badge.name}
                   </h3>
-                  <p className="text-[9px] text-coffee-500 uppercase font-bold">
+                  <p className="text-[9px] uppercase font-bold" style={{ color: MUTED }}>
                     {badge.desc}
                   </p>
 
                   {badge.unlocked && (
-                    <div className="mt-2 text-[9px] font-bold text-white bg-volt-400 px-2 py-0.5 rounded-full">
+                    <div
+                      className="mt-2 text-[9px] font-black px-2 py-0.5 rounded-full"
+                      style={{ background: "#ccff00", color: "#231b15" }}
+                    >
                       UNLOCKED
                     </div>
                   )}
@@ -865,14 +949,14 @@ const Profile: React.FC = () => {
         {isOwnProfile && (
           <div className="mb-6 sm:mb-10">
             <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-              <h2 className="text-lg sm:text-xl font-serif font-bold text-coffee-900">
+              <h2 className="text-lg sm:text-xl font-serif font-black" style={{ color: TEXT }}>
                 DripClub Membership
               </h2>
             </div>
 
             {membershipLoading ? (
-              <div className="bg-white p-6 rounded-2xl sm:rounded-3xl shadow-sm border border-coffee-100 text-center">
-                <i className="fas fa-spinner fa-spin text-coffee-800 text-xl"></i>
+              <div className="p-6 rounded-2xl sm:rounded-3xl border border-white/[0.06] text-center" style={{ background: SURFACE }}>
+                <i className="fas fa-spinner fa-spin text-xl" style={{ color: "rgba(243,239,224,0.45)" }}></i>
               </div>
             ) : dripClubMembership &&
               (dripClubMembership.status === "active" ||
@@ -886,22 +970,22 @@ const Profile: React.FC = () => {
                 />
 
                 {/* Subscription Details Card */}
-                <div className="bg-white rounded-2xl p-4 shadow-sm border border-coffee-100">
+                <div className="rounded-2xl p-4 border border-white/[0.06]" style={{ background: SURFACE }}>
                   {/* Status + Plan Type */}
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-coffee-600 text-xs font-bold uppercase tracking-wider">
+                    <span className="text-xs font-bold uppercase tracking-wider" style={{ color: TEXT_2 }}>
                       {dripClubMembership.planType === "annual" ? "Annual" : "Monthly"} Plan
                     </span>
                     <div
                       className={`text-[10px] font-black px-2.5 py-1 rounded-full flex items-center gap-1 ${dripClubMembership.status === "trialing"
-                        ? "bg-blue-100 text-blue-600"
-                        : "bg-green-100 text-green-600"
+                        ? "bg-blue-400/15 text-blue-300"
+                        : "bg-green-400/15 text-green-300"
                         }`}
                     >
                       <span
                         className={`w-1.5 h-1.5 rounded-full ${dripClubMembership.status === "trialing"
-                          ? "bg-blue-500"
-                          : "bg-green-500"
+                          ? "bg-blue-400"
+                          : "bg-green-400"
                           }`}
                       ></span>
                       {dripClubMembership.status === "trialing"
@@ -911,10 +995,10 @@ const Profile: React.FC = () => {
                   </div>
 
                   {/* Dates */}
-                  <div className="flex items-center justify-between text-xs border-t border-coffee-50 pt-3">
+                  <div className="flex items-center justify-between text-xs border-t border-white/[0.07] pt-3">
                     <div>
-                      <p className="text-coffee-400 text-[10px] uppercase">Member Since</p>
-                      <p className="text-coffee-900 font-bold">
+                      <p className="text-[10px] uppercase" style={{ color: MUTED }}>Member Since</p>
+                      <p className="font-bold" style={{ color: TEXT }}>
                         {dripClubMembership.createdAt
                           ? new Date(dripClubMembership.createdAt).toLocaleDateString("en-US", {
                             month: "short",
@@ -925,10 +1009,10 @@ const Profile: React.FC = () => {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-coffee-400 text-[10px] uppercase">
+                      <p className="text-[10px] uppercase" style={{ color: MUTED }}>
                         {dripClubMembership.cancelAtPeriodEnd ? "Ends On" : "Renews On"}
                       </p>
-                      <p className="text-coffee-900 font-bold">
+                      <p className="font-bold" style={{ color: TEXT }}>
                         {dripClubMembership.currentPeriodEnd
                           ? new Date(dripClubMembership.currentPeriodEnd).toLocaleDateString("en-US", {
                             month: "short",
@@ -942,8 +1026,8 @@ const Profile: React.FC = () => {
 
                   {/* Cancel warning */}
                   {dripClubMembership.cancelAtPeriodEnd && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mt-3">
-                      <p className="text-amber-700 text-xs font-medium flex items-center gap-2">
+                    <div className="rounded-xl p-3 mt-3 border border-amber-400/30" style={{ background: "rgba(251,191,36,0.08)" }}>
+                      <p className="text-amber-300 text-xs font-medium flex items-center gap-2">
                         <i className="fas fa-exclamation-triangle"></i>
                         Your membership will end on{" "}
                         {dripClubMembership.currentPeriodEnd
@@ -960,29 +1044,29 @@ const Profile: React.FC = () => {
               </div>
             ) : (
               // Non-member CTA card
-              <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-lg border border-coffee-100">
+              <div className="rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-white/[0.06]" style={{ background: SURFACE }}>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="bg-volt-400 p-3 rounded-xl">
                     <i className="fas fa-crown text-coffee-900 text-xl"></i>
                   </div>
                   <div>
-                    <h3 className="text-coffee-900 font-black text-lg">
+                    <h3 className="font-black text-lg" style={{ color: TEXT }}>
                       Join DripClub
                     </h3>
-                    <p className="text-coffee-800 text-xs">
+                    <p className="text-xs" style={{ color: MUTED }}>
                       Unlock exclusive perks & discounts
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-coffee-50 rounded-xl p-4 mb-4">
+                <div className="rounded-xl p-4 mb-4 border border-white/[0.06]" style={{ background: TILE }}>
                   <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-3xl font-black text-coffee-900">
+                    <span className="text-3xl font-black" style={{ color: TEXT }}>
                       {formatPrice(getPricing().dripClub.annual.amount)}
                     </span>
-                    <span className="text-coffee-800 text-sm">/year</span>
+                    <span className="text-sm" style={{ color: MUTED }}>/year</span>
                   </div>
-                  <p className="text-volt-500 text-xs font-bold">
+                  <p className="text-xs font-bold" style={{ color: "#ccff00" }}>
                     Less than $1 per month!
                   </p>
                 </div>
@@ -996,9 +1080,10 @@ const Profile: React.FC = () => {
                   ].map((perk, i) => (
                     <li
                       key={i}
-                      className="flex items-center gap-2.5 text-sm text-coffee-800"
+                      className="flex items-center gap-2.5 text-sm"
+                      style={{ color: TEXT_2 }}
                     >
-                      <i className="fas fa-check text-volt-500 text-xs"></i>
+                      <i className="fas fa-check text-xs" style={{ color: "#ccff00" }}></i>
                       {perk}
                     </li>
                   ))}
@@ -1006,7 +1091,8 @@ const Profile: React.FC = () => {
 
                 <button
                   onClick={() => navigate("/dripclub")}
-                  className="w-full py-3 bg-volt-400 text-coffee-900 rounded-xl font-bold text-sm hover:bg-volt-500 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-volt-400/20"
+                  className="w-full py-3 bg-volt-400 text-coffee-900 rounded-full font-bold text-sm hover:bg-volt-500 active:scale-[0.98] transition-all flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-volt-400"
+                  style={{ boxShadow: "0 8px 24px -4px rgba(204,255,0,0.45)" }}
                 >
                   <i className="fas fa-crown"></i>
                   Join DripClub
@@ -1018,21 +1104,24 @@ const Profile: React.FC = () => {
 
         {/* PASSPORT BOOK */}
         <div className="mb-6 sm:mb-10">
-          <h2 className="text-lg sm:text-xl font-serif font-bold text-coffee-900 mb-3 sm:mb-4 flex items-center gap-2">
-            <i className="fas fa-passport text-coffee-400"></i> Your Passport
-            Book
-          </h2>
+          {sectionTitle("fas fa-passport", "Your Passport Book")}
 
           {Object.keys(passportBook).length > 0 ? (
-            <div className="bg-[#FDFBF7] border-2 border-coffee-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-10 shadow-2xl relative overflow-hidden">
+            <div
+              className="rounded-2xl sm:rounded-3xl border border-white/[0.09] p-4 sm:p-6 md:p-10 relative overflow-hidden"
+              style={{ background: SURFACE }}
+            >
               {/* Book Binding Gradient */}
-              <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-black/20 via-black/5 to-transparent pointer-events-none z-10"></div>
+              <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-black/40 via-black/10 to-transparent pointer-events-none z-10"></div>
 
               {(Object.entries(passportBook) as [string, Shop[]][]).map(
                 ([location, shops]) => (
                   <div key={location} className="mb-8 last:mb-0 relative z-0">
-                    <h3 className="text-sm font-bold text-coffee-400 uppercase tracking-widest border-b border-coffee-200 pb-2 mb-6 flex items-center gap-2">
-                      <i className="fas fa-map-pin text-volt-400"></i>{" "}
+                    <h3
+                      className="text-[10px] font-bold uppercase tracking-[0.08em] border-b border-white/[0.09] pb-2 mb-6 flex items-center gap-2"
+                      style={{ color: MUTED }}
+                    >
+                      <i className="fas fa-map-pin" style={{ color: "#ccff00" }}></i>{" "}
                       {location}
                     </h3>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 sm:gap-x-6 gap-y-6 sm:gap-y-8">
@@ -1060,8 +1149,8 @@ const Profile: React.FC = () => {
                                                 relative w-24 h-24 rounded-full border-[3px] flex flex-col items-center justify-center p-2 text-center transform transition-transform duration-300 hover:scale-110 hover:rotate-0
                                                 ${rotationClass}
                                                 ${shop.isClaimed
-                                  ? "border-yellow-500/60 text-yellow-700 bg-yellow-50/50" // Gold Stamp
-                                  : "border-coffee-900/40 text-coffee-900/60 hover:border-coffee-900 hover:text-coffee-900" // Standard Ink
+                                  ? "border-yellow-400/60 text-yellow-300" // Gold Stamp
+                                  : "border-[#e4ddce]/40 text-[#e4ddce]/60 hover:border-[#e4ddce] hover:text-[#e4ddce]" // Standard Ink
                                 }
                                             `}
                             >
@@ -1091,33 +1180,41 @@ const Profile: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="bg-coffee-50 border-2 border-dashed border-coffee-200 rounded-3xl p-12 text-center">
-              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-                <i className="fas fa-passport text-4xl text-coffee-200"></i>
+            <div
+              className="rounded-3xl border-2 border-dashed border-white/[0.09] p-12 text-center"
+              style={{ background: SURFACE }}
+            >
+              <div
+                className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4"
+                style={{ background: TILE }}
+              >
+                <i className="fas fa-passport text-4xl" style={{ color: "rgba(243,239,224,0.25)" }}></i>
               </div>
-              <h3 className="text-lg font-bold text-coffee-900 mb-2">
+              <h3 className="text-lg font-bold mb-2" style={{ color: TEXT }}>
                 Your passport is empty
               </h3>
-              <p className="text-coffee-500 mb-6 max-w-xs mx-auto">
+              <p className="mb-6 max-w-xs mx-auto" style={{ color: MUTED }}>
                 Check into shops to earn stamps, track your travels, and unlock
                 badges.
               </p>
-              <Button variant="primary" onClick={() => navigate("/")}>
+              <button
+                onClick={() => navigate("/")}
+                className={pillBtn}
+                style={{ background: "#ccff00", color: "#231b15" }}
+              >
                 Start Exploring
-              </Button>
+              </button>
             </div>
           )}
         </div>
 
         {/* User Experience Logs */}
         <div className="mb-6 sm:mb-10">
-          <h2 className="text-lg sm:text-xl font-serif font-bold text-coffee-900 mb-3 sm:mb-4 flex items-center gap-2">
-            <i className="fas fa-book-open text-coffee-400"></i> Experience Logs ({userLogs.length})
-          </h2>
+          {sectionTitle("fas fa-book-open", <>Experience Logs ({userLogs.length})</>)}
 
           {logsLoading ? (
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-coffee-100 text-center">
-              <i className="fas fa-spinner fa-spin text-coffee-800 text-xl"></i>
+            <div className="p-6 rounded-2xl border border-white/[0.06] text-center" style={{ background: SURFACE }}>
+              <i className="fas fa-spinner fa-spin text-xl" style={{ color: "rgba(243,239,224,0.45)" }}></i>
             </div>
           ) : userLogs.length > 0 ? (
             <div className="space-y-4">
@@ -1127,32 +1224,36 @@ const Profile: React.FC = () => {
                   return (
                     <div key={log.id}
                       onClick={() => setExpanded(!expanded)}
-                      className="p-5 rounded-2xl bg-white border border-coffee-100 hover:border-volt-400 transition-colors shadow-sm cursor-pointer relative overflow-hidden">
+                      className="p-5 rounded-2xl border border-white/[0.06] hover:border-volt-400 transition-colors cursor-pointer relative overflow-hidden"
+                      style={{ background: SURFACE }}>
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-lg bg-coffee-100 overflow-hidden border border-coffee-200 shrink-0">
+                          <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/[0.09] shrink-0" style={{ background: TILE }}>
                             {log.shopCoverImage ? (
-                              <img src={log.shopCoverImage} alt={log.shopName} className="w-full h-full object-cover" />
+                              <img src={sizedImageUrl(log.shopCoverImage, { width: 1080 })} alt={log.shopName} className="w-full h-full object-cover" />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-coffee-400">
+                              <div className="w-full h-full flex items-center justify-center" style={{ color: "rgba(243,239,224,0.45)" }}>
                                 <i className="fas fa-coffee"></i>
                               </div>
                             )}
                           </div>
                           <div>
-                            <Link to={`/shop/${log.shopId}`} onClick={(e) => e.stopPropagation()} className="font-bold text-coffee-900 text-base md:text-lg hover:text-volt-600 block line-clamp-1 truncate">
+                            <Link to={`/shop/${log.shopId}`} onClick={(e) => e.stopPropagation()} className="font-bold text-[#f3efe0] text-base md:text-lg hover:text-volt-400 block line-clamp-1 truncate">
                               {log.shopName}
                             </Link>
-                            <div className="text-xs text-coffee-500">
+                            <div className="text-xs" style={{ color: MUTED }}>
                               {log.shopCity}, {log.shopState}
                             </div>
-                            <div className="text-[10px] text-coffee-400 mt-0.5">
+                            <div className="text-[10px] mt-0.5" style={{ color: "rgba(243,239,224,0.45)" }}>
                               {new Date(log.createdAt).toLocaleDateString()}
                             </div>
                           </div>
                         </div>
                         <div className="flex flex-col items-end shrink-0">
-                          <div className="flex items-center gap-1 bg-coffee-900 text-volt-400 px-2 py-1 rounded-md">
+                          <div
+                            className="flex items-center gap-1 px-2 py-1 rounded-md"
+                            style={{ background: "rgba(204,255,0,0.14)", color: "#ccff00" }}
+                          >
                             <i className="fas fa-tint text-[10px]"></i>
                             <span className="text-sm font-bold">{log.overallQuality}</span>
                           </div>
@@ -1162,72 +1263,72 @@ const Profile: React.FC = () => {
                       {/* Quick Overview Grid */}
                       <div className="grid grid-cols-3 gap-2 mb-3">
                         {log.coffeeStyle !== null && log.coffeeStyle !== undefined ? (
-                          <div className="bg-coffee-50 rounded px-2 py-1 text-center">
-                            <div className="text-[10px] text-coffee-500 uppercase flex flex-col"><span>Coffee</span></div>
-                            <div className="text-xs font-bold text-coffee-800">
+                          <div className="rounded px-2 py-1 text-center" style={{ background: TILE }}>
+                            <div className="text-[10px] uppercase flex flex-col" style={{ color: MUTED }}><span>Coffee</span></div>
+                            <div className="text-xs font-bold" style={{ color: TEXT_2 }}>
                               {log.coffeeStyle >= 70 ? "Modern" : log.coffeeStyle <= 30 ? "Classic" : "Balanced"}
                             </div>
                           </div>
                         ) : <div></div>}
                         {log.vibeEnergy !== null && log.vibeEnergy !== undefined ? (
-                          <div className="bg-coffee-50 rounded px-2 py-1 text-center">
-                            <div className="text-[10px] text-coffee-500 uppercase">Vibe</div>
-                            <div className="text-xs font-bold text-coffee-800">
+                          <div className="rounded px-2 py-1 text-center" style={{ background: TILE }}>
+                            <div className="text-[10px] uppercase" style={{ color: MUTED }}>Vibe</div>
+                            <div className="text-xs font-bold" style={{ color: TEXT_2 }}>
                               {log.vibeEnergy >= 70 ? "Lively" : log.vibeEnergy <= 30 ? "Quiet" : "Balanced"}
                             </div>
                           </div>
                         ) : <div></div>}
                         {log.bringFriendScore !== undefined ? (
-                          <div className="bg-coffee-50 rounded px-2 py-1 text-center">
-                            <div className="text-[10px] text-coffee-500 uppercase">Rec.</div>
-                            <div className="text-xs font-bold text-coffee-800">{log.bringFriendScore}/10</div>
+                          <div className="rounded px-2 py-1 text-center" style={{ background: TILE }}>
+                            <div className="text-[10px] uppercase" style={{ color: MUTED }}>Rec.</div>
+                            <div className="text-xs font-bold" style={{ color: TEXT_2 }}>{log.bringFriendScore}/10</div>
                           </div>
                         ) : <div></div>}
                       </div>
 
                       {log.quickTake && (
-                        <div className="relative pl-3 border-l-2 border-volt-400 mb-2">
-                          <p className="text-coffee-700 italic text-sm line-clamp-2">"{log.quickTake}"</p>
+                        <div className="relative pl-3 mb-2" style={{ borderLeft: "2px solid #ccff00" }}>
+                          <p className="italic text-sm line-clamp-2" style={{ color: TEXT_2 }}>"{log.quickTake}"</p>
                         </div>
                       )}
 
                       {/* Expanded Details Wrapper */}
-                      <div className={`overflow-hidden transition-all duration-300 ${expanded ? 'max-h-96 opacity-100 mt-4 border-t border-coffee-50 pt-4' : 'max-h-0 opacity-0'}`}>
-                        <div className="text-xs font-bold uppercase text-coffee-400 tracking-wider mb-2">Full Vibe Check</div>
+                      <div className={`overflow-hidden transition-all duration-300 ${expanded ? 'max-h-96 opacity-100 mt-4 border-t border-white/[0.06] pt-4' : 'max-h-0 opacity-0'}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-[0.08em] mb-2" style={{ color: MUTED }}>Full Vibe Check</div>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                           {log.matchaProfile !== null && log.matchaProfile !== undefined && (
-                            <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
-                              <span className="block text-xs text-gray-400">Matcha</span>
-                              <span className="font-medium text-coffee-800">{log.matchaProfile}/100</span>
+                            <div className="text-sm p-2 rounded-lg border border-white/[0.06]" style={{ background: TILE }}>
+                              <span className="block text-xs" style={{ color: "rgba(243,239,224,0.45)" }}>Matcha</span>
+                              <span className="font-medium" style={{ color: TEXT_2 }}>{log.matchaProfile}/100</span>
                             </div>
                           )}
                           {log.pastryCraft !== null && log.pastryCraft !== undefined && (
-                            <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
-                              <span className="block text-xs text-gray-400">Pastry Craft</span>
-                              <span className="font-medium text-coffee-800">{log.pastryCraft}/100</span>
+                            <div className="text-sm p-2 rounded-lg border border-white/[0.06]" style={{ background: TILE }}>
+                              <span className="block text-xs" style={{ color: "rgba(243,239,224,0.45)" }}>Pastry Craft</span>
+                              <span className="font-medium" style={{ color: TEXT_2 }}>{log.pastryCraft}/100</span>
                             </div>
                           )}
                           {log.specialtyDrink !== null && log.specialtyDrink !== undefined && (
-                            <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
-                              <span className="block text-xs text-gray-400">Specialty Drink</span>
-                              <span className="font-medium text-coffee-800">{log.specialtyDrink}/100</span>
+                            <div className="text-sm p-2 rounded-lg border border-white/[0.06]" style={{ background: TILE }}>
+                              <span className="block text-xs" style={{ color: "rgba(243,239,224,0.45)" }}>Specialty Drink</span>
+                              <span className="font-medium" style={{ color: TEXT_2 }}>{log.specialtyDrink}/100</span>
                             </div>
                           )}
                           {log.laptopFriendly !== null && log.laptopFriendly !== undefined && (
-                            <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
-                              <span className="block text-xs text-gray-400">Laptop Friendly</span>
-                              <span className="font-medium text-coffee-800">{log.laptopFriendly}%</span>
+                            <div className="text-sm p-2 rounded-lg border border-white/[0.06]" style={{ background: TILE }}>
+                              <span className="block text-xs" style={{ color: "rgba(243,239,224,0.45)" }}>Laptop Friendly</span>
+                              <span className="font-medium" style={{ color: TEXT_2 }}>{log.laptopFriendly}%</span>
                             </div>
                           )}
                           {log.parkingEase !== null && log.parkingEase !== undefined && (
-                            <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
-                              <span className="block text-xs text-gray-400">Parking Ease</span>
-                              <span className="font-medium text-coffee-800">{log.parkingEase}%</span>
+                            <div className="text-sm p-2 rounded-lg border border-white/[0.06]" style={{ background: TILE }}>
+                              <span className="block text-xs" style={{ color: "rgba(243,239,224,0.45)" }}>Parking Ease</span>
+                              <span className="font-medium" style={{ color: TEXT_2 }}>{log.parkingEase}%</span>
                             </div>
                           )}
                         </div>
                       </div>
-                      <div className="text-center mt-2 cursor-pointer text-[10px] text-coffee-400 font-bold uppercase flex items-center justify-center gap-1 hover:text-volt-500 transition-colors">
+                      <div className="text-center mt-2 cursor-pointer text-[10px] font-bold uppercase flex items-center justify-center gap-1 hover:text-volt-400 transition-colors text-[#f3efe0]/45">
                         {expanded ? (<><i className="fas fa-chevron-up"></i> Hide Details</>) : (<><i className="fas fa-chevron-down"></i> Expand Log</>)}
                       </div>
                     </div>
@@ -1237,18 +1338,28 @@ const Profile: React.FC = () => {
               })}
             </div>
           ) : (
-            <div className="bg-coffee-50 border-2 border-dashed border-coffee-200 rounded-3xl p-12 text-center">
-              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-                <i className="fas fa-pen text-3xl text-coffee-200"></i>
+            <div
+              className="rounded-3xl border-2 border-dashed border-white/[0.09] p-12 text-center"
+              style={{ background: SURFACE }}
+            >
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                style={{ background: TILE }}
+              >
+                <i className="fas fa-pen text-3xl" style={{ color: "rgba(243,239,224,0.25)" }}></i>
               </div>
-              <h3 className="text-base font-bold text-coffee-900 mb-2">No logs yet</h3>
-              <p className="text-coffee-500 text-sm mb-4 max-w-xs mx-auto">
+              <h3 className="text-base font-bold mb-2" style={{ color: TEXT }}>No logs yet</h3>
+              <p className="text-sm mb-4 max-w-xs mx-auto" style={{ color: MUTED }}>
                 {isOwnProfile ? "You haven't" : `@${viewedUser.username} hasn't`} rated any shops. Share your experiences!
               </p>
               {isOwnProfile && (
-                <Button variant="primary" onClick={() => navigate("/")} size="sm">
+                <button
+                  onClick={() => navigate("/")}
+                  className={pillBtn}
+                  style={{ background: "#ccff00", color: "#231b15" }}
+                >
                   Find Shops to Rate
-                </Button>
+                </button>
               )}
             </div>
           )}
@@ -1257,32 +1368,36 @@ const Profile: React.FC = () => {
         {/* Managed Shops (Owners Only) */}
         {claimedSpots.length > 0 && (
           <div className="mt-10 pb-10">
-            <h2 className="text-xl font-serif font-bold text-coffee-900 mb-4 flex items-center gap-2">
-              <i className="fas fa-briefcase text-coffee-400"></i> Your Managed
-              Shops
-            </h2>
+            {sectionTitle("fas fa-briefcase", "Your Managed Shops")}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {claimedSpots.map(shop => (
                 <div
                   key={shop.id}
                   onClick={() => navigate(`/shop/${shop.id}`)}
-                  className="bg-white p-5 rounded-xl shadow-sm border-l-4 border-volt-400 cursor-pointer hover:shadow-md transition-all group relative overflow-hidden"
+                  className="p-5 rounded-xl border border-white/[0.06] border-l-4 border-l-volt-400 cursor-pointer transition-all group relative overflow-hidden hover:border-white/[0.12]"
+                  style={{ background: SURFACE }}
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-coffee-900 group-hover:text-coffee-600 transition-colors pr-8">
+                    <h3 className="font-bold text-[#f3efe0] group-hover:text-volt-400 transition-colors pr-8">
                       {shop.name}
                     </h3>
                     <div className="absolute top-5 right-5">
-                      <span className="bg-coffee-900 text-volt-400 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                      <span
+                        className="text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1"
+                        style={{ background: "rgba(204,255,0,0.14)", color: "#ccff00" }}
+                      >
                         <i className="fas fa-check-circle"></i>
                       </span>
                     </div>
                   </div>
-                  <p className="text-sm text-coffee-500 mb-4">
+                  <p className="text-sm mb-4" style={{ color: MUTED }}>
                     {shop.location.address}, {shop.location.city}
                   </p>
 
-                  <div className="flex items-center justify-between text-xs font-bold text-volt-500 uppercase tracking-wide mt-auto pt-3 border-t border-coffee-50">
+                  <div
+                    className="flex items-center justify-between text-xs font-bold uppercase tracking-wide mt-auto pt-3 border-t border-white/[0.06]"
+                    style={{ color: "#ccff00" }}
+                  >
                     <span>Manage Page</span>
                     <i className="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
                   </div>
@@ -1293,29 +1408,29 @@ const Profile: React.FC = () => {
         )}
 
         {/* Saved Spots */}
-        <div className="mt-10 pb-20">
-          <h2 className="text-xl font-serif font-bold text-coffee-900 mb-4 flex items-center gap-2">
-            <i className="fas fa-heart text-coffee-400"></i> Your Saved Spots
-          </h2>
+        <div className="mt-10">
+          {sectionTitle("fas fa-heart", "Your Saved Spots")}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {savedSpots.length > 0 ? (
               savedSpots.map(shop => (
                 <div
                   key={shop.id}
                   onClick={() => navigate(`/shop/${shop.id}`)}
-                  className="bg-white p-4 rounded-xl shadow-sm border border-coffee-100 cursor-pointer hover:shadow-md transition-all group"
+                  className="p-4 rounded-xl border border-white/[0.06] cursor-pointer transition-all group hover:border-white/[0.12]"
+                  style={{ background: SURFACE }}
                 >
-                  <h3 className="font-bold text-coffee-900 group-hover:text-volt-500 transition-colors">
+                  <h3 className="font-bold text-[#f3efe0] group-hover:text-volt-400 transition-colors">
                     {shop.name}
                   </h3>
-                  <p className="text-sm text-coffee-600 mb-2">
+                  <p className="text-sm mb-2" style={{ color: MUTED }}>
                     {shop.location.city}
                   </p>
                   <div className="flex gap-1">
                     {shop.vibes.slice(0, 2).map(v => (
                       <span
                         key={v}
-                        className="text-[9px] bg-coffee-50 text-coffee-400 border border-coffee-100 px-1.5 py-0.5 rounded"
+                        className="text-[9px] border border-white/[0.09] px-1.5 py-0.5 rounded-full"
+                        style={{ background: TILE, color: TEXT_2 }}
                       >
                         {v}
                       </span>
@@ -1324,20 +1439,23 @@ const Profile: React.FC = () => {
                 </div>
               ))
             ) : (
-              <div className="col-span-full py-8 text-center border-2 border-dashed border-coffee-200 rounded-xl">
-                <p className="text-coffee-400 italic">No saved spots yet.</p>
-                <Button
-                  variant="ghost"
-                  className="mt-2 text-sm"
+              <div className="col-span-full py-8 text-center border-2 border-dashed border-white/[0.09] rounded-xl">
+                <p className="italic" style={{ color: "rgba(243,239,224,0.45)" }}>No saved spots yet.</p>
+                <button
                   onClick={() => navigate("/")}
+                  className={`${pillBtn} mt-2`}
+                  style={{ background: TILE, color: "#ccff00", border: "1px solid rgba(255,255,255,0.09)" }}
                 >
                   Explore Map
-                </Button>
+                </button>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      <MenuDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <BottomTabBar />
     </div>
   );
 };
