@@ -15,9 +15,9 @@ import {
   deleteShopImage,
   reorderShopImages,
 } from "../services/dbService";
-import Button from "../components/Button";
-import TagChip from "../components/TagChip";
 import { useToast } from "../context/ToastContext";
+import BottomTabBar from "../components/darkroast/BottomTabBar";
+import { sizedImageUrl } from "../lib/imageUrl";
 import ShopPricingModal from "../components/ShopPricingModal";
 import { createShopCheckoutSession, getCustomerPortalUrl, updateProPlusDiscountEnabled } from "../services/subscriptionService";
 import { BillingInterval, ShopAggregate } from "../types";
@@ -74,31 +74,34 @@ const ExpandableLogCard = ({ log }: { log: any }) => {
   return (
     <div key={log.id}
       onClick={() => setExpanded(!expanded)}
-      className="p-5 rounded-2xl bg-white border border-coffee-100 hover:border-volt-400 transition-colors shadow-sm cursor-pointer mb-4">
+      className="p-5 rounded-2xl bg-[#2b221b] border border-white/[0.07] hover:border-volt-400/50 transition-colors cursor-pointer mb-4">
       <div className="flex justify-between items-start mb-3">
         <div className="flex items-center gap-3">
-          <Link to={`/profile/${log.userId}`} onClick={(e) => e.stopPropagation()} className="block shrink-0">
-            <div className="w-10 h-10 rounded-full bg-coffee-100 overflow-hidden border border-coffee-200">
+          <Link to={`/profile/${log.userId}`} onClick={(e) => e.stopPropagation()} className="block shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-volt-400">
+            <div className="w-10 h-10 rounded-full bg-white/10 overflow-hidden border border-white/[0.09]">
               {log.userAvatar ? (
                 <img src={log.userAvatar} alt={log.userName} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-coffee-400">
+                <div className="w-full h-full flex items-center justify-center text-[rgba(243,239,224,0.5)]">
                   <i className="fas fa-user"></i>
                 </div>
               )}
             </div>
           </Link>
           <div>
-            <Link to={`/profile/${log.userId}`} onClick={(e) => e.stopPropagation()} className="font-bold text-coffee-900 text-sm hover:text-volt-600 block">
+            <Link to={`/profile/${log.userId}`} onClick={(e) => e.stopPropagation()} className="font-bold text-[#f3efe0] text-sm hover:text-volt-400 block focus:outline-none focus:ring-2 focus:ring-volt-400 rounded">
               {log.userName}
             </Link>
-            <div className="text-xs text-coffee-400">
+            <div className="text-xs text-[rgba(243,239,224,0.5)]">
               {new Date(log.createdAt).toLocaleDateString()}
             </div>
           </div>
         </div>
         <div className="flex flex-col items-end">
-          <div className="flex items-center gap-1 bg-coffee-900 text-volt-400 px-2 py-1 rounded-md">
+          <div
+            className="flex items-center gap-1 px-2 py-1 rounded-xl border font-black"
+            style={{ background: 'rgba(204,255,0,0.16)', borderColor: 'rgba(204,255,0,0.5)', color: '#ccff00' }}
+          >
             <i className="fas fa-tint text-[10px]"></i>
             <span className="text-sm font-bold">{log.overallQuality}</span>
           </div>
@@ -108,67 +111,67 @@ const ExpandableLogCard = ({ log }: { log: any }) => {
       {/* Quick Overview Grid (Always visible) */}
       <div className="grid grid-cols-3 gap-2 mb-3">
         {log.coffeeStyle !== null && log.coffeeStyle !== undefined ? (
-          <div className="bg-coffee-50 rounded px-2 py-1 text-center">
-            <div className="text-[10px] text-coffee-500 uppercase">Coffee</div>
-            <div className="text-xs font-bold text-coffee-800">
+          <div className="bg-[#2f251d] rounded px-2 py-1 text-center">
+            <div className="text-[10px] text-[rgba(243,239,224,0.5)] uppercase">Coffee</div>
+            <div className="text-xs font-bold text-[#e4ddce]">
               {log.coffeeStyle >= 70 ? "Modern" : log.coffeeStyle <= 30 ? "Classic" : "Balanced"}
             </div>
           </div>
         ) : <div></div>}
         {log.vibeEnergy !== null && log.vibeEnergy !== undefined ? (
-          <div className="bg-coffee-50 rounded px-2 py-1 text-center">
-            <div className="text-[10px] text-coffee-500 uppercase">Vibe</div>
-            <div className="text-xs font-bold text-coffee-800">
+          <div className="bg-[#2f251d] rounded px-2 py-1 text-center">
+            <div className="text-[10px] text-[rgba(243,239,224,0.5)] uppercase">Vibe</div>
+            <div className="text-xs font-bold text-[#e4ddce]">
               {log.vibeEnergy >= 70 ? "Lively" : log.vibeEnergy <= 30 ? "Quiet" : "Balanced"}
             </div>
           </div>
         ) : <div></div>}
         {log.bringFriendScore !== undefined ? (
-          <div className="bg-coffee-50 rounded px-2 py-1 text-center">
-            <div className="text-[10px] text-coffee-500 uppercase">Rec.</div>
-            <div className="text-xs font-bold text-coffee-800">{log.bringFriendScore}/10</div>
+          <div className="bg-[#2f251d] rounded px-2 py-1 text-center">
+            <div className="text-[10px] text-[rgba(243,239,224,0.5)] uppercase">Rec.</div>
+            <div className="text-xs font-bold text-[#e4ddce]">{log.bringFriendScore}/10</div>
           </div>
         ) : <div></div>}
       </div>
 
       {log.quickTake && (
         <div className="relative pl-3 border-l-2 border-volt-400 mb-2">
-          <p className="text-coffee-700 italic text-sm">"{log.quickTake}"</p>
+          <p className="text-[#e4ddce] italic text-sm">"{log.quickTake}"</p>
         </div>
       )}
 
       {/* Expanded Details Wrapper */}
-      <div className={`overflow-hidden transition-all duration-300 ${expanded ? 'max-h-96 opacity-100 mt-4 border-t border-coffee-50 pt-4' : 'max-h-0 opacity-0'}`}>
-        <div className="text-xs font-bold uppercase text-coffee-400 tracking-wider mb-2">Full Vibe Check</div>
+      <div className={`overflow-hidden transition-all duration-300 ${expanded ? 'max-h-96 opacity-100 mt-4 border-t border-white/[0.06] pt-4' : 'max-h-0 opacity-0'}`}>
+        <div className="text-[10px] font-bold uppercase text-[rgba(243,239,224,0.5)] tracking-[0.08em] mb-2">Full Vibe Check</div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {log.matchaProfile !== null && log.matchaProfile !== undefined && (
-            <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
-              <span className="block text-xs text-gray-400">Matcha</span>
-              <span className="font-medium text-coffee-800">{log.matchaProfile}/100</span>
+            <div className="text-sm bg-[#2f251d] p-2 rounded-lg border border-white/[0.06]">
+              <span className="block text-xs text-[rgba(243,239,224,0.5)]">Matcha</span>
+              <span className="font-medium text-[#e4ddce]">{log.matchaProfile}/100</span>
             </div>
           )}
           {log.pastryCraft !== null && log.pastryCraft !== undefined && (
-            <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
-              <span className="block text-xs text-gray-400">Pastry Craft</span>
-              <span className="font-medium text-coffee-800">{log.pastryCraft}/100</span>
+            <div className="text-sm bg-[#2f251d] p-2 rounded-lg border border-white/[0.06]">
+              <span className="block text-xs text-[rgba(243,239,224,0.5)]">Pastry Craft</span>
+              <span className="font-medium text-[#e4ddce]">{log.pastryCraft}/100</span>
             </div>
           )}
           {log.specialtyDrink !== null && log.specialtyDrink !== undefined && (
-            <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
-              <span className="block text-xs text-gray-400">Specialty Drink</span>
-              <span className="font-medium text-coffee-800">{log.specialtyDrink}/100</span>
+            <div className="text-sm bg-[#2f251d] p-2 rounded-lg border border-white/[0.06]">
+              <span className="block text-xs text-[rgba(243,239,224,0.5)]">Specialty Drink</span>
+              <span className="font-medium text-[#e4ddce]">{log.specialtyDrink}/100</span>
             </div>
           )}
           {log.laptopFriendly !== null && log.laptopFriendly !== undefined && (
-            <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
-              <span className="block text-xs text-gray-400">Laptop Friendly</span>
-              <span className="font-medium text-coffee-800">{log.laptopFriendly}%</span>
+            <div className="text-sm bg-[#2f251d] p-2 rounded-lg border border-white/[0.06]">
+              <span className="block text-xs text-[rgba(243,239,224,0.5)]">Laptop Friendly</span>
+              <span className="font-medium text-[#e4ddce]">{log.laptopFriendly}%</span>
             </div>
           )}
           {log.parkingEase !== null && log.parkingEase !== undefined && (
-            <div className="text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
-              <span className="block text-xs text-gray-400">Parking Ease</span>
-              <span className="font-medium text-coffee-800">{log.parkingEase}%</span>
+            <div className="text-sm bg-[#2f251d] p-2 rounded-lg border border-white/[0.06]">
+              <span className="block text-xs text-[rgba(243,239,224,0.5)]">Parking Ease</span>
+              <span className="font-medium text-[#e4ddce]">{log.parkingEase}%</span>
             </div>
           )}
         </div>
@@ -177,16 +180,17 @@ const ExpandableLogCard = ({ log }: { log: any }) => {
         <button
           onClick={handleLike}
           disabled={isLikeLoading}
-          className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full transition-colors ${isLiked
-              ? "bg-red-50 text-red-500 hover:bg-red-100"
-              : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+          className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400 ${isLiked
+              ? "text-volt-400"
+              : "bg-white/5 text-[rgba(243,239,224,0.5)] hover:bg-white/10"
             }`}
+          style={isLiked ? { background: 'rgba(204,255,0,0.12)' } : undefined}
         >
           <i className={`${isLiked ? 'fas' : 'far'} fa-heart`}></i>
           {likesCount > 0 && <span>{likesCount}</span>}
         </button>
 
-        <div className="text-center cursor-pointer text-[10px] text-coffee-400 font-bold uppercase flex items-center gap-1 hover:text-volt-500 transition-colors">
+        <div className="text-center cursor-pointer text-[10px] text-[rgba(243,239,224,0.5)] font-bold uppercase flex items-center gap-1 hover:text-volt-400 transition-colors">
           {expanded ? (<><i className="fas fa-chevron-up"></i> Hide Details</>) : (<><i className="fas fa-chevron-down"></i> Expand Log</>)}
         </div>
       </div>
@@ -298,16 +302,16 @@ const ShopDetail: React.FC = () => {
   // is still running (this is the shared-link entry path).
   if (shopsLoading && !shop) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-coffee-200 border-t-volt-500 rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#1e1712' }}>
+        <div className="w-10 h-10 border-4 border-white/10 border-t-volt-400 rounded-full animate-spin" />
       </div>
     );
   }
   if (!shop) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 p-10 text-center">
-        <p className="text-coffee-500 font-medium">Shop not found.</p>
-        <Link to="/" className="text-volt-500 font-bold hover:underline">Back to map</Link>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-10 text-center" style={{ background: '#1e1712' }}>
+        <p className="text-[rgba(243,239,224,0.5)] font-medium">Shop not found.</p>
+        <Link to="/" className="text-volt-400 font-bold hover:underline focus:outline-none focus:ring-2 focus:ring-volt-400 rounded">Back to map</Link>
       </div>
     );
   }
@@ -427,6 +431,39 @@ const ShopDetail: React.FC = () => {
   const showExpandButton = filteredImages.length > 9 && !isGalleryExpanded;
 
   // Handlers
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/");
+    }
+  };
+
+  const handleDirections = () => {
+    const url =
+      shop.mapsUrl ||
+      `https://www.google.com/maps/search/?api=1&query=${shop.location.lat},${shop.location.lng}`;
+    window.open(url, "_blank", "noopener");
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: shop.name, url });
+      } catch {
+        // user cancelled the share sheet — nothing to do
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied!");
+      } catch {
+        toast.error("Could not copy link");
+      }
+    }
+  };
+
   const handleSaveClick = () => {
     if (!user) {
       navigate("/auth");
@@ -597,26 +634,27 @@ const ShopDetail: React.FC = () => {
       <label
         key={vibe}
         className={`group flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 cursor-default ${hasVibe
-          ? "bg-coffee-50 border-coffee-200 shadow-sm"
-          : "bg-white border-transparent hover:bg-coffee-50/50"
+          ? "bg-[#2b221b] border-white/[0.09]"
+          : "bg-transparent border-transparent hover:bg-white/[0.03]"
           }`}
       >
         <div
           className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${hasVibe
-            ? "bg-coffee-900 border-coffee-900"
-            : "border-coffee-300 bg-transparent"
+            ? "bg-volt-400 border-volt-400"
+            : "border-white/20 bg-transparent"
             }`}
         >
           <i
-            className={`fas fa-check text-volt-400 text-[10px] transform transition-transform ${hasVibe ? "scale-100" : "scale-0"
+            className={`fas fa-check text-[10px] transform transition-transform ${hasVibe ? "scale-100" : "scale-0"
               }`}
+            style={{ color: '#231b15' }}
           ></i>
         </div>
         <input type="checkbox" checked={hasVibe} readOnly className="hidden" />
         <span
           className={`text-sm font-medium transition-colors ${hasVibe
-            ? "text-coffee-900"
-            : "text-coffee-400 group-hover:text-coffee-600"
+            ? "text-[#e4ddce]"
+            : "text-[rgba(243,239,224,0.4)] group-hover:text-[rgba(243,239,224,0.6)]"
             }`}
         >
           {vibe}
@@ -626,7 +664,7 @@ const ShopDetail: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen pb-20 bg-coffee-50 relative">
+    <div className="min-h-screen pb-[110px] relative" style={{ background: '#1e1712', color: '#f3efe0' }}>
       {/* Lightbox Modal */}
       {lightboxIndex !== null && filteredImages[lightboxIndex] && (
         <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-200">
@@ -682,25 +720,32 @@ const ShopDetail: React.FC = () => {
 
       {/* Hero Header */}
       <div
-        className="h-[50vh] w-full relative group cursor-pointer"
+        className="h-[400px] w-full relative group cursor-pointer"
         onClick={() => { if (shop.gallery?.length > 0) setLightboxIndex(0); }}
       >
         <img
-          src={shop.gallery?.[0]?.url || "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80"}
+          src={sizedImageUrl(shop.gallery?.[0]?.url, { width: 1080 }) || "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80"}
           alt={shop.name}
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10">
-          <div className="bg-white/20 backdrop-blur-md px-6 py-3 rounded-full text-white font-bold text-sm border border-white/30">
+        {/* Gradient fading into the page color */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(to bottom, rgba(30,23,18,0.4) 0%, rgba(30,23,18,0) 32%, rgba(30,23,18,0.35) 60%, #1e1712 100%)',
+          }}
+        ></div>
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="px-6 py-3 rounded-full text-white font-bold text-sm border border-white/10" style={{ background: 'rgba(35,27,21,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
             <i className="fas fa-expand-arrows-alt mr-2"></i> View Gallery
           </div>
         </div>
 
         {/* Visited Stamp Overlay */}
         {isVisited && (
-          <div className="absolute top-4 right-4 md:top-24 md:right-8 transform rotate-12 animate-in zoom-in duration-500 pointer-events-none z-10">
-            <div className="w-24 h-24 rounded-full border-4 border-volt-400/80 flex items-center justify-center bg-coffee-900/80 backdrop-blur-sm shadow-lg">
+          <div className="absolute top-[112px] right-5 transform rotate-12 animate-in zoom-in duration-500 pointer-events-none z-10">
+            <div className="w-24 h-24 rounded-full border-4 border-volt-400/80 flex items-center justify-center backdrop-blur-sm shadow-lg" style={{ background: 'rgba(35,27,21,0.8)' }}>
               <div className="text-center transform -rotate-12">
                 <p className="text-volt-400 text-[10px] font-bold uppercase tracking-widest">
                   DripMap
@@ -714,136 +759,190 @@ const ShopDetail: React.FC = () => {
           </div>
         )}
 
-        <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 text-white bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-          <div className="container mx-auto">
+        {/* Bottom overlay: score chip + name + location */}
+        <div className="absolute bottom-0 left-0 w-full px-5 pb-4 text-white">
+          <div className="mx-auto max-w-md lg:max-w-6xl">
             <div className="flex flex-wrap items-center gap-2 mb-3">
+              {shopAggregate?.dripScore ? (
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[15px] font-black"
+                  style={{ background: 'rgba(204,255,0,0.16)', borderColor: 'rgba(204,255,0,0.5)', color: '#ccff00' }}
+                >
+                  <i className="fas fa-tint text-xs"></i>
+                  {shopAggregate.dripScore.toFixed(0)}
+                </span>
+              ) : (
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-black uppercase"
+                  style={{ background: 'rgba(204,255,0,0.15)', borderColor: 'rgba(204,255,0,0.5)', color: '#ccff00', letterSpacing: '0.07em' }}
+                >
+                  <i className="fas fa-tint"></i> Score Pending
+                </span>
+              )}
               {shop.isClaimed && (
-                <span className="bg-volt-400 text-coffee-900 text-[10px] md:text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-[0_0_15px_rgba(204,255,0,0.4)] animate-pulse-slow">
-                  <i className="fas fa-certificate"></i> VERIFIED
+                <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full flex items-center gap-1.5" style={{ background: '#ccff00', color: '#231b15', letterSpacing: '0.07em' }}>
+                  <i className="fas fa-certificate"></i> Verified
                 </span>
               )}
               {isProPlus ? (
-                <span className="bg-gradient-to-r from-purple-600 to-volt-400 text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-[0_0_15px_rgba(204,255,0,0.3)]">
+                <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full flex items-center gap-1.5 border" style={{ background: 'rgba(204,255,0,0.15)', borderColor: 'rgba(204,255,0,0.5)', color: '#ccff00', letterSpacing: '0.07em' }}>
                   <i className="fas fa-crown"></i> PRO+
                 </span>
               ) : isPro && (
-                <span className="bg-purple-600 text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 border border-purple-400">
+                <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full flex items-center gap-1.5 border" style={{ background: 'rgba(204,255,0,0.15)', borderColor: 'rgba(204,255,0,0.5)', color: '#ccff00', letterSpacing: '0.07em' }}>
                   <i className="fas fa-star"></i> PRO
                 </span>
               )}
-              <div className="flex items-center text-volt-400 font-bold bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-white/10">
-                {/* Show Drip Score if available, else show Score Pending */}
-                {shopAggregate?.dripScore ? (
-                  <>
-                    <i className="fas fa-tint mr-1"></i> {shopAggregate.dripScore.toFixed(0)} <span className="text-[10px] ml-1 opacity-70">DRIP SCORE</span>
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-clock mr-1"></i> <span className="text-[10px] md:text-xs">SCORE PENDING</span>
-                  </>
-                )}
-              </div>
-              <div className="flex items-center text-white/90 font-bold text-[10px] md:text-xs bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-white/10 w-full sm:w-auto mt-1 sm:mt-0">
-                <i className="fas fa-stamp mr-1.5"></i> {shop.stampCount}{" "}
-                Passports Stamped
-              </div>
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-serif font-bold mb-2 leading-tight drop-shadow-lg">
+            <h1 className="font-serif font-black text-[38px] text-white mb-2" style={{ lineHeight: 0.98, letterSpacing: '-0.02em' }}>
               {shop.name}
             </h1>
-            <p className="text-white/90 text-sm sm:text-lg flex items-center gap-2 drop-shadow-md">
+            <p className="text-sm font-medium flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.85)' }}>
               <i className="fas fa-map-marker-alt"></i> {[shop.location.city, shop.location.state, shop.location.country].filter(Boolean).join(', ')}
             </p>
           </div>
         </div>
 
-        <Link
-          to="/"
-          onClick={e => e.stopPropagation()}
-          className="absolute top-6 left-6 md:top-8 md:left-8 bg-black/30 backdrop-blur-md p-3 rounded-full hover:bg-white hover:text-coffee-900 text-white transition-all border border-white/20"
+        {/* Glass back + share buttons */}
+        <button
+          onClick={e => { e.stopPropagation(); handleBack(); }}
+          aria-label="Go back"
+          className="absolute top-5 left-5 w-10 h-10 rounded-full flex items-center justify-center text-white transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-volt-400"
+          style={{ background: 'rgba(35,27,21,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
         >
-          <i className="fas fa-arrow-left text-xl"></i>
-        </Link>
+          <i className="fas fa-arrow-left"></i>
+        </button>
+        <button
+          onClick={e => { e.stopPropagation(); handleShare(); }}
+          aria-label="Share this shop"
+          className="absolute top-5 right-5 w-10 h-10 rounded-full flex items-center justify-center text-white transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-volt-400"
+          style={{ background: 'rgba(35,27,21,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+        >
+          <i className="fas fa-share-nodes"></i>
+        </button>
       </div>
 
-      <div className="container mx-auto px-4 py-8 md:py-10">
+      <div className="mx-auto max-w-md px-5 lg:max-w-6xl">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-10">
           {/* Left Column */}
-          <div className="lg:col-span-2 space-y-10">
-            {/* About */}
-            <section className="bg-white p-8 rounded-3xl shadow-sm border border-coffee-100 relative">
-              {/* Coffee Date Button & Save Button */}
-              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-4 lg:mt-0 lg:absolute lg:top-8 lg:right-8 mb-6 lg:mb-0">
-                <button
-                  onClick={() => setShowCoffeeDateModal(true)}
-                  className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-gradient-to-r from-coffee-900 to-coffee-800 text-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all font-bold text-sm"
-                >
-                  <i className="fas fa-mug-hot text-volt-400"></i>
-                  Make a Coffee Date
-                </button>
+          <div className="lg:col-span-2 space-y-8">
+            {/* Action row: Directions / Save / Coffee Date */}
+            <div className="flex gap-2.5 pt-5">
+              <button
+                onClick={handleDirections}
+                className="flex-[1.3] h-[52px] rounded-2xl flex items-center justify-center gap-2 text-[13px] font-extrabold transition-transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-volt-400"
+                style={{ background: '#ccff00', color: '#231b15', boxShadow: '0 8px 24px -6px rgba(204,255,0,0.5)' }}
+              >
+                <i className="fas fa-diamond-turn-right"></i>
+                Directions
+              </button>
+              <button
+                onClick={handleSaveClick}
+                className="flex-1 h-[52px] rounded-2xl border border-white/[0.08] bg-[#2b221b] flex items-center justify-center gap-2 text-[13px] font-extrabold text-[#f3efe0] transition-colors hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-volt-400"
+              >
+                <i className={`${isSaved ? 'fas' : 'far'} fa-heart`} style={isSaved ? { color: '#ccff00' } : undefined}></i>
+                {isSaved ? 'Saved' : 'Save'}
+              </button>
+              <button
+                onClick={() => setShowCoffeeDateModal(true)}
+                aria-label="Make a Coffee Date"
+                title="Make a Coffee Date"
+                className="h-[52px] w-[52px] shrink-0 rounded-2xl border border-white/[0.08] bg-[#2b221b] flex items-center justify-center text-[#f3efe0] transition-colors hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-volt-400"
+              >
+                <i className="far fa-calendar"></i>
+              </button>
+            </div>
 
-                <button
-                  onClick={handleSaveClick}
-                  className={`flex items-center justify-center gap-2 px-4 py-3 sm:py-2 rounded-xl shadow-sm border transition-all font-bold text-sm ${isSaved
-                    ? 'bg-coffee-100 text-coffee-900 border-coffee-200'
-                    : 'bg-white text-coffee-600 border-coffee-200 hover:bg-coffee-50'}`}
-                >
-                  <i className={`fas ${isSaved ? 'fa-bookmark' : 'fa-bookmark'} ${isSaved ? 'text-volt-500' : 'text-coffee-400'}`}></i>
-                  {isSaved ? 'Saved' : 'Save for Later'}
-                </button>
+            {/* Stat strip */}
+            <div className="flex rounded-2xl border border-white/[0.06] bg-[#2b221b] divide-x divide-white/[0.06]">
+              <div className="flex-1 py-4 text-center">
+                <div className="font-serif text-[22px] font-black" style={{ color: '#ccff00' }}>
+                  {shopAggregate?.dripScore ? shopAggregate.dripScore.toFixed(0) : '—'}
+                </div>
+                <div className="text-[10px] font-bold uppercase text-[rgba(243,239,224,0.5)]">Drip Score</div>
               </div>
+              <div className="flex-1 py-4 text-center">
+                <div className="font-serif text-[22px] font-black text-[#f3efe0]">
+                  {shop.vibes.length + shop.cheekyVibes.length + (shop.customVibes?.length || 0)}
+                </div>
+                <div className="text-[10px] font-bold uppercase text-[rgba(243,239,224,0.5)]">Vibes</div>
+              </div>
+              <div className="flex-1 py-4 text-center">
+                <div className="font-serif text-[22px] font-black text-[#f3efe0]">{shop.stampCount}</div>
+                <div className="text-[10px] font-bold uppercase text-[rgba(243,239,224,0.5)]">Stamps</div>
+              </div>
+            </div>
 
-              <h2 className="text-2xl font-serif font-bold text-coffee-900 mb-4">
+            {/* The Lowdown */}
+            <section>
+              <h2 className="text-[10px] font-bold uppercase tracking-[0.08em] text-[rgba(243,239,224,0.5)] mb-2">
                 The Lowdown
               </h2>
-              <p className="text-lg text-coffee-800/80 leading-relaxed mb-6 whitespace-pre-wrap">
+              <p className="text-[15px] font-medium text-[#e4ddce] whitespace-pre-wrap" style={{ lineHeight: 1.55 }}>
                 {shop.description}
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 mt-4">
                 {[...(shop.customVibes || []), ...shop.vibes].map(vibe => (
-                  <TagChip key={vibe} label={vibe} isSelected />
+                  <span
+                    key={vibe}
+                    className="rounded-full bg-[#2b221b] border border-white/[0.09] px-3 py-1.5 text-xs font-medium text-[#e4ddce]"
+                  >
+                    {vibe}
+                  </span>
                 ))}
               </div>
             </section>
 
             {/* Aesthetic Gallery (Masonry) */}
-            <section className="bg-white p-8 rounded-3xl shadow-sm border border-coffee-100">
-              <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-                <h2 className="text-2xl font-serif font-bold text-coffee-900">
+            <section>
+              <div className="flex items-center justify-between mb-3 gap-4">
+                <h2 className="text-[10px] font-bold uppercase tracking-[0.08em] text-[rgba(243,239,224,0.5)]">
                   The Aesthetic
                 </h2>
+                <button
+                  type="button"
+                  onClick={() => photoInputRef.current?.click()}
+                  disabled={isUploadingPhoto}
+                  className="text-xs font-bold text-volt-400 hover:text-volt-500 transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-volt-400 rounded"
+                >
+                  {isUploadingPhoto ? (
+                    <><i className="fas fa-spinner fa-spin mr-1.5"></i>Uploading...</>
+                  ) : (
+                    <><i className="fas fa-plus mr-1.5"></i>Add photo</>
+                  )}
+                </button>
+              </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  {isOwner && (
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                {isOwner && (
+                  <button
+                    onClick={() => setIsEditMode(!isEditMode)}
+                    className={`px-4 py-2 rounded-full text-xs font-bold transition-all focus:outline-none focus:ring-2 focus:ring-volt-400 ${isEditMode
+                      ? "bg-volt-400 text-coffee-900"
+                      : "bg-[#2b221b] border border-white/[0.08] text-[#e4ddce] hover:border-white/20"
+                      }`}
+                  >
+                    <i className={`fas ${isEditMode ? "fa-check" : "fa-edit"} mr-1`}></i>
+                    {isEditMode ? "Done" : "Edit"}
+                  </button>
+                )}
+
+                <div className="flex flex-wrap p-1 bg-[#2b221b] border border-white/[0.06] rounded-full w-fit">
+                  {(["all", "owner", "community"] as const).map(type => (
                     <button
-                      onClick={() => setIsEditMode(!isEditMode)}
-                      className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${isEditMode
-                        ? "bg-volt-400 text-coffee-900"
-                        : "bg-coffee-100 text-coffee-600 hover:bg-coffee-200"
+                      key={type}
+                      onClick={() => {
+                        setGalleryFilter(type);
+                        setIsGalleryExpanded(false);
+                      }}
+                      className={`px-5 py-2 rounded-full text-xs font-bold capitalize transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-volt-400 ${galleryFilter === type
+                        ? "bg-[#2f251d] text-[#f3efe0]"
+                        : "text-[rgba(243,239,224,0.5)] hover:text-[#e4ddce]"
                         }`}
                     >
-                      <i className={`fas ${isEditMode ? "fa-check" : "fa-edit"} mr-1`}></i>
-                      {isEditMode ? "Done" : "Edit"}
+                      {type}
                     </button>
-                  )}
-
-                  <div className="flex flex-wrap p-1 bg-coffee-100 rounded-2xl md:rounded-full w-full sm:w-fit shadow-inner">
-                    {(["all", "owner", "community"] as const).map(type => (
-                      <button
-                        key={type}
-                        onClick={() => {
-                          setGalleryFilter(type);
-                          setIsGalleryExpanded(false);
-                        }}
-                        className={`px-5 py-2 rounded-full text-xs font-bold capitalize transition-all duration-300 ${galleryFilter === type
-                          ? "bg-white text-coffee-900 shadow-sm transform scale-105"
-                          : "text-coffee-500 hover:text-coffee-800 hover:bg-coffee-50"
-                          }`}
-                      >
-                        {type}
-                      </button>
-                    ))}
-                  </div>
+                  ))}
                 </div>
               </div>
 
@@ -853,10 +952,10 @@ const ShopDetail: React.FC = () => {
                     <div
                       key={idx}
                       onClick={() => setLightboxIndex(idx)}
-                      className="break-inside-avoid relative rounded-2xl overflow-hidden bg-coffee-200 cursor-zoom-in group shadow-sm hover:shadow-md transition-all"
+                      className="break-inside-avoid relative rounded-2xl overflow-hidden bg-[#2b221b] cursor-zoom-in group transition-all"
                     >
                       <LazyImage
-                        src={img.url}
+                        src={sizedImageUrl(img.url, { width: 1080 })}
                         alt={`Gallery ${idx}`}
                         className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
                       />
@@ -898,13 +997,13 @@ const ShopDetail: React.FC = () => {
                       type="button"
                       onClick={() => photoInputRef.current?.click()}
                       disabled={isUploadingPhoto}
-                      className="break-inside-avoid w-full aspect-square rounded-2xl border-2 border-dashed border-coffee-300 flex flex-col items-center justify-center text-coffee-400 hover:border-volt-400 hover:text-volt-500 hover:bg-coffee-50 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="break-inside-avoid w-full aspect-square rounded-2xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center text-[rgba(243,239,224,0.5)] hover:border-volt-400 hover:text-volt-400 transition-all group disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-volt-400"
                     >
-                      <div className="w-12 h-12 rounded-full bg-coffee-100 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                      <div className="w-12 h-12 rounded-full bg-[#2b221b] flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         {isUploadingPhoto ? (
-                          <i className="fas fa-spinner fa-spin text-coffee-500"></i>
+                          <i className="fas fa-spinner fa-spin text-[#e4ddce]"></i>
                         ) : (
-                          <i className="fas fa-plus text-coffee-500 group-hover:text-volt-500"></i>
+                          <i className="fas fa-plus text-[#e4ddce] group-hover:text-volt-400"></i>
                         )}
                       </div>
                       <span className="font-bold text-xs">
@@ -914,13 +1013,26 @@ const ShopDetail: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <div className="py-12 text-center text-coffee-400 bg-coffee-50 rounded-xl border border-coffee-100 border-dashed">
+                <div className="py-12 text-center text-[rgba(243,239,224,0.5)] bg-[#2b221b] rounded-2xl border border-dashed border-white/10">
                   <i className="fas fa-images text-3xl mb-3 opacity-30"></i>
-                  <p className="text-sm font-medium">
+                  <p className="text-sm font-medium mb-4">
                     {galleryFilter === "all"
-                      ? "No photos yet."
-                      : `No ${galleryFilter} photos yet.`}
+                      ? "No photos yet. Show everyone the vibe."
+                      : `No ${galleryFilter} photos yet. Show everyone the vibe.`}
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => photoInputRef.current?.click()}
+                    disabled={isUploadingPhoto}
+                    className="rounded-full px-5 py-2.5 text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-volt-400 disabled:opacity-50"
+                    style={{ background: '#ccff00', color: '#231b15' }}
+                  >
+                    {isUploadingPhoto ? (
+                      <><i className="fas fa-spinner fa-spin mr-1.5"></i>Uploading...</>
+                    ) : (
+                      <><i className="fas fa-plus mr-1.5"></i>Add Photo</>
+                    )}
+                  </button>
                 </div>
               )}
 
@@ -937,32 +1049,30 @@ const ShopDetail: React.FC = () => {
               {showExpandButton && (
                 <div className="relative mt-6">
                   {/* Fade effect for non-expanded */}
-                  <div className="absolute -top-24 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
-                  <Button
-                    variant="outline"
-                    className="w-full border-coffee-200 text-coffee-600 hover:text-coffee-900 hover:border-coffee-900 relative z-10"
+                  <div className="absolute -top-24 left-0 right-0 h-24 pointer-events-none" style={{ background: 'linear-gradient(to top, #1e1712, transparent)' }}></div>
+                  <button
+                    className="w-full rounded-full border border-white/[0.09] bg-[#2b221b] py-2.5 text-sm font-bold text-[#e4ddce] hover:border-white/20 transition-colors relative z-10 focus:outline-none focus:ring-2 focus:ring-volt-400"
                     onClick={() => setIsGalleryExpanded(true)}
                   >
                     See All Images ({filteredImages.length})
-                  </Button>
+                  </button>
                 </div>
               )}
 
               {isGalleryExpanded && filteredImages.length > 9 && (
-                <Button
-                  variant="ghost"
-                  className="w-full mt-6 text-sm text-coffee-500"
+                <button
+                  className="w-full mt-6 rounded-full py-2.5 text-sm font-bold text-[rgba(243,239,224,0.5)] hover:text-[#e4ddce] transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400"
                   onClick={() => setIsGalleryExpanded(false)}
                 >
                   Show Less
-                </Button>
+                </button>
               )}
             </section>
 
             {/* Cheeky Vibe Check */}
             <section>
-              <h2 className="text-2xl font-serif font-bold text-coffee-900 mb-6 flex items-center gap-2">
-                <i className="fas fa-tasks text-volt-400"></i> Vibe Check
+              <h2 className="text-[10px] font-bold uppercase tracking-[0.08em] text-[rgba(243,239,224,0.5)] mb-4">
+                Vibe Check
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {CHEEKY_VIBES_OPTIONS.map(vibe => renderVibeCheck(vibe))}
@@ -1090,13 +1200,13 @@ const ShopDetail: React.FC = () => {
             )}
 
             {/* Experience Logs */}
-            <section className="bg-white p-8 rounded-3xl shadow-sm border border-coffee-100">
+            <section>
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-2xl font-serif font-bold text-coffee-900 flex items-center gap-2">
+                  <h2 className="font-serif text-2xl font-black text-[#f3efe0] flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
                     Experience Logs
                     {(shop.experienceLogs?.length || 0) > 0 ? (
-                      <span className="bg-coffee-100 text-coffee-600 text-xs font-sans font-bold px-2 py-1 rounded-full">
+                      <span className="bg-[#2b221b] border border-white/[0.08] text-[#e4ddce] text-xs font-sans font-bold px-2 py-1 rounded-full">
                         {shop.experienceLogs?.length}
                       </span>
                     ) : null}
@@ -1104,7 +1214,10 @@ const ShopDetail: React.FC = () => {
                 </div>
                 {/* Drip Score Mini Badge */}
                 {shopAggregate?.dripScore && (
-                  <div className="flex items-center gap-1 text-volt-500 font-bold bg-coffee-900 px-3 py-1 rounded-lg shadow-sm">
+                  <div
+                    className="flex items-center gap-1 font-bold px-3 py-1 rounded-xl border"
+                    style={{ background: 'rgba(204,255,0,0.16)', borderColor: 'rgba(204,255,0,0.5)', color: '#ccff00' }}
+                  >
                     <i className="fas fa-tint"></i>
                     <span>{shopAggregate.dripScore.toFixed(0)}</span>
                   </div>
@@ -1134,30 +1247,30 @@ const ShopDetail: React.FC = () => {
                 };
 
                 return (
-                  <div className="bg-coffee-50/50 rounded-2xl p-6 mb-8 border border-coffee-100 grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center p-3 bg-white rounded-xl shadow-sm border border-coffee-50">
-                      <div className="text-xs text-coffee-500 font-bold uppercase tracking-wider mb-1">Drip Score</div>
-                      <div className="text-2xl font-black text-volt-500 flex items-center justify-center gap-1">
-                        <i className="fas fa-tint text-lg"></i>
+                  <div className="bg-[#2b221b] rounded-2xl p-4 mb-8 border border-white/[0.06] grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="text-center p-3 bg-[#2f251d] rounded-xl border border-white/[0.06]">
+                      <div className="text-[10px] text-[rgba(243,239,224,0.5)] font-bold uppercase tracking-[0.08em] mb-1">Drip Score</div>
+                      <div className="font-serif text-[22px] font-black flex items-center justify-center gap-1" style={{ color: '#ccff00' }}>
+                        <i className="fas fa-tint text-sm"></i>
                         {shopAggregate.dripScore?.toFixed(0) || "--"}
                       </div>
                     </div>
-                    <div className="text-center p-3 bg-white rounded-xl shadow-sm border border-coffee-50">
-                      <div className="text-xs text-coffee-500 font-bold uppercase tracking-wider mb-1">Quality</div>
-                      <div className="text-lg font-black text-coffee-800 flex items-center justify-center h-8">
+                    <div className="text-center p-3 bg-[#2f251d] rounded-xl border border-white/[0.06]">
+                      <div className="text-[10px] text-[rgba(243,239,224,0.5)] font-bold uppercase tracking-[0.08em] mb-1">Quality</div>
+                      <div className="text-lg font-black text-[#e4ddce] flex items-center justify-center h-8">
                         {shopAggregate.avgOverallQuality ? getQualityText(shopAggregate.avgOverallQuality) : "--"}
                       </div>
                     </div>
-                    <div className="text-center p-3 bg-white rounded-xl shadow-sm border border-coffee-50">
-                      <div className="text-xs text-coffee-500 font-bold uppercase tracking-wider mb-1">Vibe</div>
-                      <div className="text-lg font-black text-coffee-800 flex items-center justify-center h-8">
+                    <div className="text-center p-3 bg-[#2f251d] rounded-xl border border-white/[0.06]">
+                      <div className="text-[10px] text-[rgba(243,239,224,0.5)] font-bold uppercase tracking-[0.08em] mb-1">Vibe</div>
+                      <div className="text-lg font-black text-[#e4ddce] flex items-center justify-center h-8">
                         {shopAggregate.avgVibeEnergy ? getVibeText(shopAggregate.avgVibeEnergy) : "--"}
                       </div>
                     </div>
-                    <div className="text-center p-3 bg-white rounded-xl shadow-sm border border-coffee-50">
-                      <div className="text-xs text-coffee-500 font-bold uppercase tracking-wider mb-1">Rec.</div>
-                      <div className="text-2xl font-black text-coffee-800 flex items-center justify-center gap-1">
-                        {recScore}<span className="text-sm text-coffee-400 font-bold">/10</span>
+                    <div className="text-center p-3 bg-[#2f251d] rounded-xl border border-white/[0.06]">
+                      <div className="text-[10px] text-[rgba(243,239,224,0.5)] font-bold uppercase tracking-[0.08em] mb-1">Rec.</div>
+                      <div className="font-serif text-[22px] font-black text-[#e4ddce] flex items-center justify-center gap-1">
+                        {recScore}<span className="text-sm text-[rgba(243,239,224,0.5)] font-bold">/10</span>
                       </div>
                     </div>
                   </div>
@@ -1175,52 +1288,52 @@ const ShopDetail: React.FC = () => {
                   shop.reviews.map((review, i) => (
                     <div
                       key={i}
-                      className="bg-coffee-50 rounded-2xl p-5 border border-coffee-100 opacity-75"
+                      className="bg-[#2b221b] rounded-2xl p-5 border border-white/[0.07] opacity-75"
                     >
                       <div className="flex items-start gap-4">
                         {/* Legacy Review Item (Simplified) */}
                         <div className="flex-1">
                           <div className="flex justify-between mb-1">
-                            <span className="font-bold text-coffee-900">{review.username}</span>
-                            <span className="text-xs text-coffee-400">{review.date}</span>
+                            <span className="font-bold text-[#f3efe0]">{review.username}</span>
+                            <span className="text-xs text-[rgba(243,239,224,0.5)]">{review.date}</span>
                           </div>
-                          <p className="text-sm text-coffee-800">"{review.comment}"</p>
+                          <p className="text-sm text-[#e4ddce]">"{review.comment}"</p>
                         </div>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-10 rounded-2xl border-2 border-dashed border-coffee-200 bg-coffee-50/50">
-                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-coffee-100">
-                      <i className="fas fa-feather-alt text-2xl text-volt-500"></i>
+                  <div className="text-center py-10 rounded-2xl border-2 border-dashed border-white/10 bg-[#2b221b]">
+                    <div className="w-16 h-16 bg-[#2f251d] rounded-full flex items-center justify-center mx-auto mb-4 border border-white/[0.06]">
+                      <i className="fas fa-feather-alt text-2xl text-volt-400"></i>
                     </div>
-                    <h3 className="text-lg font-bold text-coffee-900 mb-1">No Logs Yet</h3>
-                    <p className="text-coffee-500 text-sm max-w-xs mx-auto mb-6">
+                    <h3 className="text-lg font-bold text-[#f3efe0] mb-1">No Logs Yet</h3>
+                    <p className="text-[rgba(243,239,224,0.5)] text-sm max-w-xs mx-auto mb-6">
                       Be the first to verify the vibe. Your deep intel helps the community.
                     </p>
 
                     {/* Mock Cards for "What it will look like" */}
                     <div className="opacity-50 scale-90 pointer-events-none blur-[1px] select-none" aria-hidden="true">
-                      <div className="p-3 rounded-xl bg-white border border-coffee-100 mb-2 text-left">
+                      <div className="p-3 rounded-xl bg-[#2f251d] border border-white/[0.06] mb-2 text-left">
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="w-6 h-6 rounded-full bg-coffee-200"></div>
-                          <div className="h-2 w-20 bg-coffee-100 rounded"></div>
+                          <div className="w-6 h-6 rounded-full bg-white/10"></div>
+                          <div className="h-2 w-20 bg-white/10 rounded"></div>
                         </div>
-                        <div className="h-3 w-full bg-coffee-50 rounded mb-1"></div>
-                        <div className="h-3 w-2/3 bg-coffee-50 rounded"></div>
+                        <div className="h-3 w-full bg-white/5 rounded mb-1"></div>
+                        <div className="h-3 w-2/3 bg-white/5 rounded"></div>
                       </div>
                     </div>
                   </div>
                 )}
               </div>
               {/* Trigger review modal manually if needed */}
-              <Button
-                variant="outline"
-                className="w-full mt-6"
+              <button
+                className="w-full mt-6 rounded-full py-2.5 text-sm font-extrabold transition-transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-volt-400"
+                style={{ background: '#ccff00', color: '#231b15' }}
                 onClick={() => setShowExperienceLogModal(true)}
               >
                 Log Experience
-              </Button>
+              </button>
             </section>
           </div>
 
@@ -1228,29 +1341,29 @@ const ShopDetail: React.FC = () => {
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-6">
               {/* Action Card */}
-              <div className="bg-white p-6 rounded-3xl shadow-lg border border-coffee-100 relative overflow-hidden">
+              <div className="bg-[#2b221b] p-6 rounded-3xl border border-white/[0.07] relative overflow-hidden">
                 {isOwner && (
                   <div className="absolute top-0 left-0 right-0 bg-volt-400 h-1.5"></div>
                 )}
 
                 {/* Admin Viewing Indicator */}
                 {isAdminViewing && (
-                  <div className="mb-4 bg-amber-100 border border-amber-300 rounded-lg p-3 flex items-center gap-2">
-                    <i className="fas fa-shield-alt text-amber-600"></i>
-                    <span className="text-amber-800 text-sm font-medium">Admin View Mode</span>
+                  <div className="mb-4 bg-amber-400/10 border border-amber-400/30 rounded-lg p-3 flex items-center gap-2">
+                    <i className="fas fa-shield-alt text-amber-300"></i>
+                    <span className="text-amber-200 text-sm font-medium">Admin View Mode</span>
                   </div>
                 )}
 
                 {shop.isClaimed && (
-                  <div className="mb-6 bg-coffee-900 rounded-xl p-4 flex items-center gap-3 shadow-md">
-                    <div className="w-10 h-10 rounded-full bg-volt-400 flex items-center justify-center shrink-0 text-coffee-900 text-lg">
+                  <div className="mb-6 bg-[#1e1712] border border-white/[0.06] rounded-xl p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-volt-400 flex items-center justify-center shrink-0 text-lg" style={{ color: '#231b15' }}>
                       <i className="fas fa-check"></i>
                     </div>
                     <div>
                       <p className="text-volt-400 font-bold text-sm">
                         Verified Business
                       </p>
-                      <p className="text-coffee-100 text-xs opacity-80">
+                      <p className="text-[#e4ddce] text-xs opacity-80">
                         Managed by Owner
                       </p>
                     </div>
@@ -1258,66 +1371,66 @@ const ShopDetail: React.FC = () => {
                 )}
 
                 <div className="mb-6">
-                  <p className="text-sm font-bold text-coffee-400 mb-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[rgba(243,239,224,0.5)] mb-1">
                     ADDRESS
                   </p>
-                  <p className="text-coffee-900">{shop.location.address}</p>
-                  <p className="text-coffee-900">
+                  <p className="text-[#e4ddce]">{shop.location.address}</p>
+                  <p className="text-[#e4ddce]">
                     {[shop.location.city, shop.location.state, shop.location.country].filter(Boolean).join(', ')}
                   </p>
                 </div>
                 <div className="mb-8">
-                  <p className="text-sm font-bold text-coffee-400 mb-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[rgba(243,239,224,0.5)] mb-1">
                     HOURS
                   </p>
                   {shop.openHours &&
                     Object.values(shop.openHours).some(v => v) ? (
                     <div className="space-y-1">
                       {shop.openHours.monday && (
-                        <p className="text-coffee-900 text-sm">
+                        <p className="text-[#e4ddce] text-sm">
                           <span className="font-semibold">Mon:</span>{" "}
                           {shop.openHours.monday}
                         </p>
                       )}
                       {shop.openHours.tuesday && (
-                        <p className="text-coffee-900 text-sm">
+                        <p className="text-[#e4ddce] text-sm">
                           <span className="font-semibold">Tue:</span>{" "}
                           {shop.openHours.tuesday}
                         </p>
                       )}
                       {shop.openHours.wednesday && (
-                        <p className="text-coffee-900 text-sm">
+                        <p className="text-[#e4ddce] text-sm">
                           <span className="font-semibold">Wed:</span>{" "}
                           {shop.openHours.wednesday}
                         </p>
                       )}
                       {shop.openHours.thursday && (
-                        <p className="text-coffee-900 text-sm">
+                        <p className="text-[#e4ddce] text-sm">
                           <span className="font-semibold">Thu:</span>{" "}
                           {shop.openHours.thursday}
                         </p>
                       )}
                       {shop.openHours.friday && (
-                        <p className="text-coffee-900 text-sm">
+                        <p className="text-[#e4ddce] text-sm">
                           <span className="font-semibold">Fri:</span>{" "}
                           {shop.openHours.friday}
                         </p>
                       )}
                       {shop.openHours.saturday && (
-                        <p className="text-coffee-900 text-sm">
+                        <p className="text-[#e4ddce] text-sm">
                           <span className="font-semibold">Sat:</span>{" "}
                           {shop.openHours.saturday}
                         </p>
                       )}
                       {shop.openHours.sunday && (
-                        <p className="text-coffee-900 text-sm">
+                        <p className="text-[#e4ddce] text-sm">
                           <span className="font-semibold">Sun:</span>{" "}
                           {shop.openHours.sunday}
                         </p>
                       )}
                     </div>
                   ) : (
-                    <p className="text-coffee-500 text-sm italic">
+                    <p className="text-[rgba(243,239,224,0.5)] text-sm italic">
                       Hours not available
                     </p>
                   )}
@@ -1331,7 +1444,7 @@ const ShopDetail: React.FC = () => {
                         href={shop.instagramUrl.startsWith('http') ? shop.instagramUrl : `https://instagram.com/${shop.instagramUrl.replace(/^@/, '')}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-10 h-10 rounded-full bg-coffee-50 flex items-center justify-center transition-all hover:scale-110 hover:bg-white hover:shadow-md border border-transparent hover:border-coffee-100 text-pink-600"
+                        className="w-10 h-10 rounded-full bg-white/5 border border-white/[0.08] flex items-center justify-center transition-all hover:scale-110 hover:border-volt-400 text-[#e4ddce] hover:text-volt-400 focus:outline-none focus:ring-2 focus:ring-volt-400"
                         title="Instagram"
                       >
                         <i className="fab fa-instagram text-lg"></i>
@@ -1342,7 +1455,7 @@ const ShopDetail: React.FC = () => {
                         href={shop.websiteUrl.startsWith('http') ? shop.websiteUrl : `https://${shop.websiteUrl}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-10 h-10 rounded-full bg-coffee-50 flex items-center justify-center transition-all hover:scale-110 hover:bg-white hover:shadow-md border border-transparent hover:border-coffee-100 text-coffee-900"
+                        className="w-10 h-10 rounded-full bg-white/5 border border-white/[0.08] flex items-center justify-center transition-all hover:scale-110 hover:border-volt-400 text-[#e4ddce] hover:text-volt-400 focus:outline-none focus:ring-2 focus:ring-volt-400"
                         title="Website"
                       >
                         <i className="fas fa-globe text-lg"></i>
@@ -1353,7 +1466,7 @@ const ShopDetail: React.FC = () => {
                         href={shop.mapsUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-10 h-10 rounded-full bg-coffee-50 flex items-center justify-center transition-all hover:scale-110 hover:bg-white hover:shadow-md border border-transparent hover:border-coffee-100 text-coffee-900"
+                        className="w-10 h-10 rounded-full bg-white/5 border border-white/[0.08] flex items-center justify-center transition-all hover:scale-110 hover:border-volt-400 text-[#e4ddce] hover:text-volt-400 focus:outline-none focus:ring-2 focus:ring-volt-400"
                         title="Google Maps"
                       >
                         <i className="fas fa-map-marker-alt text-lg"></i>
@@ -1364,30 +1477,35 @@ const ShopDetail: React.FC = () => {
 
                 <div className="space-y-3">
                   {isOwner && (
-                    <Button
+                    <button
                       onClick={() => navigate(`/edit-shop/${shop.id}`)}
-                      className="w-full bg-coffee-900 text-volt-400 hover:bg-coffee-800 border-2 border-transparent hover:border-volt-400 transition-all mb-4"
+                      className="w-full rounded-full py-2.5 font-bold text-volt-400 bg-[#1e1712] border border-white/[0.08] hover:border-volt-400 transition-all mb-4 focus:outline-none focus:ring-2 focus:ring-volt-400"
                     >
                       <i className="fas fa-pen mr-2"></i> Edit Shop Details
-                    </Button>
+                    </button>
                   )}
 
                   {user && (
                     <>
-                      <Button
-                        variant={isSaved ? "secondary" : "outline"}
-                        className="w-full"
+                      <button
+                        className={`w-full rounded-full py-2.5 font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400 ${isSaved
+                          ? "text-volt-400 border border-volt-400/50"
+                          : "text-[#f3efe0] bg-white/5 border border-white/[0.08] hover:border-white/20"
+                          }`}
+                        style={isSaved ? { background: 'rgba(204,255,0,0.12)' } : undefined}
                         onClick={handleSaveClick}
                       >
                         <i
                           className={`${isSaved ? "fas" : "far"} fa-heart mr-2`}
                         ></i>
                         {isSaved ? "Saved" : "Save Spot"}
-                      </Button>
-                      <Button
-                        variant={isVisited ? "secondary" : "outline"}
-                        className={`w-full ${isVisited ? "border-volt-400" : ""
+                      </button>
+                      <button
+                        className={`w-full rounded-full py-2.5 font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400 ${isVisited
+                          ? "text-volt-400 border border-volt-400/50"
+                          : "text-[#f3efe0] bg-white/5 border border-white/[0.08] hover:border-white/20"
                           }`}
+                        style={isVisited ? { background: 'rgba(204,255,0,0.12)' } : undefined}
                         onClick={handleVisitedClick}
                       >
                         <i
@@ -1395,31 +1513,35 @@ const ShopDetail: React.FC = () => {
                             } mr-2`}
                         ></i>
                         {isVisited ? "Visited" : "Stamp My Passport"}
-                      </Button>
+                      </button>
                     </>
                   )}
-                  <Button className="w-full bg-coffee-900 text-volt-400 hover:bg-coffee-800">
-                    <i className="fas fa-location-arrow mr-2"></i> Get
+                  <button
+                    onClick={handleDirections}
+                    className="w-full rounded-full py-2.5 font-extrabold transition-transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-volt-400"
+                    style={{ background: '#ccff00', color: '#231b15', boxShadow: '0 8px 24px -6px rgba(204,255,0,0.5)' }}
+                  >
+                    <i className="fas fa-diamond-turn-right mr-2"></i> Get
                     Directions
-                  </Button>
+                  </button>
                 </div>
 
                 {/* Claim Logic */}
                 {!shop.isClaimed && (
-                  <div className="mt-6 pt-6 border-t border-coffee-100 text-center">
+                  <div className="mt-6 pt-6 border-t border-white/[0.06] text-center">
                     {pendingRequest ? (
-                      <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-xl text-yellow-800 text-xs font-bold">
+                      <div className="bg-amber-400/10 border border-amber-400/30 p-3 rounded-xl text-amber-200 text-xs font-bold">
                         <i className="fas fa-clock mr-1"></i> Verification
                         Pending
                       </div>
                     ) : (
                       <>
-                        <p className="text-xs text-coffee-500 mb-3 font-medium">
+                        <p className="text-xs text-[rgba(243,239,224,0.5)] mb-3 font-medium">
                           Own this business?
                         </p>
-                        <Button
-                          variant="secondary"
-                          className="w-full font-bold"
+                        <button
+                          className="w-full rounded-full py-2.5 font-extrabold focus:outline-none focus:ring-2 focus:ring-volt-400"
+                          style={{ background: '#ccff00', color: '#231b15' }}
                           onClick={() => {
                             if (user) {
                               navigate(`/claim/${shop.id}`);
@@ -1429,7 +1551,7 @@ const ShopDetail: React.FC = () => {
                           }}
                         >
                           Claim My Shop
-                        </Button>
+                        </button>
                       </>
                     )}
                   </div>
@@ -1438,16 +1560,16 @@ const ShopDetail: React.FC = () => {
 
               {/* Owner Subscription Management Card */}
               {isOwner && (
-                <div className="bg-white p-6 rounded-3xl shadow-lg border border-coffee-100">
+                <div className="bg-[#2b221b] p-6 rounded-3xl border border-white/[0.07]">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className={`p-3 rounded-xl ${isProPlus ? 'bg-volt-400' : isPro ? 'bg-purple-100' : 'bg-coffee-100'
+                    <div className={`p-3 rounded-xl ${isProPlus ? 'bg-volt-400' : 'bg-white/5 border border-white/[0.08]'
                       }`}>
-                      <i className={`fas ${isProPlus || isPro ? 'fa-crown' : 'fa-store'} ${isProPlus ? 'text-coffee-900' : isPro ? 'text-purple-600' : 'text-coffee-800'
+                      <i className={`fas ${isProPlus || isPro ? 'fa-crown' : 'fa-store'} ${isProPlus ? 'text-coffee-900' : isPro ? 'text-volt-400' : 'text-[#e4ddce]'
                         }`}></i>
                     </div>
                     <div>
-                      <p className="text-xs text-coffee-800 font-medium">Current Plan</p>
-                      <p className={`font-black ${isProPlus ? 'text-volt-500' : isPro ? 'text-purple-600' : 'text-coffee-900'
+                      <p className="text-xs text-[rgba(243,239,224,0.5)] font-medium">Current Plan</p>
+                      <p className={`font-black ${isProPlus || isPro ? 'text-volt-400' : 'text-[#f3efe0]'
                         }`}>
                         {isProPlus ? 'PRO+' : isPro ? 'PRO' : 'Basic (Free)'}
                       </p>
@@ -1455,19 +1577,19 @@ const ShopDetail: React.FC = () => {
                   </div>
 
                   {(isPro || isProPlus) && (
-                    <div className="bg-coffee-50 rounded-xl p-3 mb-4">
-                      <div className="flex items-center gap-2 text-xs text-coffee-800">
-                        <i className="fas fa-check-circle text-green-500"></i>
+                    <div className="bg-[#1e1712] border border-white/[0.06] rounded-xl p-3 mb-4">
+                      <div className="flex items-center gap-2 text-xs text-[#e4ddce]">
+                        <i className="fas fa-check-circle text-volt-400"></i>
                         <span>Active subscription</span>
                       </div>
                       {isProPlus && (
-                        <div className="mt-3 pt-3 border-t border-coffee-100">
+                        <div className="mt-3 pt-3 border-t border-white/[0.06]">
                           <label className="flex items-center justify-between cursor-pointer">
                             <div className="flex items-center gap-2">
-                              <i className="fas fa-percent text-volt-500"></i>
+                              <i className="fas fa-percent text-volt-400"></i>
                               <div>
-                                <span className="text-xs font-bold text-coffee-900">DripClub 10% Discount</span>
-                                <p className="text-[10px] text-coffee-800">Offer discount to DripClub members</p>
+                                <span className="text-xs font-bold text-[#f3efe0]">DripClub 10% Discount</span>
+                                <p className="text-[10px] text-[rgba(243,239,224,0.5)]">Offer discount to DripClub members</p>
                               </div>
                             </div>
                             <div className="relative">
@@ -1495,7 +1617,7 @@ const ShopDetail: React.FC = () => {
                                 }}
                                 className="sr-only peer"
                               />
-                              <div className={`w-11 h-6 bg-coffee-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-volt-400 ${isTogglingDiscount ? 'opacity-50' : ''}`}></div>
+                              <div className={`w-11 h-6 bg-white/10 peer-focus:ring-2 peer-focus:ring-volt-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-volt-400 ${isTogglingDiscount ? 'opacity-50' : ''}`}></div>
                             </div>
                           </label>
                         </div>
@@ -1518,7 +1640,7 @@ const ShopDetail: React.FC = () => {
                             toast.error('Failed to open billing portal');
                           }
                         }}
-                        className="w-full py-2.5 px-4 bg-coffee-100 text-coffee-900 rounded-xl text-sm font-bold hover:bg-coffee-800 hover:text-white transition-all flex items-center justify-center gap-2"
+                        className="w-full py-2.5 px-4 bg-white/5 border border-white/[0.08] text-[#f3efe0] rounded-full text-sm font-bold hover:border-white/20 transition-all flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-volt-400"
                       >
                         <i className="fas fa-credit-card"></i>
                         Manage Billing
@@ -1526,8 +1648,8 @@ const ShopDetail: React.FC = () => {
                     )}
                     <button
                       onClick={() => setShowPricing(true)}
-                      className={`w-full py-2.5 px-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${isPro || isProPlus
-                        ? 'bg-coffee-50 text-coffee-800 hover:bg-coffee-100'
+                      className={`w-full py-2.5 px-4 rounded-full text-sm font-bold transition-all flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-volt-400 ${isPro || isProPlus
+                        ? 'bg-white/5 border border-white/[0.08] text-[#e4ddce] hover:border-white/20'
                         : 'bg-volt-400 text-coffee-900 hover:bg-volt-500'
                         }`}
                     >
@@ -1539,27 +1661,27 @@ const ShopDetail: React.FC = () => {
               )}
 
               {/* Community Section */}
-              <div className="bg-white p-6 rounded-3xl shadow-sm border border-coffee-100">
-                <h3 className="text-lg font-serif font-bold text-coffee-900 mb-4 flex items-center gap-2">
-                  <i className="fas fa-users text-coffee-400"></i> The Community
+              <div className="bg-[#2b221b] p-6 rounded-3xl border border-white/[0.07]">
+                <h3 className="text-lg font-serif font-black text-[#f3efe0] mb-4 flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
+                  <i className="fas fa-users text-[rgba(243,239,224,0.5)]"></i> The Community
                 </h3>
 
                 {/* Tabs */}
-                <div className="flex p-1 bg-coffee-50 rounded-xl mb-4">
+                <div className="flex p-1 bg-[#1e1712] border border-white/[0.06] rounded-xl mb-4">
                   <button
                     onClick={() => setCommunityTab("visited")}
-                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${communityTab === "visited"
-                      ? "bg-white text-coffee-900 shadow-sm"
-                      : "text-coffee-500 hover:text-coffee-800"
+                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-volt-400 ${communityTab === "visited"
+                      ? "bg-[#2f251d] text-[#f3efe0]"
+                      : "text-[rgba(243,239,224,0.5)] hover:text-[#e4ddce]"
                       }`}
                   >
                     Visited ({shop.stampCount})
                   </button>
                   <button
                     onClick={() => setCommunityTab("saved")}
-                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${communityTab === "saved"
-                      ? "bg-white text-coffee-900 shadow-sm"
-                      : "text-coffee-500 hover:text-coffee-800"
+                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-volt-400 ${communityTab === "saved"
+                      ? "bg-[#2f251d] text-[#f3efe0]"
+                      : "text-[rgba(243,239,224,0.5)] hover:text-[#e4ddce]"
                       }`}
                   >
                     Saved
@@ -1575,7 +1697,7 @@ const ShopDetail: React.FC = () => {
                           key={person.id}
                           to={`/profile/${person.id}`}
                           title={person.username}
-                          className="w-10 h-10 rounded-full border-2 border-white shadow-sm overflow-hidden hover:scale-110 transition-transform hover:border-volt-400 -ml-2 first:ml-0 relative z-0 hover:z-10"
+                          className="w-10 h-10 rounded-full border-2 border-[#1e1712] overflow-hidden hover:scale-110 transition-transform hover:border-volt-400 -ml-2 first:ml-0 relative z-0 hover:z-10 focus:outline-none focus:ring-2 focus:ring-volt-400"
                         >
                           <LazyImage
                             src={person.avatarUrl}
@@ -1585,8 +1707,8 @@ const ShopDetail: React.FC = () => {
                         </Link>
                       ))}
                     </div>
-                    <p className="text-xs text-coffee-500">
-                      <span className="font-bold text-coffee-900">
+                    <p className="text-xs text-[rgba(243,239,224,0.5)]">
+                      <span className="font-bold text-[#f3efe0]">
                         {communityList[0].username}
                       </span>{" "}
                       and{" "}
@@ -1598,14 +1720,14 @@ const ShopDetail: React.FC = () => {
                     </p>
                   </div>
                 ) : (
-                  <p className="text-xs text-coffee-400 italic text-center py-4">
+                  <p className="text-xs text-[rgba(243,239,224,0.5)] italic text-center py-4">
                     No one has {communityTab} this yet. Be the first!
                   </p>
                 )}
 
                 {shop.isClaimed && (
-                  <div className="mt-4 pt-4 border-t border-coffee-50">
-                    <button className="w-full text-[10px] font-bold text-volt-500 hover:text-volt-600 uppercase tracking-wide flex items-center justify-center gap-1">
+                  <div className="mt-4 pt-4 border-t border-white/[0.06]">
+                    <button className="w-full text-[10px] font-bold text-volt-400 hover:text-volt-500 uppercase tracking-wide flex items-center justify-center gap-1 focus:outline-none focus:ring-2 focus:ring-volt-400 rounded">
                       <i className="fas fa-bullhorn"></i> Send Offer to{" "}
                       {communityTab === "visited" ? "Visitors" : "Savers"}
                     </button>
@@ -1654,6 +1776,8 @@ const ShopDetail: React.FC = () => {
           />
         </React.Suspense>
       )}
+
+      <BottomTabBar />
     </div>
   );
 };
