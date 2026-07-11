@@ -1,16 +1,22 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { useToast } from '../context/ToastContext';
 import Map from '../components/Map';
-import TagChip from '../components/TagChip';
-import LoadingSpinner from '../components/LoadingSpinner';
-import ShopCard from '../components/ShopCard';
+import DiscoverCard from '../components/darkroast/DiscoverCard';
+import MenuDrawer from '../components/darkroast/MenuDrawer';
+import BottomTabBar from '../components/darkroast/BottomTabBar';
+import NotificationBell from '../components/NotificationBell';
 import { ALL_VIBES } from '../constants';
+import { Vibe } from '../types';
+import { fetchSaversForShops } from '../services/dbService';
+
+// Dark Roast Discover feed (design_handoff_dark_roast/README.md → Screens 1–3).
+// "Just Added" big-card feed + vibe filter + hamburger drawer + bottom tab bar.
 
 // Calculate distance between two points in miles (Haversine formula)
 const getDistanceMiles = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
-  const R = 3959; // Earth's radius in miles
+  const R = 3959;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLng = (lng2 - lng1) * Math.PI / 180;
   const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -21,397 +27,291 @@ const getDistanceMiles = (lat1: number, lng1: number, lat2: number, lng2: number
 };
 
 const Home: React.FC = () => {
-  const { shops, searchQuery, setSearchQuery, selectedVibes, toggleVibe, loading, shopsLoading } = useApp();
+  const { shops, shopsLoading, searchQuery, setSearchQuery, selectedVibes, toggleVibe, user, toggleSaveShop } = useApp();
+  const { toast } = useToast();
   const navigate = useNavigate();
-  const [viewMode, setViewMode] = useState<'map' | 'list'>('list'); // Mobile view toggle
-  const [nearMeActive, setNearMeActive] = useState(false);
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'feed' | 'map'>('feed');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [locationLoading, setLocationLoading] = useState(false);
-  const [locationError, setLocationError] = useState<string | null>(null);
-  const [bannerIndex, setBannerIndex] = useState(0);
 
-  // Banner carousel auto-rotate
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setBannerIndex(prev => (prev === 0 ? 1 : 0));
-    }, 6000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Fetch user location silently on mount to center the map automatically
+  // Silent geolocation for distances + map centering
   useEffect(() => {
     if (navigator.geolocation && !userLocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-        },
-        (error) => {
-          console.warn("Silent geolocation fetch failed:", error);
-        },
+        (position) => setUserLocation({ lat: position.coords.latitude, lng: position.coords.longitude }),
+        (error) => console.warn('Silent geolocation fetch failed:', error),
         { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleNearMe = () => {
-    if (nearMeActive) {
-      // Turn off near me filter
-      setNearMeActive(false);
+  // Single-vibe filter on top of the context's multi-select
+  const activeVibe: Vibe | null = selectedVibes[0] ?? null;
+  const selectVibe = (vibe: Vibe) => {
+    if (activeVibe === vibe) {
+      toggleVibe(vibe); // clear
       return;
     }
+    selectedVibes.forEach(v => toggleVibe(v));
+    toggleVibe(vibe);
+  };
+  const clearVibe = () => {
+    selectedVibes.forEach(v => toggleVibe(v));
+  };
 
-    if (userLocation) {
-      // Already have location, just activate filter
-      setNearMeActive(true);
-      return;
-    }
+  // Context `shops` is already filtered by searchQuery + selectedVibes and
+  // ordered created_at DESC — exactly the "Just Added" feed order.
+  const feedShops = shops;
 
-    // Request location
-    setLocationLoading(true);
-    setLocationError(null);
-
-    if (!navigator.geolocation) {
-      setLocationError('Geolocation not supported');
-      setLocationLoading(false);
-      return;
-    }
-
-    // Try with high accuracy first
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setUserLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        });
-        setNearMeActive(true);
-        setLocationLoading(false);
-      },
-      (error) => {
-        // If high accuracy fails, try again with lower accuracy
-        if (error.code === error.TIMEOUT) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              setUserLocation({
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-              });
-              setNearMeActive(true);
-              setLocationLoading(false);
-            },
-            (fallbackError) => {
-              let errorMessage = 'Unable to get location';
-
-              switch (fallbackError.code) {
-                case fallbackError.PERMISSION_DENIED:
-                  errorMessage = 'Location access denied. Please enable location permissions in your browser settings.';
-                  break;
-                case fallbackError.POSITION_UNAVAILABLE:
-                  errorMessage = 'Location information unavailable. Please try again.';
-                  break;
-                case fallbackError.TIMEOUT:
-                  errorMessage = 'Location request timed out. Check your GPS signal and try again.';
-                  break;
-                default:
-                  errorMessage = 'Unable to get your location. Please try again.';
-              }
-
-              setLocationError(errorMessage);
-              setLocationLoading(false);
-            },
-            { enableHighAccuracy: false, timeout: 15000, maximumAge: 30000 }
-          );
-          return;
+  // Infinite scroll: only mount a page of big cards at a time (each card is
+  // 548px with backdrop-filter layers — rendering the full catalog at once
+  // wrecks scroll performance). Spec: "feed is paginated/infinite-scroll".
+  const PAGE_SIZE = 8;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [activeVibe, searchQuery]);
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount(c => Math.min(c + PAGE_SIZE, feedShops.length));
         }
-
-        // Handle other errors
-        let errorMessage = 'Unable to get location';
-
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = 'Location access denied. Please enable location permissions in your browser settings.';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Location information unavailable. Please try again.';
-            break;
-          default:
-            errorMessage = 'Unable to get your location. Please try again.';
-        }
-
-        setLocationError(errorMessage);
-        setLocationLoading(false);
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { rootMargin: '600px' }
     );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [feedShops.length, viewMode]);
+  const visibleShops = feedShops.slice(0, visibleCount);
+
+  // "Who likes this shop" — batched per page of cards, cached across pages.
+  const [saversByShop, setSaversByShop] = useState<Record<string, { id: string; username: string; avatarUrl?: string }[]>>({});
+  useEffect(() => {
+    const missing = visibleShops.map(s => s.id).filter(id => !(id in saversByShop));
+    if (missing.length === 0) return;
+    let cancelled = false;
+    fetchSaversForShops(missing).then(fetched => {
+      if (cancelled) return;
+      setSaversByShop(prev => {
+        const next = { ...prev };
+        missing.forEach(id => { next[id] = fetched[id] ?? []; });
+        return next;
+      });
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleCount, feedShops]);
+
+  const distanceFor = (lat?: number, lng?: number): number | null => {
+    if (!userLocation || lat == null || lng == null) return null;
+    return getDistanceMiles(userLocation.lat, userLocation.lng, lat, lng);
   };
 
-  // Process and sort shops
-  const isDefaultView = !nearMeActive && searchQuery === '' && selectedVibes.length === 0;
-  let displayShops = [...shops];
-
-  if (nearMeActive && userLocation) {
-    // 1. Calculate distance for all shops
-    const shopsWithDistance = displayShops.map(shop => ({
-      shop,
-      distance: getDistanceMiles(
-        userLocation.lat, userLocation.lng,
-        shop.location.lat, shop.location.lng
-      )
-    })).filter(s => s.distance <= 100);
-
-    // 2. Sort by distance bands (5 miles) and PRO status
-    shopsWithDistance.sort((a, b) => {
-      const bandA = Math.floor(a.distance / 5);
-      const bandB = Math.floor(b.distance / 5);
-
-      if (bandA !== bandB) return bandA - bandB; // Closest band first
-
-      // Within the same band, sort by PRO status
-      const tierScore = (tier?: string) => {
-        if (tier === 'pro_plus') return 2;
-        if (tier === 'pro') return 1;
-        return 0;
-      };
-
-      const aTier = tierScore(a.shop.subscriptionTier);
-      const bTier = tierScore(b.shop.subscriptionTier);
-
-      if (aTier !== bTier) return bTier - aTier; // PRO+ > PRO > Free
-
-      // Same tier and band, sort by Drip Score
-      const scoreA = a.shop.dripScore || 0;
-      const scoreB = b.shop.dripScore || 0;
-      return scoreB - scoreA;
-    });
-
-    displayShops = shopsWithDistance.map(s => s.shop);
-  } else if (!isDefaultView) {
-    // Filtered view (Vibes/Search)
-    displayShops.sort((a, b) => {
-      const tierScore = (tier?: string) => {
-        if (tier === 'pro_plus') return 2;
-        if (tier === 'pro') return 1;
-        return 0;
-      };
-
-      const aTier = tierScore(a.subscriptionTier);
-      const bTier = tierScore(b.subscriptionTier);
-
-      if (aTier !== bTier) return bTier - aTier;
-
-      const scoreA = a.dripScore || 0;
-      const scoreB = b.dripScore || 0;
-      return scoreB - scoreA;
-    });
-  } else {
-    // Default View (No filters)
-    // First 3 listings: The 3 newest added listings (array comes pre-sorted by `created_at` DESC)
-    const top3Newest = displayShops.slice(0, 3);
-    const remaining = displayShops.slice(3);
-
-    // Next 10 listings: The most recent PRO+ and PRO subscriptions
-    const proShops = remaining.filter(s => s.subscriptionTier === 'pro_plus' || s.subscriptionTier === 'pro');
-    const freeShops = remaining.filter(s => s.subscriptionTier !== 'pro_plus' && s.subscriptionTier !== 'pro');
-
-    const next10Pro = proShops.slice(0, 10);
-
-    // The Rest: Remaining PROs + all free shops, sorted by Drip Score
-    const theRest = [...proShops.slice(10), ...freeShops];
-    theRest.sort((a, b) => {
-      const scoreA = a.dripScore || 0;
-      const scoreB = b.dripScore || 0;
-      return scoreB - scoreA;
-    });
-
-    displayShops = [...top3Newest, ...next10Pro, ...theRest];
-  }
-
-  const filteredShops = displayShops;
-
-  const handleShopClick = (id: string) => {
-    navigate(`/shop/${id}`);
+  const handleToggleSave = (shopId: string, shopName: string) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    const wasSaved = user.savedShops.includes(shopId);
+    toggleSaveShop(shopId);
+    toast.success(wasSaved ? `Removed ${shopName} from saved` : 'Saved for later');
   };
 
+  const isFiltered = activeVibe !== null;
 
   return (
-    <div className="h-[calc(100dvh-4rem)] mt-16 flex flex-col md:flex-row overflow-hidden relative w-full">
-      {/* Filters & List Section */}
-      <div className={`
-        flex-col bg-coffee-50 w-full md:w-[450px] flex-shrink-0 border-r border-coffee-200 h-full relative z-10
-        ${viewMode === 'map' ? 'hidden md:flex' : 'flex'}
-      `}>
-        {/* Search & Filter Header */}
-        <div className="p-4 border-b border-coffee-200 space-y-4 bg-white z-10 shadow-sm">
-          <div className="relative">
-            <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-coffee-800/50"></i>
-            <input
-              type="text"
-              placeholder="Search city (e.g. London), shop, or matcha..."
-              className="w-full pl-10 pr-4 py-3 bg-coffee-50 border-none rounded-xl focus:ring-2 focus:ring-volt-400 text-coffee-900 placeholder-coffee-800/50"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+    <div className="min-h-dvh" style={{ background: '#1e1712' }}>
+      {/* ── Sticky glass header ─────────────────────────────────────────── */}
+      <header
+        className="fixed inset-x-0 top-0 z-30 border-b border-white/[0.07]"
+        style={{ background: 'rgba(23,18,14,0.82)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)' }}
+      >
+        <div className="mx-auto max-w-md px-5 pb-3 pt-2">
+          {/* Row 1 */}
+          <div className="flex items-center justify-between py-1.5">
+            <div className="flex items-center gap-3">
+              {isFiltered ? (
+                <button
+                  onClick={clearVibe}
+                  aria-label="Back to full feed"
+                  className="flex h-8 w-8 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-volt-400"
+                  style={{ background: '#2b221b' }}
+                >
+                  <i className="fas fa-arrow-left text-sm" style={{ color: '#f3efe0' }}></i>
+                </button>
+              ) : (
+                <button
+                  onClick={() => setDrawerOpen(true)}
+                  aria-label="Open menu"
+                  className="flex h-9 w-9 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-volt-400"
+                  style={{ background: '#2b221b' }}
+                >
+                  <i className="fas fa-bars" style={{ color: '#f3efe0' }}></i>
+                </button>
+              )}
+              {isFiltered ? (
+                <p className="font-serif text-[19px] font-black" style={{ color: '#f3efe0', letterSpacing: '-0.02em' }}>
+                  {activeVibe}
+                  <span className="ml-1.5 font-sans text-[13px] font-medium" style={{ color: 'rgba(243,239,224,0.5)' }}>
+                    · {feedShops.length} spot{feedShops.length !== 1 ? 's' : ''}
+                  </span>
+                </p>
+              ) : (
+                <img src="/logo-dark.jpg" alt="DripMap" className="h-[22px] w-auto rounded" />
+              )}
+            </div>
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => setSearchOpen(o => !o)}
+                aria-label="Search"
+                className="flex h-9 w-9 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-volt-400"
+                style={{ background: '#2b221b' }}
+              >
+                <i className="fas fa-search text-sm" style={{ color: '#f3efe0' }}></i>
+              </button>
+              {user && <NotificationBell />}
+              {user ? (
+                <Link
+                  to={`/profile/${user.id}`}
+                  className="block h-9 w-9 overflow-hidden rounded-full focus:outline-none focus:ring-2 focus:ring-volt-400"
+                  style={{ border: '2px solid #ccff00' }}
+                >
+                  <img src={user.avatarUrl} alt={user.username} className="h-full w-full object-cover" />
+                </Link>
+              ) : (
+                <Link
+                  to="/auth"
+                  className="rounded-full px-3.5 py-2 text-[11px] font-extrabold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-volt-400"
+                  style={{ background: '#ccff00', color: '#231b15' }}
+                >
+                  Sign in
+                </Link>
+              )}
+            </div>
           </div>
 
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-            {/* Near Me Button */}
+          {/* Search input (toggled) */}
+          {searchOpen && (
+            <div className="relative py-1.5">
+              <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-sm" style={{ color: 'rgba(243,239,224,0.45)' }}></i>
+              <input
+                autoFocus
+                type="text"
+                placeholder="Search shop, city, or matcha…"
+                className="w-full rounded-xl border-none py-2.5 pl-10 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-volt-400"
+                style={{ background: '#2b221b', color: '#f3efe0' }}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          )}
+
+          {/* Row 2: vibe filter chips */}
+          <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 pt-1.5">
             <button
-              onClick={handleNearMe}
-              disabled={locationLoading}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 ${nearMeActive
-                ? 'bg-volt-400 text-coffee-900'
-                : 'bg-coffee-100 text-coffee-700 hover:bg-coffee-200'
-                } ${locationLoading ? 'opacity-50 cursor-wait' : ''}`}
+              onClick={() => setViewMode(m => (m === 'map' ? 'feed' : 'map'))}
+              className="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-volt-400"
+              style={
+                viewMode === 'map'
+                  ? { background: '#ccff00', color: '#231b15' }
+                  : { background: '#2b221b', color: '#e4ddce', border: '1px solid rgba(255,255,255,0.09)' }
+              }
             >
-              <i className={`fas ${locationLoading ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'}`}></i>
-              Near Me
+              <i className="fas fa-map"></i>
+              Map
+            </button>
+            <button
+              onClick={() => { if (isFiltered) clearVibe(); setViewMode('feed'); }}
+              className="shrink-0 rounded-full px-3.5 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-volt-400"
+              style={
+                !isFiltered && viewMode === 'feed'
+                  ? { background: '#ccff00', color: '#231b15' }
+                  : { background: '#2b221b', color: '#e4ddce', border: '1px solid rgba(255,255,255,0.09)' }
+              }
+            >
+              Just Added
             </button>
             {ALL_VIBES.map(vibe => (
-              <TagChip
+              <button
                 key={vibe}
-                label={vibe}
-                isSelected={selectedVibes.includes(vibe)}
-                onClick={() => toggleVibe(vibe)}
-              />
+                onClick={() => { selectVibe(vibe); setViewMode('feed'); }}
+                className="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-volt-400"
+                style={
+                  activeVibe === vibe
+                    ? { background: '#ccff00', color: '#231b15' }
+                    : { background: '#2b221b', color: '#e4ddce', border: '1px solid rgba(255,255,255,0.09)' }
+                }
+              >
+                {vibe}
+                {activeVibe === vibe && <i className="fas fa-xmark"></i>}
+              </button>
             ))}
           </div>
-          {locationError && (
-            <p className="text-xs text-red-500 mt-1">{locationError}</p>
-          )}
-          {nearMeActive && (
-            <p className="text-xs text-volt-600 mt-1">
-              <i className="fas fa-check-circle mr-1"></i>
-              Showing spots within 100 miles
-            </p>
-          )}
         </div>
+      </header>
 
-        {/* Shop List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {/* DUAL CTA CAROUSEL BANNER - Scout Bounty & DripClub */}
-          <div className="relative h-16 overflow-hidden rounded-2xl bg-coffee-900 shadow-sm border border-coffee-800 group">
-            {/* Slide 1: Scout Bounty */}
-            <Link
-              to="/scout-bounty"
-              className={`absolute inset-0 p-4 flex items-center justify-between transition-all duration-1000 ease-in-out ${bannerIndex === 0 ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'}`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-volt-400 flex items-center justify-center text-coffee-900 shrink-0 shadow-lg">
-                  <i className="fas fa-dollar-sign"></i>
-                </div>
-                <div>
-                  <p className="text-volt-400 font-black text-[11px] uppercase tracking-wider">Scout Bounty Program</p>
-                  <p className="text-white/60 text-[10px] font-bold">Earn $10.00 for every spot you map</p>
-                </div>
-              </div>
-              <div className="bg-white/5 w-7 h-7 rounded-full flex items-center justify-center group-hover:bg-volt-400 group-hover:text-coffee-900 transition-all border border-white/10">
-                <i className="fas fa-chevron-right text-[10px] text-white group-hover:text-coffee-900"></i>
-              </div>
-            </Link>
-
-            {/* Slide 2: DripClub Membership */}
-            <Link
-              to="/dripclub"
-              className={`absolute inset-0 p-4 flex items-center justify-between transition-all duration-1000 ease-in-out ${bannerIndex === 1 ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-coffee-100 flex items-center justify-center text-coffee-900 shrink-0 shadow-lg">
-                  <i className="fas fa-droplet text-coffee-900"></i>
-                </div>
-                <div>
-                  <p className="text-volt-400 font-black text-[11px] uppercase tracking-wider">Join DripClub • First Month Free</p>
-                  <p className="text-white/60 text-[10px] font-bold">10% OFF PRO+ Shops • Only $0.99/mo</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="text-right hidden sm:block">
-                  <p className="text-white font-black text-[10px] leading-none">$0.99</p>
-                  <p className="text-white/40 text-[8px] font-bold uppercase">/month</p>
-                </div>
-                <div className="bg-volt-400 w-7 h-7 rounded-full flex items-center justify-center group-hover:bg-white group-hover:scale-110 transition-all shadow-lg">
-                  <i className="fas fa-plus text-[10px] text-coffee-900"></i>
-                </div>
-              </div>
-            </Link>
-
-            {/* Progress Indicators */}
-            <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
-              <div className={`h-1 rounded-full transition-all duration-500 ${bannerIndex === 0 ? 'w-6 bg-volt-400' : 'w-1.5 bg-white/20'}`}></div>
-              <div className={`h-1 rounded-full transition-all duration-500 ${bannerIndex === 1 ? 'w-6 bg-volt-400' : 'w-1.5 bg-white/20'}`}></div>
-            </div>
-          </div>
-
+      {/* ── Map view (preserved from the previous Home) ─────────────────── */}
+      {viewMode === 'map' ? (
+        <div className="fixed inset-x-0 bottom-[82px] top-[118px]">
+          <Map shops={feedShops} onShopClick={(id) => navigate(`/shop/${id}`)} userLocation={userLocation} />
+        </div>
+      ) : (
+        /* ── "Just Added" big-card feed ─────────────────────────────────── */
+        <main className="mx-auto max-w-md px-4 pb-[100px] pt-[130px]">
           {shopsLoading ? (
-            /* Skeleton loader while shops are fetching */
             <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-coffee-100 animate-pulse">
-                  <div className="h-36 bg-coffee-100"></div>
-                  <div className="p-3 space-y-2">
-                    <div className="h-4 bg-coffee-100 rounded-full w-3/4"></div>
-                    <div className="h-3 bg-coffee-100 rounded-full w-1/2"></div>
-                    <div className="flex gap-2 mt-2">
-                      <div className="h-6 bg-coffee-100 rounded-full w-16"></div>
-                      <div className="h-6 bg-coffee-100 rounded-full w-20"></div>
-                    </div>
-                  </div>
-                </div>
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-[548px] animate-pulse rounded-3xl" style={{ background: '#2b221b' }}></div>
               ))}
             </div>
-          ) : filteredShops.length === 0 ? (
-            <div className="text-center py-10 text-coffee-800/60">
-              <i className="fas fa-globe-americas text-4xl mb-4"></i>
-              <p>{nearMeActive ? 'No spots found within 100 miles.' : 'No spots found in this area.'}</p>
-              <button onClick={() => { setSearchQuery(''); setNearMeActive(false); }} className="mt-2 text-volt-500 font-bold text-sm hover:underline">Clear Filters</button>
+          ) : feedShops.length === 0 ? (
+            <div className="flex flex-col items-center gap-4 py-24 text-center">
+              <i className="fas fa-mug-hot text-4xl" style={{ color: 'rgba(243,239,224,0.25)' }}></i>
+              <p className="text-[15px] font-medium" style={{ color: '#e4ddce' }}>
+                No spots here yet. Be the first to map one.
+              </p>
+              <Link
+                to="/add"
+                className="rounded-full px-5 py-3 text-sm font-extrabold focus:outline-none focus:ring-2 focus:ring-volt-400"
+                style={{ background: '#2b221b', color: '#ccff00', border: '1px solid rgba(255,255,255,0.09)' }}
+              >
+                <i className="fas fa-plus mr-2"></i>
+                Add a Shop
+              </Link>
             </div>
           ) : (
-            filteredShops.map(shop => (
-              <ShopCard key={shop.id} shop={shop} />
-            ))
+            <div className="space-y-4">
+              {visibleShops.map((shop, i) => (
+                <DiscoverCard
+                  key={shop.id}
+                  shop={shop}
+                  isSaved={!!user?.savedShops.includes(shop.id)}
+                  onToggleSave={() => handleToggleSave(shop.id, shop.name)}
+                  distanceMi={distanceFor(shop.location?.lat, shop.location?.lng)}
+                  categoryBadge={isFiltered ? String(activeVibe) : null}
+                  eager={i < 2}
+                  savers={saversByShop[shop.id]}
+                />
+              ))}
+              {visibleCount < feedShops.length && (
+                <div ref={sentinelRef} className="flex justify-center py-6">
+                  <i className="fas fa-spinner fa-spin text-xl" style={{ color: 'rgba(243,239,224,0.45)' }}></i>
+                </div>
+              )}
+            </div>
           )}
-        </div>
-      </div>
+        </main>
+      )}
 
-      {/* Map Section */}
-      <div className={`
-        flex-1 bg-coffee-100 min-h-0 h-full w-full
-        ${viewMode === 'list' ? 'absolute inset-0 opacity-0 pointer-events-none z-[-10] md:relative md:opacity-100 md:pointer-events-auto md:z-0 md:block' : 'absolute inset-0 z-0 block md:relative'}
-      `}>
-        {/* Floating Search Bar (Mobile Only) */}
-        <div className="absolute top-4 left-4 right-16 z-[500] md:hidden pointer-events-auto">
-          <div className="relative shadow-lg rounded-xl">
-            <i className="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-coffee-800/50"></i>
-            <input
-              type="text"
-              placeholder="Search map..."
-              className="w-full pl-11 pr-4 py-3 bg-white/95 backdrop-blur-sm border border-coffee-100 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none text-coffee-900 text-sm font-bold"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <Map shops={filteredShops} onShopClick={handleShopClick} userLocation={userLocation} />
-      </div>
-
-      {/* Mobile View Toggle */}
-      <div className="md:hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-coffee-900 text-volt-400 rounded-full shadow-xl z-[1000] p-1 flex">
-        <button
-          onClick={() => setViewMode('list')}
-          className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${viewMode === 'list' ? 'bg-volt-400 text-coffee-900' : 'text-volt-400'}`}
-        >
-          List
-        </button>
-        <button
-          onClick={() => setViewMode('map')}
-          className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${viewMode === 'map' ? 'bg-volt-400 text-coffee-900' : 'text-volt-400'}`}
-        >
-          Map
-        </button>
-      </div>
+      <MenuDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <BottomTabBar />
     </div>
   );
 };

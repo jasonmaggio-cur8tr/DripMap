@@ -417,6 +417,8 @@ export const fetchShops = async (): Promise<Shop[]> => {
           plantMilks: shop.plant_milks || [],
           // Map Drip Score
           dripScore: shop.shop_aggregates?.drip_score,
+          // Listing recency (drives the "Just Added" badge)
+          createdAt: shop.created_at,
         }));
 
 
@@ -1534,6 +1536,36 @@ export const acceptCoffeeDateInvite = async (inviteId: string) => {
   } catch (error) {
     console.error("Error accepting invite:", error);
     return { success: false, error };
+  }
+};
+
+/**
+ * Batched "who likes these shops" for the Discover feed — one query for a
+ * page of cards. Returns shopId → savers (id, username, avatarUrl).
+ */
+export const fetchSaversForShops = async (
+  shopIds: string[]
+): Promise<Record<string, { id: string; username: string; avatarUrl?: string }[]>> => {
+  if (shopIds.length === 0) return {};
+  try {
+    const { data, error } = await supabase
+      .from("saved_shops")
+      .select("shop_id, profiles(id, username, avatar_url)")
+      .in("shop_id", shopIds);
+    if (error) throw error;
+    const byShop: Record<string, { id: string; username: string; avatarUrl?: string }[]> = {};
+    (data || []).forEach((r: any) => {
+      if (!r.profiles?.id) return;
+      (byShop[r.shop_id] ||= []).push({
+        id: r.profiles.id,
+        username: r.profiles.username,
+        avatarUrl: r.profiles.avatar_url,
+      });
+    });
+    return byShop;
+  } catch (error) {
+    console.error("Error fetching shop savers:", error);
+    return {};
   }
 };
 
