@@ -4,8 +4,8 @@ import { Shop } from '../../types';
 import { sizedImageUrl } from '../../lib/imageUrl';
 import { countryFlag } from '../../lib/countryFlag';
 
-// Glass capsule background opacity (Jason iterating on this — spec was 0.72).
-const CAPSULE_ALPHA = 0.55;
+// Glass capsule background opacity (Jason's pick 2026-07-11; spec was 0.72).
+const CAPSULE_ALPHA = 0.4;
 
 // Dark Roast big shop card (design_handoff_dark_roast/README.md → Screen 1).
 // Full-bleed photo, top badge + save heart, bottom glass detail capsule.
@@ -41,11 +41,9 @@ interface DiscoverCardProps {
   eager?: boolean;
   /** Users who saved ("like") this shop — shown as a facepile in the capsule. */
   savers?: { id: string; username: string; avatarUrl?: string }[];
-  /** TEMP (design review): override capsule opacity + show a corner label. */
-  demoAlpha?: number;
 }
 
-const DiscoverCard: React.FC<DiscoverCardProps> = ({ shop, isSaved, onToggleSave, distanceMi, categoryBadge, eager, savers, demoAlpha }) => {
+const DiscoverCard: React.FC<DiscoverCardProps> = ({ shop, isSaved, onToggleSave, distanceMi, categoryBadge, eager, savers }) => {
   const photo = shop.gallery?.[0]?.url;
   const addedLabel = categoryBadge ? null : justAddedLabel(shop.createdAt);
   const tint = categoryBadge ? CATEGORY_TINTS[categoryBadge] ?? { bg: 'rgba(204,255,0,0.92)', text: '#231b15' } : null;
@@ -121,20 +119,10 @@ const DiscoverCard: React.FC<DiscoverCardProps> = ({ shop, isSaved, onToggleSave
         <i className={`${isSaved ? 'fas' : 'far'} fa-heart text-lg`} style={{ color: isSaved ? '#ccff00' : '#fff' }}></i>
       </button>
 
-      {/* TEMP (design review): variant label */}
-      {demoAlpha != null && (
-        <span
-          className="absolute right-4 top-16 rounded-full px-2.5 py-1 text-[10px] font-black uppercase"
-          style={{ background: '#fff', color: '#231b15', letterSpacing: '0.05em' }}
-        >
-          Opacity {demoAlpha}
-        </span>
-      )}
-
       {/* Glass detail capsule */}
       <div
         className="absolute inset-x-3.5 bottom-3.5 rounded-[20px] border border-white/10 px-[18px] py-4"
-        style={{ background: `rgba(35,27,21,${demoAlpha ?? CAPSULE_ALPHA})`, backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)' }}
+        style={{ background: `rgba(35,27,21,${CAPSULE_ALPHA})`, backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)' }}
         data-capsule
       >
         <div className="flex items-start justify-between gap-3">

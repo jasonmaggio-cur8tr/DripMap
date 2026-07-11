@@ -126,27 +126,6 @@ const Home: React.FC = () => {
 
   const isFiltered = activeVibe !== null;
 
-  // ── TEMP (design review — remove after Jason picks) ────────────────────
-  // First three cards demo capsule opacities 0.72 / 0.55 / 0.40, each with a
-  // mocked facepile so the "who likes" treatment is visible without the RLS
-  // policy change. Real savers data replaces this once approved.
-  const DEMO_ALPHAS = [0.72, 0.55, 0.4];
-  const DEMO_SAVERS = [
-    { id: 'demo-1', username: 'toni' },
-    { id: 'demo-2', username: 'jason' },
-    { id: 'demo-3', username: 'nancy' },
-    { id: 'demo-4', username: 'malik' },
-    { id: 'demo-5', username: 'riley' },
-    { id: 'demo-6', username: 'sam' },
-    { id: 'demo-7', username: 'ava' },
-    { id: 'demo-8', username: 'kai' },
-    { id: 'demo-9', username: 'mia' },
-    { id: 'demo-10', username: 'leo' },
-    { id: 'demo-11', username: 'zoe' },
-    { id: 'demo-12', username: 'max' },
-  ];
-  // ────────────────────────────────────────────────────────────────────────
-
   return (
     <div className="min-h-dvh" style={{ background: '#1e1712' }}>
       {/* ── Sticky glass header ─────────────────────────────────────────── */}
@@ -318,8 +297,7 @@ const Home: React.FC = () => {
                   distanceMi={distanceFor(shop.location?.lat, shop.location?.lng)}
                   categoryBadge={isFiltered ? String(activeVibe) : null}
                   eager={i < 2}
-                  savers={!isFiltered && i < 3 ? DEMO_SAVERS : saversByShop[shop.id]}
-                  demoAlpha={!isFiltered && i < 3 ? DEMO_ALPHAS[i] : undefined}
+                  savers={saversByShop[shop.id]}
                 />
               ))}
               {visibleCount < feedShops.length && (
