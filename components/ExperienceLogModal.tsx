@@ -88,26 +88,26 @@ const ExperienceLogModal: React.FC<ExperienceLogModalProps> = ({
         return (
             <div className="mb-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="flex justify-between items-end mb-2">
-                    <label className="font-serif font-bold text-coffee-900 text-lg flex items-center gap-2">
+                    <label className="font-serif font-bold text-lg flex items-center gap-2" style={{ color: '#f3efe0' }}>
                         {label}
                         {optional && !isSet && (
-                            <span className="text-xs font-sans font-normal text-coffee-400 bg-coffee-50 px-2 py-0.5 rounded-full">
+                            <span className="text-xs font-sans font-normal px-2 py-0.5 rounded-full" style={{ background: '#2f251d', color: 'rgba(243,239,224,0.5)' }}>
                                 Optional
                             </span>
                         )}
                     </label>
-                    <span className="text-volt-500 font-bold font-mono">
+                    <span className="text-volt-400 font-bold font-mono">
                         {isSet ? value : '-'}
                     </span>
                 </div>
 
                 {helperText && (
-                    <p className="text-sm text-coffee-500 mb-3">{helperText}</p>
+                    <p className="text-sm mb-3" style={{ color: 'rgba(243,239,224,0.5)' }}>{helperText}</p>
                 )}
 
                 <div className="relative h-12 flex items-center">
                     {/* Track */}
-                    <div className="absolute w-full h-2 bg-coffee-100 rounded-full overflow-hidden">
+                    <div className="absolute w-full h-2 rounded-full overflow-hidden" style={{ background: '#2f251d' }}>
                         {/* Fill */}
                         <div
                             className="h-full bg-gradient-to-r from-coffee-800 to-volt-400 transition-all duration-100"
@@ -129,7 +129,7 @@ const ExperienceLogModal: React.FC<ExperienceLogModalProps> = ({
                     {/* Thumb (Visual only, follows value) */}
                     {isSet && (
                         <div
-                            className="absolute h-6 w-6 bg-white border-2 border-coffee-900 rounded-full shadow-lg pointer-events-none flex items-center justify-center transform -translate-x-1/2"
+                            className="absolute h-6 w-6 bg-[#f3efe0] border-2 border-[#231b15] rounded-full shadow-lg pointer-events-none flex items-center justify-center transform -translate-x-1/2"
                             style={{ left: `${((value - min) / (max - min)) * 100}%` }}
                         >
                             <div className="w-2 h-2 bg-volt-400 rounded-full"></div>
@@ -146,7 +146,7 @@ const ExperienceLogModal: React.FC<ExperienceLogModalProps> = ({
                     )}
                 </div>
 
-                <div className="flex justify-between text-xs text-coffee-400 font-medium uppercase tracking-wide mt-1">
+                <div className="flex justify-between text-xs font-medium uppercase tracking-wide mt-1" style={{ color: 'rgba(243,239,224,0.5)' }}>
                     <span>{leftLabel}</span>
                     <span>{rightLabel}</span>
                 </div>
@@ -154,7 +154,8 @@ const ExperienceLogModal: React.FC<ExperienceLogModalProps> = ({
                 {optional && isSet && (
                     <button
                         onClick={() => onChange(null)}
-                        className="text-xs text-coffee-400 hover:text-red-500 underline mt-2"
+                        className="text-xs hover:text-red-400 underline mt-2"
+                        style={{ color: 'rgba(243,239,224,0.5)' }}
                     >
                         Clear this rating
                     </button>
@@ -165,20 +166,20 @@ const ExperienceLogModal: React.FC<ExperienceLogModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-coffee-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-coffee-100 flex flex-col max-h-[90vh] overflow-hidden relative">
+            <div className="rounded-3xl w-full max-w-lg shadow-2xl border border-white/[0.09] flex flex-col max-h-[90vh] overflow-hidden relative" style={{ background: '#221a14' }}>
 
                 {/* Header */}
-                <div className="p-6 border-b border-coffee-50 flex justify-between items-center bg-white z-10">
+                <div className="p-6 border-b border-white/[0.07] flex justify-between items-center z-10" style={{ background: '#221a14' }}>
                     <div>
-                        <h2 className="text-xl font-serif font-bold text-coffee-900 leading-tight">
+                        <h2 className="text-xl font-serif font-black leading-tight" style={{ color: '#f3efe0', letterSpacing: '-0.02em' }}>
                             Experience Log
                         </h2>
-                        <p className="text-sm text-coffee-500">
+                        <p className="text-sm" style={{ color: 'rgba(243,239,224,0.5)' }}>
                             {shopName}
                         </p>
                     </div>
-                    <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-coffee-50 transition-colors">
-                        <i className="fas fa-times text-coffee-400"></i>
+                    <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400" style={{ background: '#2b221b' }}>
+                        <i className="fas fa-times" style={{ color: '#f3efe0' }}></i>
                     </button>
                 </div>
 
@@ -188,8 +189,8 @@ const ExperienceLogModal: React.FC<ExperienceLogModalProps> = ({
                     {step === 1 && (
                         <>
                             <div className="mb-2">
-                                <span className="text-xs font-bold text-volt-500 uppercase tracking-widest mb-1 block">Step 1 of 3</span>
-                                <h3 className="text-lg font-bold text-coffee-900 mb-6">The Core Signal</h3>
+                                <span className="text-xs font-bold text-volt-400 uppercase tracking-widest mb-1 block">Step 1 of 3</span>
+                                <h3 className="text-lg font-bold mb-6" style={{ color: '#f3efe0' }}>The Core Signal</h3>
                             </div>
 
                             <SliderField
@@ -203,10 +204,10 @@ const ExperienceLogModal: React.FC<ExperienceLogModalProps> = ({
 
                             <div className="mb-0">
                                 <div className="flex justify-between items-end mb-3">
-                                    <label className="font-serif font-bold text-coffee-900 text-lg">Bring a Friend?</label>
-                                    <span className="text-volt-500 font-bold font-mono text-xl">{formData.bringFriendScore}</span>
+                                    <label className="font-serif font-bold text-lg" style={{ color: '#f3efe0' }}>Bring a Friend?</label>
+                                    <span className="text-volt-400 font-bold font-mono text-xl">{formData.bringFriendScore}</span>
                                 </div>
-                                <p className="text-sm text-coffee-500 mb-4">How likely are you to bring or recommend to a friend?</p>
+                                <p className="text-sm mb-4" style={{ color: 'rgba(243,239,224,0.5)' }}>How likely are you to bring or recommend to a friend?</p>
 
                                 <div className="flex justify-between gap-1">
                                     {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
@@ -216,8 +217,8 @@ const ExperienceLogModal: React.FC<ExperienceLogModalProps> = ({
                                             className={`
                         flex-1 h-10 rounded-lg text-sm font-bold transition-all
                         ${formData.bringFriendScore === num
-                                                    ? 'bg-coffee-900 text-volt-400 transform scale-110 shadow-lg'
-                                                    : 'bg-coffee-50 text-coffee-400 hover:bg-coffee-100'
+                                                    ? 'bg-volt-400 text-[#231b15] transform scale-110 shadow-lg'
+                                                    : 'bg-[#2f251d] text-[#e4ddce] hover:bg-[#382d23]'
                                                 }
                       `}
                                         >
@@ -225,7 +226,7 @@ const ExperienceLogModal: React.FC<ExperienceLogModalProps> = ({
                                         </button>
                                     ))}
                                 </div>
-                                <div className="flex justify-between text-xs text-coffee-400 font-medium uppercase tracking-wide mt-2">
+                                <div className="flex justify-between text-xs font-medium uppercase tracking-wide mt-2" style={{ color: 'rgba(243,239,224,0.5)' }}>
                                     <span>Not Likely</span>
                                     <span>Absolutely</span>
                                 </div>
@@ -236,8 +237,8 @@ const ExperienceLogModal: React.FC<ExperienceLogModalProps> = ({
                     {step === 2 && (
                         <>
                             <div className="mb-2">
-                                <span className="text-xs font-bold text-volt-500 uppercase tracking-widest mb-1 block">Step 2 of 3</span>
-                                <h3 className="text-lg font-bold text-coffee-900 mb-6">Refine the Vibe (Optional)</h3>
+                                <span className="text-xs font-bold text-volt-400 uppercase tracking-widest mb-1 block">Step 2 of 3</span>
+                                <h3 className="text-lg font-bold mb-6" style={{ color: '#f3efe0' }}>Refine the Vibe (Optional)</h3>
                             </div>
 
                             <SliderField
@@ -301,33 +302,35 @@ const ExperienceLogModal: React.FC<ExperienceLogModalProps> = ({
                     {step === 3 && (
                         <>
                             <div className="mb-2">
-                                <span className="text-xs font-bold text-volt-500 uppercase tracking-widest mb-1 block">Step 3 of 3</span>
-                                <h3 className="text-lg font-bold text-coffee-900 mb-6">Final Thoughts</h3>
+                                <span className="text-xs font-bold text-volt-400 uppercase tracking-widest mb-1 block">Step 3 of 3</span>
+                                <h3 className="text-lg font-bold mb-6" style={{ color: '#f3efe0' }}>Final Thoughts</h3>
                             </div>
 
                             <div className="mb-6">
-                                <label className="block text-sm font-bold text-coffee-900 mb-2">
-                                    Quick Take <span className="text-coffee-400 font-normal">(Public)</span>
+                                <label className="block text-sm font-bold mb-2" style={{ color: '#f3efe0' }}>
+                                    Quick Take <span className="font-normal" style={{ color: 'rgba(243,239,224,0.5)' }}>(Public)</span>
                                 </label>
                                 <textarea
-                                    className="w-full p-4 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none text-coffee-900 placeholder-coffee-400"
+                                    className="w-full p-4 rounded-xl border-none text-sm font-medium focus:outline-none focus:ring-2 focus:ring-volt-400"
+                                    style={{ background: '#2f251d', color: '#f3efe0' }}
                                     rows={2}
                                     maxLength={140}
                                     placeholder="One sentence. What stood out?"
                                     value={formData.quickTake}
                                     onChange={e => setFormData(p => ({ ...p, quickTake: e.target.value }))}
                                 />
-                                <div className="text-right text-xs text-coffee-400 mt-1">
+                                <div className="text-right text-xs mt-1" style={{ color: 'rgba(243,239,224,0.5)' }}>
                                     {formData.quickTake.length}/140
                                 </div>
                             </div>
 
                             <div className="mb-6">
-                                <label className="block text-sm font-bold text-coffee-900 mb-2">
-                                    Private Feedback <span className="text-coffee-400 font-normal">(Owner Only)</span>
+                                <label className="block text-sm font-bold mb-2" style={{ color: '#f3efe0' }}>
+                                    Private Feedback <span className="font-normal" style={{ color: 'rgba(243,239,224,0.5)' }}>(Owner Only)</span>
                                 </label>
                                 <textarea
-                                    className="w-full p-4 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none text-coffee-900 placeholder-coffee-400"
+                                    className="w-full p-4 rounded-xl border-none text-sm font-medium focus:outline-none focus:ring-2 focus:ring-volt-400"
+                                    style={{ background: '#2f251d', color: '#f3efe0' }}
                                     rows={3}
                                     placeholder="Constructive feedback for the shop owner. They will appreciate it."
                                     value={formData.privateFeedback}
@@ -340,11 +343,12 @@ const ExperienceLogModal: React.FC<ExperienceLogModalProps> = ({
                 </div>
 
                 {/* Footer Actions */}
-                <div className="p-6 border-t border-coffee-50 bg-white z-10 flex gap-3">
+                <div className="p-6 border-t border-white/[0.07] z-10 flex gap-3" style={{ background: '#221a14' }}>
                     {step > 1 && (
                         <button
                             onClick={() => setStep(step - 1)}
-                            className="px-6 py-3 rounded-xl border border-coffee-200 text-coffee-600 font-bold hover:bg-coffee-50 transition-colors"
+                            className="px-6 py-3 rounded-full font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400"
+                            style={{ background: '#2b221b', color: '#e4ddce', border: '1px solid rgba(255,255,255,0.09)' }}
                         >
                             Back
                         </button>
