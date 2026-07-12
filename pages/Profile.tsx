@@ -11,7 +11,8 @@ import {
   formatPrice,
   getPricing,
 } from "../services/subscriptionService";
-import { fetchUserExperienceLogs } from "../services/dbService";
+import { fetchUserExperienceLogs, getUserBadgeAwards, previousMonthStart } from "../services/dbService";
+import BadgedAvatar from "../components/BadgedAvatar";
 import MenuDrawer from "../components/darkroast/MenuDrawer";
 import BottomTabBar from "../components/darkroast/BottomTabBar";
 import NotificationBell from "../components/NotificationBell";
@@ -127,6 +128,9 @@ const Profile: React.FC = () => {
   const [userLogs, setUserLogs] = useState<any[]>([]);
   const [logsLoading, setLogsLoading] = useState(false);
 
+  // Monthly badge awards (gamified leaderboards trophy case)
+  const [badgeAwards, setBadgeAwards] = useState<any[]>([]);
+
   const [editData, setEditData] = useState({
     username: "",
     bio: "",
@@ -241,6 +245,22 @@ const Profile: React.FC = () => {
 
     fetchLogs();
   }, [viewedUser?.id]);
+
+  // Fetch monthly badge awards (fails soft to [] pre-migration)
+  useEffect(() => {
+    const fetchBadges = async () => {
+      if (!viewedUser?.id) return;
+      const awards = await getUserBadgeAwards(viewedUser.id);
+      setBadgeAwards(awards);
+    };
+    fetchBadges();
+  }, [viewedUser?.id]);
+
+  // Only the reigning badge (last completed month's win) decorates the avatar
+  const headerBadgeAward = badgeAwards.find(a => a.month_start === previousMonthStart());
+  const headerBadge = headerBadgeAward?.badge
+    ? { emoji: headerBadgeAward.badge.emoji, name: headerBadgeAward.badge.name }
+    : null;
 
   // Handle manage membership click
   const handleManageMembership = async () => {
@@ -592,16 +612,25 @@ const Profile: React.FC = () => {
         >
           {/* Avatar Section */}
           <div className="flex-shrink-0 mx-auto md:mx-0 relative group">
-            <div
-              className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full overflow-hidden"
-              style={{ border: "2px solid #ccff00", background: TILE }}
-            >
-              <img
-                src={isEditing ? editData.avatarUrl : sizedImageUrl(viewedUser.avatarUrl, { width: 120 })}
+            {!isEditing && headerBadge ? (
+              <BadgedAvatar
+                avatarUrl={sizedImageUrl(viewedUser.avatarUrl, { width: 120 })}
                 alt={viewedUser.username}
-                className="w-full h-full object-cover"
+                size={96}
+                badge={headerBadge}
               />
-            </div>
+            ) : (
+              <div
+                className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full overflow-hidden"
+                style={{ border: "2px solid #ccff00", background: TILE }}
+              >
+                <img
+                  src={isEditing ? editData.avatarUrl : sizedImageUrl(viewedUser.avatarUrl, { width: 120 })}
+                  alt={viewedUser.username}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
             {isEditing && (
               <button
                 onClick={() => fileInputRef.current?.click()}
@@ -873,6 +902,36 @@ const Profile: React.FC = () => {
 
           <div className="p-3 sm:p-4 md:p-6 rounded-2xl sm:rounded-3xl border border-white/[0.06]" style={{ background: SURFACE }}>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+              {/* Monthly Badge Awards (trophy case) */}
+              {badgeAwards.map(award => {
+                const [y, m] = String(award.month_start).split("-").map(Number);
+                const monthLabel = new Date(y, (m || 1) - 1, 1).toLocaleString("en-US", {
+                  month: "long",
+                  year: "numeric",
+                });
+                return (
+                  <div
+                    key={award.id}
+                    className="aspect-square rounded-2xl flex flex-col items-center justify-center p-3 text-center border-2 transition-all duration-300 group scale-105 relative overflow-hidden"
+                    style={{ background: TILE, borderColor: "rgba(204,255,0,0.6)" }}
+                    title={award.badge?.description}
+                  >
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center mb-2 text-2xl relative z-10"
+                      style={{ background: "rgba(204,255,0,0.14)" }}
+                    >
+                      {award.badge?.emoji}
+                    </div>
+                    <h3 className="font-bold text-[10px] leading-tight mb-1 relative z-10" style={{ color: TEXT }}>
+                      {award.badge?.name}
+                    </h3>
+                    <p className="text-[9px] font-bold relative z-10" style={{ color: "#ccff00" }}>
+                      {monthLabel}
+                    </p>
+                  </div>
+                );
+              })}
+
               {/* Leaderboard Badges */}
               {viewedUser.leaderboardBadges?.map(badge => {
                 let borderColor = "rgba(250,204,21,0.6)"; // gold

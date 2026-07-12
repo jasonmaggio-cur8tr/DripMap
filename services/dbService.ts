@@ -1915,6 +1915,90 @@ export const getLeaderboard = async () => {
   }
 };
 
+// ==================== MONTHLY LEADERBOARDS (gamified-leaderboards-proposal.md) ====================
+// All reads fail soft (return []) so the UI renders gracefully before the
+// 006_monthly_leaderboards.sql migration has been applied.
+
+/** First day of the current calendar month as 'YYYY-MM-DD' (local time). */
+export const currentMonthStart = (): string => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+};
+
+/** First day of the previous calendar month as 'YYYY-MM-DD' (local time). */
+export const previousMonthStart = (): string => {
+  const now = new Date();
+  const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  return `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}-01`;
+};
+
+/** Monthly user stats for a month, with profile info. Sorted client-side per metric. */
+export const getMonthlyUserStats = async (monthStart: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("monthly_user_stats")
+      .select("*, profiles:user_id(username, avatar_url)")
+      .eq("month_start", monthStart)
+      .order("month_points", { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.warn("Monthly leaderboards: failed to get monthly user stats (006_monthly_leaderboards.sql applied yet?)", error);
+    return [];
+  }
+};
+
+/** Monthly shop stats for a month, with shop info. Sorted client-side per metric. */
+export const getMonthlyShopStats = async (monthStart: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("monthly_shop_stats")
+      .select("*, shops:shop_id(id, name, city, state, shop_images(url))")
+      .eq("month_start", monthStart)
+      .order("logs_count", { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.warn("Monthly leaderboards: failed to get monthly shop stats (006_monthly_leaderboards.sql applied yet?)", error);
+    return [];
+  }
+};
+
+/** Badge awards for a month (last month's champs), with badge/profile/shop info. */
+export const getBadgeAwards = async (monthStart: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("badge_awards")
+      .select(
+        "*, badge:badge_definitions(slug, name, emoji, description, scope), profile:profiles(username, avatar_url), shop:shops(id, name, city, shop_images(url))"
+      )
+      .eq("month_start", monthStart);
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.warn("Monthly leaderboards: failed to get badge awards (006_monthly_leaderboards.sql applied yet?)", error);
+    return [];
+  }
+};
+
+/** All badge awards for one user (profile trophy case), newest first. */
+export const getUserBadgeAwards = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("badge_awards")
+      .select("*, badge:badge_definitions(slug, name, emoji, description, scope)")
+      .eq("user_id", userId)
+      .order("month_start", { ascending: false });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.warn("Monthly leaderboards: failed to get user badge awards (006_monthly_leaderboards.sql applied yet?)", error);
+    return [];
+  }
+};
+
 export const fetchFollowingFeed = async (userId: string) => {
   try {
     const { data: follows } = await supabase
