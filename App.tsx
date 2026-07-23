@@ -19,6 +19,7 @@ import AdminEvents from './pages/admin/AdminEvents';
 import AdminCampaigns from './pages/admin/AdminCampaigns';
 import EventsFeed from './pages/EventsFeed';
 import DripClub from './pages/DripClub';
+import Redeem from './pages/Redeem';
 import ScoutBounty from './pages/ScoutBounty';
 import CoffeeDateAccept from './pages/CoffeeDateAccept';
 import Leaderboard from './pages/Leaderboard';
@@ -56,6 +57,7 @@ const App: React.FC = () => {
 
           <Route path="/events" element={<EventsFeed />} />
           <Route path="/dripclub" element={<DripClub />} />
+          <Route path="/redeem/:campaignId" element={<Redeem />} />
           <Route path="/scout-bounty" element={<ScoutBounty />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />

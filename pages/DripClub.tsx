@@ -6,6 +6,7 @@ import DripClubCard from '../components/DripClubCard';
 import LazyImage from '../components/LazyImage';
 import DripClubModal from '../components/DripClubModal';
 import BottomTabBar from '../components/darkroast/BottomTabBar';
+import FreeDrinkBanner from '../components/FreeDrinkBanner';
 import { sizedImageUrl } from '../lib/imageUrl';
 import {
   getDripClubMembership,
@@ -149,6 +150,8 @@ const DripClub: React.FC = () => {
           </div>
         </div>
       )}
+
+      <FreeDrinkBanner />
 
       {/* Hero Section */}
       <div className="relative overflow-hidden border-b border-white/[0.07]" style={{ background: '#231b15' }}>
