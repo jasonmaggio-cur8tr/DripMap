@@ -746,6 +746,9 @@ export const updateShopInDB = async (
     cheeky_vibes?: string[];
     custom_vibes?: string[];
     open_hours?: any;
+    brand_id?: string | null;
+    website_url?: string | null;
+    instagram_url?: string | null;
   }
 ) => {
   try {

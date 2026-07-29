@@ -28,6 +28,8 @@ const EditShop: React.FC = () => {
     country: '',
     address: '',
     description: '',
+    websiteUrl: '',
+    instagramUrl: '',
   });
 
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -100,7 +102,9 @@ const EditShop: React.FC = () => {
       state: shopToEdit.location.state,
       country: shopToEdit.location.country || '',
       address: shopToEdit.location.address,
-      description: shopToEdit.description
+      description: shopToEdit.description,
+      websiteUrl: shopToEdit.websiteUrl || '',
+      instagramUrl: shopToEdit.instagramUrl || '',
     });
     setLocation({
       lat: shopToEdit.location.lat,
@@ -271,6 +275,12 @@ const EditShop: React.FC = () => {
         custom_vibes: customVibes,
         open_hours: openHours,
         brand_id: finalBrandId || null,
+        website_url: formData.websiteUrl.trim() || null,
+        instagram_url: (() => {
+          const ig = formData.instagramUrl.trim().replace(/^@/, '');
+          if (!ig) return null;
+          return /^https?:\/\//i.test(ig) ? ig : `https://instagram.com/${ig}`;
+        })(),
       };
 
       const updateResult = await updateShopInDB(originalShop.id, shopUpdates);
@@ -452,6 +462,27 @@ const EditShop: React.FC = () => {
                   setLocation({ lat: loc.lat, lng: loc.lng });
                 }}
               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-coffee-900 mb-2">Website <span className="text-coffee-400 font-normal">(optional)</span></label>
+                <input
+                  placeholder="https://..."
+                  className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                  value={formData.websiteUrl}
+                  onChange={e => setFormData({ ...formData, websiteUrl: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-coffee-900 mb-2">Instagram <span className="text-coffee-400 font-normal">(handle or URL)</span></label>
+                <input
+                  placeholder="@yourshop"
+                  className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                  value={formData.instagramUrl}
+                  onChange={e => setFormData({ ...formData, instagramUrl: e.target.value })}
+                />
+              </div>
             </div>
           </section>
 
