@@ -124,6 +124,25 @@ const Leaderboard: React.FC = () => {
     const [userMetric, setUserMetric] = useState<UserMetric>("points");
     const [shopMetric, setShopMetric] = useState<ShopMetric>("logged");
 
+    // "Where do I stand RIGHT NOW" — always ranked by month points.
+    const standing = useMemo(() => {
+        if (!user?.id) return null;
+        const ranked = [...monthlyUsers]
+            .filter(s => (s.month_points as number) > 0)
+            .sort((a, b) => (b.month_points as number) - (a.month_points as number));
+        const idx = ranked.findIndex(s => s.user_id === user.id);
+        if (idx === -1) return { onBoard: false as const };
+        const me = ranked[idx];
+        const ahead = idx > 0 ? ranked[idx - 1] : null;
+        return {
+            onBoard: true as const,
+            rank: idx + 1,
+            points: me.month_points as number,
+            gap: ahead ? (ahead.month_points as number) - (me.month_points as number) : 0,
+            aheadName: ahead?.profiles?.username ?? null,
+        };
+    }, [monthlyUsers, user?.id]);
+
     useEffect(() => {
         const fetchAll = async () => {
             setLoading(true);
@@ -270,6 +289,35 @@ const Leaderboard: React.FC = () => {
                         <span>{countdownLabel()}</span>
                     </div>
                 </div>
+
+                {/* Your standing this month */}
+                {tab === "users" && standing && (
+                    <div
+                        className="mb-6 flex items-center gap-4 rounded-2xl border p-4"
+                        style={{ background: "rgba(204,255,0,0.10)", borderColor: "rgba(204,255,0,0.35)" }}
+                    >
+                        <div
+                            className="flex h-13 w-13 shrink-0 items-center justify-center rounded-full font-black"
+                            style={{ background: VOLT, color: "#231b15", width: 52, height: 52, fontFamily: "Fraunces, serif" }}
+                        >
+                            {standing.onBoard ? `#${standing.rank}` : "—"}
+                        </div>
+                        <div className="min-w-0">
+                            <div className="font-bold" style={{ color: TEXT }}>
+                                {standing.onBoard
+                                    ? `You're #${standing.rank} this month · ${standing.points.toLocaleString()} pts`
+                                    : "You're not on the board yet"}
+                            </div>
+                            <div className="text-sm font-semibold" style={{ color: VOLT }}>
+                                {standing.onBoard
+                                    ? standing.rank === 1
+                                        ? "You hold the crown. Defend it. 👑"
+                                        : `${standing.gap.toLocaleString()} pts behind ${standing.aheadName ? "@" + standing.aheadName : "the next spot"}`
+                                    : "Log a visit or a drink to enter this month's race →"}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Last month's champs */}
                 <div className="mb-6">
