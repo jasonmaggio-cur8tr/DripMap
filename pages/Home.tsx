@@ -133,7 +133,7 @@ const Home: React.FC = () => {
         className="fixed inset-x-0 top-0 z-30 border-b border-white/[0.07]"
         style={{ background: 'rgba(23,18,14,0.82)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)' }}
       >
-        <div className="mx-auto max-w-md px-5 pb-3 pt-2">
+        <div className="mx-auto max-w-md px-5 pb-3 pt-2 md:max-w-3xl lg:max-w-6xl">
           {/* Row 1 */}
           <div className="flex items-center justify-between py-1.5">
             <div className="flex items-center gap-3">
@@ -259,15 +259,15 @@ const Home: React.FC = () => {
 
       {/* ── Map view (preserved from the previous Home) ─────────────────── */}
       {viewMode === 'map' ? (
-        <div className="fixed inset-x-0 bottom-[82px] top-[118px]">
+        <div className="fixed inset-x-0 bottom-[82px] top-[118px] lg:bottom-0">
           <Map shops={feedShops} onShopClick={(id) => navigate(`/shop/${id}`)} userLocation={userLocation} />
         </div>
       ) : (
         /* ── "Just Added" big-card feed ─────────────────────────────────── */
-        <main className="mx-auto max-w-md px-4 pb-[100px] pt-[130px]">
+        <main className="mx-auto max-w-md px-4 pb-[100px] pt-[130px] md:max-w-3xl lg:max-w-6xl">
           {shopsLoading ? (
-            <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
+            <div className="space-y-4 md:grid md:grid-cols-2 md:gap-5 md:space-y-0 xl:grid-cols-3">
+              {[...Array(6)].map((_, i) => (
                 <div key={i} className="h-[548px] animate-pulse rounded-3xl" style={{ background: '#2b221b' }}></div>
               ))}
             </div>
@@ -287,7 +287,7 @@ const Home: React.FC = () => {
               </Link>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-4 md:grid md:grid-cols-2 md:gap-5 md:space-y-0 xl:grid-cols-3">
               {visibleShops.map((shop, i) => (
                 <DiscoverCard
                   key={shop.id}
