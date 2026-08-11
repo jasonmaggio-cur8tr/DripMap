@@ -19,10 +19,10 @@ const BottomTabBar: React.FC = () => {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-30 h-[82px] border-t border-white/[0.07]"
+      className="fixed bottom-0 left-0 right-0 z-30 h-[82px] border-t border-white/[0.07] lg:bottom-5 lg:left-1/2 lg:right-auto lg:h-[68px] lg:w-[400px] lg:-translate-x-1/2 lg:rounded-full lg:border lg:border-white/[0.07] lg:shadow-2xl"
       style={{ background: 'rgba(23,18,14,0.9)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)' }}
     >
-      <div className="mx-auto flex h-full max-w-md items-start justify-around pt-[11px]">
+      <div className="mx-auto flex h-full max-w-md items-start justify-around pt-[11px] lg:items-center lg:pt-0">
         {TABS.map(tab =>
           tab.key === 'add' ? (
             <Link
