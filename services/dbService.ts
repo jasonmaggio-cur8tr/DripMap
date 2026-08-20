@@ -386,6 +386,7 @@ export const fetchShops = async (): Promise<Shop[]> => {
           websiteUrl: shop.website_url,
           mapsUrl: shop.maps_url,
           onlineOrderUrl: shop.online_order_url,
+          parkingInfo: shop.parking_info,
 
           // Happening Now
           happeningNow: shop.happening_now_title ? {
@@ -547,6 +548,7 @@ export const fetchShopBySlug = async (slugOrId: string): Promise<Shop | null> =>
       websiteUrl: shop.website_url,
       mapsUrl: shop.maps_url,
       onlineOrderUrl: shop.online_order_url,
+      parkingInfo: shop.parking_info,
 
       happeningNow: shop.happening_now_title ? {
         id: shop.id,
@@ -749,6 +751,7 @@ export const updateShopInDB = async (
     brand_id?: string | null;
     website_url?: string | null;
     instagram_url?: string | null;
+    parking_info?: string | null;
   }
 ) => {
   try {

@@ -1379,6 +1379,14 @@ const ShopDetail: React.FC = () => {
                     {[shop.location.city, shop.location.state, shop.location.country].filter(Boolean).join(', ')}
                   </p>
                 </div>
+                {shop.parkingInfo && (
+                  <div className="mb-6">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[rgba(243,239,224,0.5)] mb-1">
+                      PARKING
+                    </p>
+                    <p className="text-[#e4ddce] text-sm">{shop.parkingInfo}</p>
+                  </div>
+                )}
                 <div className="mb-8">
                   <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[rgba(243,239,224,0.5)] mb-1">
                     HOURS
