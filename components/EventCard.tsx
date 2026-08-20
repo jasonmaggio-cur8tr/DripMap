@@ -24,6 +24,16 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
   const [attendeeCount, setAttendeeCount] = useState(event.attendeeCount || 0);
   const [recentAttendees, setRecentAttendees] = useState(event.attendees || []);
   const [showAttendeesModal, setShowAttendeesModal] = useState(false);
+  const [showCoverLightbox, setShowCoverLightbox] = useState(false);
+
+  // Event covers are usually flyers whose dates and lineups sit near the edges, but the
+  // card crops them square. Esc closes the full-size view.
+  useEffect(() => {
+    if (!showCoverLightbox) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowCoverLightbox(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showCoverLightbox]);
 
 
   useEffect(() => {
@@ -130,7 +140,14 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
       {/* Image Header (if exists) */}
       {event.coverImage && (
         <div className="relative w-full aspect-square overflow-hidden" style={{ background: '#2f251d' }}>
-          <LazyImage src={sizedImageUrl(event.coverImage.url, { width: 1080 }) || event.coverImage.url} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <button
+            type="button"
+            onClick={() => setShowCoverLightbox(true)}
+            aria-label={`View full flyer for ${event.title}`}
+            className="block w-full h-full cursor-zoom-in"
+          >
+            <LazyImage src={sizedImageUrl(event.coverImage.url, { width: 1080 }) || event.coverImage.url} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          </button>
           <div className="absolute top-2 right-2">
             <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full shadow-sm ${typeColors[event.eventType] || typeColors['Other']}`}>
               {event.eventType}
@@ -253,6 +270,32 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
           attendees={recentAttendees}
           onClose={() => setShowAttendeesModal(false)}
         />
+      )}
+
+      {showCoverLightbox && event.coverImage && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+          onClick={() => setShowCoverLightbox(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Full flyer for ${event.title}`}
+        >
+          <img
+            src={event.coverImage.url}
+            alt={event.title}
+            className="max-w-full max-h-full object-contain rounded-lg"
+            onClick={e => e.stopPropagation()}
+          />
+          <button
+            type="button"
+            onClick={() => setShowCoverLightbox(false)}
+            aria-label="Close"
+            className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-xl bg-black/60 hover:bg-black/80"
+            style={{ color: '#f3efe0' }}
+          >
+            <i className="fas fa-times"></i>
+          </button>
+        </div>
       )}
     </div>
   );
