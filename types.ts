@@ -246,6 +246,7 @@ export interface Shop {
 
   // Subscription fields (public)
   subscriptionTier?: SubscriptionTier;
+  parkingInfo?: string;
   subscriptionStatus?: SubscriptionStatus;
   proPlusDiscountEnabled?: boolean;
   subscriptionCurrentPeriodEnd?: string;

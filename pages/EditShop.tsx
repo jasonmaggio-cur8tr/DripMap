@@ -32,6 +32,8 @@ const EditShop: React.FC = () => {
     instagramUrl: '',
   });
 
+  const [parkingInfo, setParkingInfo] = useState('');
+  const [isProShop, setIsProShop] = useState(false);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedVibes, setSelectedVibes] = useState<Vibe[]>([]);
   const [selectedCheekyVibes, setSelectedCheekyVibes] = useState<string[]>([]);
@@ -114,6 +116,8 @@ const EditShop: React.FC = () => {
     setSelectedCheekyVibes(shopToEdit.cheekyVibes || []);
     setCustomVibes(shopToEdit.customVibes || []);
     setBrandId((shopToEdit as any).brandId || '');
+    setParkingInfo(shopToEdit.parkingInfo || '');
+    setIsProShop(shopToEdit.subscriptionTier === 'pro' || shopToEdit.subscriptionTier === 'pro_plus');
 
     // Load opening hours
     if (shopToEdit.openHours) {
@@ -281,6 +285,7 @@ const EditShop: React.FC = () => {
           if (!ig) return null;
           return /^https?:\/\//i.test(ig) ? ig : `https://instagram.com/${ig}`;
         })(),
+        ...(isProShop ? { parking_info: parkingInfo.trim() || null } : {}),
       };
 
       const updateResult = await updateShopInDB(originalShop.id, shopUpdates);
@@ -483,6 +488,27 @@ const EditShop: React.FC = () => {
                   onChange={e => setFormData({ ...formData, instagramUrl: e.target.value })}
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-coffee-900 mb-2">
+                Parking Info{' '}
+                <span className="ml-1 rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-purple-700">PRO</span>
+              </label>
+              {isProShop ? (
+                <textarea
+                  placeholder="e.g. Parking Pro Tip: there is free parking all day on the block behind our cafe."
+                  className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none resize-none"
+                  rows={3}
+                  value={parkingInfo}
+                  onChange={e => setParkingInfo(e.target.value)}
+                />
+              ) : (
+                <div className="flex items-center gap-3 rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 text-sm text-purple-700">
+                  <i className="fas fa-lock"></i>
+                  <span>Upgrade to PRO to share parking tips with visitors.</span>
+                </div>
+              )}
             </div>
           </section>
 
