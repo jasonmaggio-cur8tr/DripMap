@@ -661,14 +661,14 @@ export const addShopImages = async (
       type: img.type,
     }));
 
-    const { error } = await supabase.from("shop_images").insert(imageInserts).select();
+    const { data, error } = await supabase.from("shop_images").insert(imageInserts).select();
 
     if (error) {
       console.error('[addShopImages] Database insert error (RLS may be blocking):', error);
       throw error;
     }
 
-    return { success: true };
+    return { success: true, data: data || [] };
   } catch (error) {
     console.error("Error adding shop images:", error);
     return { success: false, error };
