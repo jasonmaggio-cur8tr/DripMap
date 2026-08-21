@@ -6,7 +6,7 @@ import { Shop, Vibe, ShopImage } from '../types';
 import { ALL_VIBES, CHEEKY_VIBES_OPTIONS } from '../constants';
 import { generateShopDescription } from '../services/geminiService';
 import { uploadImages } from '../services/storageService';
-import { updateShopInDB, addShopImages, deleteShopImage, fetchShops } from '../services/dbService';
+import { updateShopInDB, addShopImages, deleteShopImage, reorderShopImages, fetchShops } from '../services/dbService';
 import Button from '../components/Button';
 import TagChip from '../components/TagChip';
 import LocationPicker from '../components/LocationPicker';
@@ -192,6 +192,17 @@ const EditShop: React.FC = () => {
     setUploadedImages(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Reorder gallery images. The first image (index 0) is the hero shown on the shop card.
+  const moveImage = (from: number, to: number) => {
+    if (to < 0 || to >= uploadedImages.length || from === to) return;
+    setUploadedImages(prev => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -227,6 +238,7 @@ const EditShop: React.FC = () => {
 
       // 2. Handle New Uploads & Additions
       const newImagesToUpload = uploadedImages.filter(img => img.isNew && img.file);
+      const newIdByImage = new Map<any, string>();
 
       if (newImagesToUpload.length > 0) {
         console.log(`Uploading ${newImagesToUpload.length} new images...`);
@@ -240,7 +252,16 @@ const EditShop: React.FC = () => {
               url,
               type: 'owner' as const
             }));
-            await addShopImages(originalShop.id, newImagesData);
+            const addResult = await addShopImages(originalShop.id, newImagesData);
+            // Map freshly-inserted rows back to their image objects (by uploaded URL)
+            // so the gallery order below can include newly added photos.
+            const urlToId = new Map<string, string>(
+              (addResult?.data || []).map((row: any) => [row.url, row.id])
+            );
+            newImagesToUpload.forEach((imgObj, i) => {
+              const insertedId = urlToId.get(uploadResult.urls![i]);
+              if (insertedId) newIdByImage.set(imgObj, insertedId);
+            });
           }
         } catch (err: any) {
           console.error('Supabase upload error (EditShop):', err);
@@ -248,6 +269,14 @@ const EditShop: React.FC = () => {
           setIsUploading(false);
           return;
         }
+      }
+
+      // 2b. Persist the gallery order (index 0 = hero image shown on the shop card)
+      const orderedImageIds = uploadedImages
+        .map(img => (img.isNew ? newIdByImage.get(img) : img.id))
+        .filter((v): v is string => !!v);
+      if (orderedImageIds.length > 0) {
+        await reorderShopImages(originalShop.id, orderedImageIds);
       }
 
       // Handle brand update
@@ -649,6 +678,7 @@ const EditShop: React.FC = () => {
           {/* Section 5: Photos */}
           <section className="space-y-4">
             <h2 className="text-sm font-bold text-coffee-400 uppercase tracking-wider border-b border-coffee-100 pb-2">Photos</h2>
+            <p className="text-xs text-coffee-400 -mt-1">Use the arrows to reorder your photos — the first one is the hero image shown on your shop card.</p>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {uploadedImages.map((img, idx) => (
@@ -661,10 +691,39 @@ const EditShop: React.FC = () => {
                   >
                     <i className="fas fa-times text-xs"></i>
                   </button>
-                  {idx === 0 && (
+                  {/* Reorder controls — the first image is the hero */}
+                  <div className="absolute top-1 left-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      type="button"
+                      onClick={() => moveImage(idx, idx - 1)}
+                      disabled={idx === 0}
+                      aria-label="Move image earlier"
+                      className="bg-black/60 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-sm disabled:opacity-30"
+                    >
+                      <i className="fas fa-chevron-left text-xs"></i>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveImage(idx, idx + 1)}
+                      disabled={idx === uploadedImages.length - 1}
+                      aria-label="Move image later"
+                      className="bg-black/60 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-sm disabled:opacity-30"
+                    >
+                      <i className="fas fa-chevron-right text-xs"></i>
+                    </button>
+                  </div>
+                  {idx === 0 ? (
                     <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] font-bold text-center py-1">
                       HERO IMAGE
                     </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => moveImage(idx, 0)}
+                      className="absolute bottom-1 left-1 right-1 bg-black/50 hover:bg-volt-400 hover:text-black text-white text-[10px] font-bold text-center py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      Make hero
+                    </button>
                   )}
                 </div>
               ))}
