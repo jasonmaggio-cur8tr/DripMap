@@ -74,7 +74,7 @@ const Auth: React.FC = () => {
         console.log('[Auth] Login result:', result);
         if (result.success) {
           toast.success('Welcome back!');
-          navigate('/');
+          navigate((location.state as { from?: string } | null)?.from || '/');
         } else {
           toast.error(result.error?.message || 'Invalid email or password');
         }
