@@ -216,19 +216,56 @@ async function getSessionToken(): Promise<string | null> {
   return session?.access_token || null;
 }
 
+/**
+ * Bake EXIF orientation into the pixels and re-encode as JPEG.
+ *
+ * Why: iPhone photos are stored landscape with an EXIF Orientation flag (e.g. 6 =
+ * rotate 90 deg CW). Supabase Storage's image transform - which the iOS/web apps use
+ * via sizedImageUrl - does NOT honor EXIF orientation, so those photos render
+ * sideways and cropped. Decoding with { imageOrientation: 'from-image' } applies the
+ * rotation to the actual pixels and drops the now-redundant EXIF, so the image is
+ * upright everywhere regardless of whether the renderer reads EXIF.
+ *
+ * Best-effort: returns the original file unchanged if anything is unsupported or fails.
+ */
+async function normalizeImageOrientation(file: File): Promise<File> {
+  if (!file.type.startsWith('image/') || file.type === 'image/gif') return file;
+  if (typeof createImageBitmap !== 'function' || typeof document === 'undefined') return file;
+  try {
+    const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) { bitmap.close?.(); return file; }
+    ctx.drawImage(bitmap, 0, 0);
+    bitmap.close?.();
+    const blob: Blob | null = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.9));
+    if (!blob) return file;
+    const newName = file.name.replace(/\.[^.]+$/, '.jpg');
+    return new File([blob], newName, { type: 'image/jpeg' });
+  } catch {
+    return file;
+  }
+}
+
 export async function uploadDraftPhotoFile(file: File): Promise<{ url: string; error?: string }> {
   if (file.size > 8 * 1024 * 1024) return { url: '', error: 'File too large (max 8MB)' };
   if (!file.type.startsWith('image/')) return { url: '', error: 'File must be an image' };
 
+  // Bake EXIF orientation into the pixels so the (EXIF-agnostic) Supabase image
+  // transform used by the apps can't render the photo sideways/cropped.
+  const normalized = await normalizeImageOrientation(file);
+
   const now = new Date();
   const datePath = `${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, '0')}/${String(now.getUTCDate()).padStart(2, '0')}`;
   const shortId = Math.random().toString(36).slice(2, 10);
-  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const ext = normalized.name.split('.').pop()?.toLowerCase() || 'jpg';
   const storagePath = `${datePath}/${shortId}.${ext}`;
 
   const { error: uploadError } = await supabase.storage
     .from('agent-uploads')
-    .upload(storagePath, file, { contentType: file.type, upsert: false });
+    .upload(storagePath, normalized, { contentType: normalized.type, upsert: false });
 
   if (uploadError) {
     return { url: '', error: `Storage error: ${uploadError.message}` };
