@@ -614,10 +614,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   // Claim Requests
   const submitClaimRequest = async (request: any) => {
     const result = await db.submitClaimRequest(request);
-    if (result.success) {
-      // Reload profile to get updated requests if needed
-      if (user) loadUserProfile(user.id);
-    }
+    if (!result.success) throw result.error || new Error('Failed to submit claim request');
+    // Reload profile to get updated requests if needed
+    if (user) loadUserProfile(user.id);
   };
 
   const markClaimRequest = async (requestId: string, status: "approved" | "rejected") => {

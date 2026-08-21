@@ -36,7 +36,7 @@ const ClaimShop: React.FC = () => {
           <p className="mb-6" style={{ color: "#e4ddce" }}>
             You need an account to claim a business.
           </p>
-          <Button variant="secondary" className="font-extrabold" onClick={() => navigate("/auth")}>Go to Login</Button>
+          <Button variant="secondary" className="font-extrabold" onClick={() => navigate("/auth", { state: { from: `/claim/${shop.id}` } })}>Go to Login</Button>
         </div>
       </div>
     );
