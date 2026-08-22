@@ -19,9 +19,16 @@ export default {
           50:  '#faf9f6', // Cream
         },
         volt: {
-          400: '#ccff00', // Volt Green/Yellow
-          500: '#b3e600',
-          600: '#99cc00',
+          // Anchored to iOS BRAND.volt in dripmap-ios/constants/Colors.ts.
+          // Ramp follows Tailwind's lime scale, of which #a3e635 is lime-400.
+          50:  '#f7fee7',
+          100: '#ecfccb',
+          200: '#d9f99d',
+          300: '#bef264',
+          400: '#a3e635', // Volt
+          500: '#84cc16',
+          600: '#65a30d',
+          700: '#4d7c0f',
         },
       },
       fontFamily: {

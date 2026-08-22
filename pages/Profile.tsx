@@ -36,13 +36,13 @@ const DripClubBadge: React.FC<{ username: string; onManage?: () => void }> = ({ 
       <div className="absolute inset-0 bg-gradient-to-br from-volt-400/20 via-transparent to-volt-400/10 animate-pulse"></div>
 
       {/* Constantly moving scanning line (Prevents screenshots by showing movement) */}
-      <div className="absolute top-0 left-0 w-full h-1 bg-volt-400/40 shadow-[0_0_15px_rgba(204,255,0,0.8)] z-20 animate-scan"></div>
+      <div className="absolute top-0 left-0 w-full h-1 bg-volt-400/40 shadow-[0_0_15px_rgba(163,230,53,0.8)] z-20 animate-scan"></div>
 
       {/* Animated holographic sheen */}
       <div className="absolute inset-0 z-10 opacity-30 pointer-events-none bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine bg-[length:200%_100%]"></div>
 
       <div className="relative z-10 p-8 flex flex-col items-center text-center">
-        <div className="w-20 h-20 bg-volt-400 rounded-3xl flex items-center justify-center text-coffee-900 mb-6 shadow-[0_0_30px_rgba(204,255,0,0.4)] transform group-hover:rotate-12 transition-transform duration-500">
+        <div className="w-20 h-20 bg-volt-400 rounded-3xl flex items-center justify-center text-coffee-900 mb-6 shadow-[0_0_30px_rgba(163,230,53,0.4)] transform group-hover:rotate-12 transition-transform duration-500">
           <i className="fas fa-droplet text-4xl"></i>
         </div>
 
@@ -328,7 +328,7 @@ const Profile: React.FC = () => {
           <button
             onClick={() => navigate("/")}
             className="mt-4 hover:underline focus:outline-none focus:ring-2 focus:ring-volt-400 rounded"
-            style={{ color: "#ccff00" }}
+            style={{ color: "#a3e635" }}
           >
             Return to Home
           </button>
@@ -622,7 +622,7 @@ const Profile: React.FC = () => {
             ) : (
               <div
                 className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full overflow-hidden"
-                style={{ border: "2px solid #ccff00", background: TILE }}
+                style={{ border: "2px solid #a3e635", background: TILE }}
               >
                 <img
                   src={isEditing ? editData.avatarUrl : sizedImageUrl(viewedUser.avatarUrl, { width: 120 })}
@@ -715,7 +715,7 @@ const Profile: React.FC = () => {
                 </div>
 
                 <div className="flex gap-3 pt-4 justify-center md:justify-start">
-                  <button onClick={handleSave} className={pillBtn} style={{ background: "#ccff00", color: "#231b15" }}>
+                  <button onClick={handleSave} className={pillBtn} style={{ background: "#a3e635", color: "#231b15" }}>
                     {uploadingAvatar ? (
                       <>
                         <i className="fas fa-spinner fa-spin mr-2"></i>
@@ -752,7 +752,7 @@ const Profile: React.FC = () => {
                   {/* Drip Score Pill */}
                   <div
                     className="ml-0 sm:ml-4 flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold"
-                    style={{ background: "rgba(204,255,0,0.14)", color: "#ccff00" }}
+                    style={{ background: "rgba(163,230,53,0.14)", color: "#a3e635" }}
                   >
                     <i className="fas fa-bolt"></i>
                     <span>{dripScore} DripScore</span>
@@ -842,7 +842,7 @@ const Profile: React.FC = () => {
                       <button
                         onClick={handleShareProfile}
                         className={`${pillBtn} border border-white/[0.09]`}
-                        style={{ background: TILE, color: "#ccff00" }}
+                        style={{ background: TILE, color: "#a3e635" }}
                       >
                         <i className="fas fa-share mr-2"></i> Share Profile
                       </button>
@@ -862,7 +862,7 @@ const Profile: React.FC = () => {
                         style={
                           isFollowing
                             ? { background: TILE, color: TEXT }
-                            : { background: "#ccff00", color: "#231b15" }
+                            : { background: "#a3e635", color: "#231b15" }
                         }
                       >
                         <i
@@ -874,7 +874,7 @@ const Profile: React.FC = () => {
                       <button
                         onClick={handleShareProfile}
                         className={`${pillBtn} border border-white/[0.09]`}
-                        style={{ background: TILE, color: "#ccff00" }}
+                        style={{ background: TILE, color: "#a3e635" }}
                       >
                         <i className="fas fa-share mr-2"></i> Share Profile
                       </button>
@@ -894,7 +894,7 @@ const Profile: React.FC = () => {
             </h2>
             <span
               className="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider"
-              style={{ background: "rgba(204,255,0,0.14)", color: "#ccff00" }}
+              style={{ background: "rgba(163,230,53,0.14)", color: "#a3e635" }}
             >
               Beta
             </span>
@@ -913,19 +913,19 @@ const Profile: React.FC = () => {
                   <div
                     key={award.id}
                     className="aspect-square rounded-2xl flex flex-col items-center justify-center p-3 text-center border-2 transition-all duration-300 group scale-105 relative overflow-hidden"
-                    style={{ background: TILE, borderColor: "rgba(204,255,0,0.6)" }}
+                    style={{ background: TILE, borderColor: "rgba(163,230,53,0.6)" }}
                     title={award.badge?.description}
                   >
                     <div
                       className="w-12 h-12 rounded-full flex items-center justify-center mb-2 text-2xl relative z-10"
-                      style={{ background: "rgba(204,255,0,0.14)" }}
+                      style={{ background: "rgba(163,230,53,0.14)" }}
                     >
                       {award.badge?.emoji}
                     </div>
                     <h3 className="font-bold text-[10px] leading-tight mb-1 relative z-10" style={{ color: TEXT }}>
                       {award.badge?.name}
                     </h3>
-                    <p className="text-[9px] font-bold relative z-10" style={{ color: "#ccff00" }}>
+                    <p className="text-[9px] font-bold relative z-10" style={{ color: "#a3e635" }}>
                       {monthLabel}
                     </p>
                   </div>
@@ -993,7 +993,7 @@ const Profile: React.FC = () => {
                   {badge.unlocked && (
                     <div
                       className="mt-2 text-[9px] font-black px-2 py-0.5 rounded-full"
-                      style={{ background: "#ccff00", color: "#231b15" }}
+                      style={{ background: "#a3e635", color: "#231b15" }}
                     >
                       UNLOCKED
                     </div>
@@ -1125,7 +1125,7 @@ const Profile: React.FC = () => {
                     </span>
                     <span className="text-sm" style={{ color: MUTED }}>/year</span>
                   </div>
-                  <p className="text-xs font-bold" style={{ color: "#ccff00" }}>
+                  <p className="text-xs font-bold" style={{ color: "#a3e635" }}>
                     Less than $1 per month!
                   </p>
                 </div>
@@ -1142,7 +1142,7 @@ const Profile: React.FC = () => {
                       className="flex items-center gap-2.5 text-sm"
                       style={{ color: TEXT_2 }}
                     >
-                      <i className="fas fa-check text-xs" style={{ color: "#ccff00" }}></i>
+                      <i className="fas fa-check text-xs" style={{ color: "#a3e635" }}></i>
                       {perk}
                     </li>
                   ))}
@@ -1151,7 +1151,7 @@ const Profile: React.FC = () => {
                 <button
                   onClick={() => navigate("/dripclub")}
                   className="w-full py-3 bg-volt-400 text-coffee-900 rounded-full font-bold text-sm hover:bg-volt-500 active:scale-[0.98] transition-all flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-volt-400"
-                  style={{ boxShadow: "0 8px 24px -4px rgba(204,255,0,0.45)" }}
+                  style={{ boxShadow: "0 8px 24px -4px rgba(163,230,53,0.45)" }}
                 >
                   <i className="fas fa-crown"></i>
                   Join DripClub
@@ -1180,7 +1180,7 @@ const Profile: React.FC = () => {
                       className="text-[10px] font-bold uppercase tracking-[0.08em] border-b border-white/[0.09] pb-2 mb-6 flex items-center gap-2"
                       style={{ color: MUTED }}
                     >
-                      <i className="fas fa-map-pin" style={{ color: "#ccff00" }}></i>{" "}
+                      <i className="fas fa-map-pin" style={{ color: "#a3e635" }}></i>{" "}
                       {location}
                     </h3>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 sm:gap-x-6 gap-y-6 sm:gap-y-8">
@@ -1259,7 +1259,7 @@ const Profile: React.FC = () => {
               <button
                 onClick={() => navigate("/")}
                 className={pillBtn}
-                style={{ background: "#ccff00", color: "#231b15" }}
+                style={{ background: "#a3e635", color: "#231b15" }}
               >
                 Start Exploring
               </button>
@@ -1311,7 +1311,7 @@ const Profile: React.FC = () => {
                         <div className="flex flex-col items-end shrink-0">
                           <div
                             className="flex items-center gap-1 px-2 py-1 rounded-md"
-                            style={{ background: "rgba(204,255,0,0.14)", color: "#ccff00" }}
+                            style={{ background: "rgba(163,230,53,0.14)", color: "#a3e635" }}
                           >
                             <i className="fas fa-tint text-[10px]"></i>
                             <span className="text-sm font-bold">{log.overallQuality}</span>
@@ -1346,7 +1346,7 @@ const Profile: React.FC = () => {
                       </div>
 
                       {log.quickTake && (
-                        <div className="relative pl-3 mb-2" style={{ borderLeft: "2px solid #ccff00" }}>
+                        <div className="relative pl-3 mb-2" style={{ borderLeft: "2px solid #a3e635" }}>
                           <p className="italic text-sm line-clamp-2" style={{ color: TEXT_2 }}>"{log.quickTake}"</p>
                         </div>
                       )}
@@ -1415,7 +1415,7 @@ const Profile: React.FC = () => {
                 <button
                   onClick={() => navigate("/")}
                   className={pillBtn}
-                  style={{ background: "#ccff00", color: "#231b15" }}
+                  style={{ background: "#a3e635", color: "#231b15" }}
                 >
                   Find Shops to Rate
                 </button>
@@ -1443,7 +1443,7 @@ const Profile: React.FC = () => {
                     <div className="absolute top-5 right-5">
                       <span
                         className="text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1"
-                        style={{ background: "rgba(204,255,0,0.14)", color: "#ccff00" }}
+                        style={{ background: "rgba(163,230,53,0.14)", color: "#a3e635" }}
                       >
                         <i className="fas fa-check-circle"></i>
                       </span>
@@ -1455,7 +1455,7 @@ const Profile: React.FC = () => {
 
                   <div
                     className="flex items-center justify-between text-xs font-bold uppercase tracking-wide mt-auto pt-3 border-t border-white/[0.06]"
-                    style={{ color: "#ccff00" }}
+                    style={{ color: "#a3e635" }}
                   >
                     <span>Manage Page</span>
                     <i className="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
@@ -1503,7 +1503,7 @@ const Profile: React.FC = () => {
                 <button
                   onClick={() => navigate("/")}
                   className={`${pillBtn} mt-2`}
-                  style={{ background: TILE, color: "#ccff00", border: "1px solid rgba(255,255,255,0.09)" }}
+                  style={{ background: TILE, color: "#a3e635", border: "1px solid rgba(255,255,255,0.09)" }}
                 >
                   Explore Map
                 </button>

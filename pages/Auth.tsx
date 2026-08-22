@@ -242,7 +242,7 @@ const Auth: React.FC = () => {
               className="flex-1 py-2 px-4 rounded-lg font-bold text-sm transition-all focus:outline-none focus:ring-2 focus:ring-volt-400"
               style={
                 mode === 'login'
-                  ? { background: '#ccff00', color: '#231b15' }
+                  ? { background: '#a3e635', color: '#231b15' }
                   : { color: 'rgba(243,239,224,0.5)' }
               }
             >
@@ -254,7 +254,7 @@ const Auth: React.FC = () => {
               className="flex-1 py-2 px-4 rounded-lg font-bold text-sm transition-all focus:outline-none focus:ring-2 focus:ring-volt-400"
               style={
                 mode === 'signup'
-                  ? { background: '#ccff00', color: '#231b15' }
+                  ? { background: '#a3e635', color: '#231b15' }
                   : { color: 'rgba(243,239,224,0.5)' }
               }
             >

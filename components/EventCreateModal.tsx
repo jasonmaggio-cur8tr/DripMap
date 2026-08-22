@@ -402,7 +402,7 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
                 type="checkbox"
                 id="publish"
                 className="w-5 h-5 rounded focus:outline-none focus:ring-2 focus:ring-volt-400"
-                style={{ accentColor: '#ccff00' }}
+                style={{ accentColor: '#a3e635' }}
                 checked={formData.isPublished}
                 onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
               />
@@ -436,7 +436,7 @@ const EventCreateModal: React.FC<EventCreateModalProps> = ({ shopId, event, onCl
               type="submit"
               disabled={loading}
               className="flex-1 px-6 py-3 font-extrabold rounded-full transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-volt-400"
-              style={{ background: '#ccff00', color: '#231b15' }}
+              style={{ background: '#a3e635', color: '#231b15' }}
             >
               {loading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Event' : 'Suggest Event')}
             </button>

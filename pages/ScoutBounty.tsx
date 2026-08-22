@@ -50,7 +50,7 @@ const ScoutBounty: React.FC = () => {
             <Button
                 onClick={() => navigate('/add')}
                 variant="secondary"
-                className="text-lg px-8 py-4 font-extrabold hover:scale-105 transform transition-all shadow-[0_0_20px_rgba(204,255,0,0.3)]"
+                className="text-lg px-8 py-4 font-extrabold hover:scale-105 transform transition-all shadow-[0_0_20px_rgba(163,230,53,0.3)]"
             >
                 Start Scouting
             </Button>

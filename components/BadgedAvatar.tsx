@@ -36,7 +36,7 @@ const BadgedAvatar: React.FC<BadgedAvatarProps> = ({ avatarUrl, alt, size, badge
                 className="h-full w-full rounded-full border border-white/[0.09] object-cover"
                 style={
                     badge
-                        ? { boxShadow: "0 0 0 2px #1e1712, 0 0 0 4px #ccff00" }
+                        ? { boxShadow: "0 0 0 2px #1e1712, 0 0 0 4px #a3e635" }
                         : undefined
                 }
             />
@@ -49,7 +49,7 @@ const BadgedAvatar: React.FC<BadgedAvatarProps> = ({ avatarUrl, alt, size, badge
                         right: -Math.round(emblemSize * 0.15),
                         bottom: -Math.round(emblemSize * 0.15),
                         background: "#2b221b",
-                        border: "1.5px solid #ccff00",
+                        border: "1.5px solid #a3e635",
                         fontSize: Math.round(emblemSize * 0.55),
                         lineHeight: 1,
                     }}

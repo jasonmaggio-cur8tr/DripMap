@@ -141,8 +141,8 @@ const Redeem: React.FC = () => {
       {/* Ticket animations (mirrors the iOS glow pulse + shimmer sweep) */}
       <style>{`
         @keyframes couponGlow {
-          0%, 100% { border-color: rgba(204,255,0,0.14); box-shadow: 0 0 18px rgba(204,255,0,0.06); }
-          50%      { border-color: rgba(204,255,0,0.6);  box-shadow: 0 0 34px rgba(204,255,0,0.18); }
+          0%, 100% { border-color: rgba(163,230,53,0.14); box-shadow: 0 0 18px rgba(163,230,53,0.06); }
+          50%      { border-color: rgba(163,230,53,0.6);  box-shadow: 0 0 34px rgba(163,230,53,0.18); }
         }
         @keyframes couponSweep {
           0%   { left: -120px; }

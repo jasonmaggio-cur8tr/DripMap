@@ -90,7 +90,7 @@ const CommunityFeed: React.FC = () => {
                         <Link
                             to="/auth"
                             className="inline-block rounded-full px-6 py-2.5 text-sm font-extrabold focus:outline-none focus:ring-2 focus:ring-volt-400"
-                            style={{ background: "#ccff00", color: "#231b15" }}
+                            style={{ background: "#a3e635", color: "#231b15" }}
                         >
                             Log In
                         </Link>
@@ -117,7 +117,7 @@ const CommunityFeed: React.FC = () => {
                                 <Link
                                     to="/leaderboard"
                                     className="inline-block rounded-full border border-white/[0.09] px-6 py-2.5 text-sm font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400"
-                                    style={{ background: "#2f251d", color: "#ccff00" }}
+                                    style={{ background: "#2f251d", color: "#a3e635" }}
                                 >
                                     Discover Tastemakers
                                 </Link>
@@ -160,7 +160,7 @@ const CommunityFeed: React.FC = () => {
 
                                             <div
                                                 className="flex items-center gap-1 rounded-md px-2 py-1"
-                                                style={{ background: "rgba(204,255,0,0.14)", color: "#ccff00" }}
+                                                style={{ background: "rgba(163,230,53,0.14)", color: "#a3e635" }}
                                             >
                                                 <i className="fas fa-tint text-[10px]"></i>
                                                 <span className="text-sm font-bold">{log.overallQuality}</span>
@@ -192,7 +192,7 @@ const CommunityFeed: React.FC = () => {
                                         {log.quickTake && (
                                             <div
                                                 className="relative mb-3 rounded-r py-2 pl-3 pr-2"
-                                                style={{ borderLeft: "2px solid #ccff00", background: "rgba(255,255,255,0.04)" }}
+                                                style={{ borderLeft: "2px solid #a3e635", background: "rgba(255,255,255,0.04)" }}
                                             >
                                                 <p className="text-sm italic" style={{ color: "#e4ddce" }}>"{log.quickTake}"</p>
                                             </div>
@@ -205,7 +205,7 @@ const CommunityFeed: React.FC = () => {
                                                 className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400"
                                                 style={
                                                     log.isLiked
-                                                        ? { background: "rgba(204,255,0,0.14)", color: "#ccff00" }
+                                                        ? { background: "rgba(163,230,53,0.14)", color: "#a3e635" }
                                                         : { background: "#2f251d", color: "rgba(243,239,224,0.55)" }
                                                 }
                                             >

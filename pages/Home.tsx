@@ -181,7 +181,7 @@ const Home: React.FC = () => {
                 <Link
                   to={`/profile/${user.id}`}
                   className="block h-9 w-9 overflow-hidden rounded-full focus:outline-none focus:ring-2 focus:ring-volt-400"
-                  style={{ border: '2px solid #ccff00' }}
+                  style={{ border: '2px solid #a3e635' }}
                 >
                   <img src={user.avatarUrl} alt={user.username} className="h-full w-full object-cover" />
                 </Link>
@@ -189,7 +189,7 @@ const Home: React.FC = () => {
                 <Link
                   to="/auth"
                   className="rounded-full px-3.5 py-2 text-[11px] font-extrabold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-volt-400"
-                  style={{ background: '#ccff00', color: '#231b15' }}
+                  style={{ background: '#a3e635', color: '#231b15' }}
                 >
                   Sign in
                 </Link>
@@ -220,7 +220,7 @@ const Home: React.FC = () => {
               className="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-volt-400"
               style={
                 viewMode === 'map'
-                  ? { background: '#ccff00', color: '#231b15' }
+                  ? { background: '#a3e635', color: '#231b15' }
                   : { background: '#2b221b', color: '#e4ddce', border: '1px solid rgba(255,255,255,0.09)' }
               }
             >
@@ -232,7 +232,7 @@ const Home: React.FC = () => {
               className="shrink-0 rounded-full px-3.5 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-volt-400"
               style={
                 !isFiltered && viewMode === 'feed'
-                  ? { background: '#ccff00', color: '#231b15' }
+                  ? { background: '#a3e635', color: '#231b15' }
                   : { background: '#2b221b', color: '#e4ddce', border: '1px solid rgba(255,255,255,0.09)' }
               }
             >
@@ -245,7 +245,7 @@ const Home: React.FC = () => {
                 className="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-volt-400"
                 style={
                   activeVibe === vibe
-                    ? { background: '#ccff00', color: '#231b15' }
+                    ? { background: '#a3e635', color: '#231b15' }
                     : { background: '#2b221b', color: '#e4ddce', border: '1px solid rgba(255,255,255,0.09)' }
                 }
               >
@@ -280,7 +280,7 @@ const Home: React.FC = () => {
               <Link
                 to="/add"
                 className="rounded-full px-5 py-3 text-sm font-extrabold focus:outline-none focus:ring-2 focus:ring-volt-400"
-                style={{ background: '#2b221b', color: '#ccff00', border: '1px solid rgba(255,255,255,0.09)' }}
+                style={{ background: '#2b221b', color: '#a3e635', border: '1px solid rgba(255,255,255,0.09)' }}
               >
                 <i className="fas fa-plus mr-2"></i>
                 Add a Shop

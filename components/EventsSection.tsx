@@ -74,7 +74,7 @@ const EventsSection: React.FC<EventsSectionProps> = ({ shopId, isPro, onUpgrade 
         <button
           onClick={handleCreateClick}
           className="px-4 py-2 font-extrabold rounded-full transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-volt-400"
-          style={{ background: '#ccff00', color: '#231b15' }}
+          style={{ background: '#a3e635', color: '#231b15' }}
         >
           <i className="fas fa-plus"></i> {isPrivileged ? 'Create Event' : 'Suggest Event'}
         </button>
