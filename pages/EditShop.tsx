@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Shop, Vibe, ShopImage } from '../types';
+import { Shop, Vibe, ShopImage, BrewItem, Barista, PlantMilkInfo } from '../types';
 import { ALL_VIBES, CHEEKY_VIBES_OPTIONS } from '../constants';
 import { generateShopDescription } from '../services/geminiService';
 import { uploadImages } from '../services/storageService';
@@ -10,7 +10,16 @@ import { updateShopInDB, addShopImages, deleteShopImage, reorderShopImages, fetc
 import Button from '../components/Button';
 import TagChip from '../components/TagChip';
 import LocationPicker from '../components/LocationPicker';
+import { NowBrewingEditor, SpecialtyMenuEditor, VeganInfoEditor, BaristaEditor } from '../components/OwnerTools';
 import { useToast } from '../context/ToastContext';
+
+// Purple locked teaser shown in place of each PRO section for free-tier shops
+const ProLockedTeaser: React.FC<{ text: string }> = ({ text }) => (
+  <div className="flex items-center gap-3 rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 text-sm text-purple-700">
+    <i className="fas fa-lock"></i>
+    <span>{text}</span>
+  </div>
+);
 
 const EditShop: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +43,16 @@ const EditShop: React.FC = () => {
 
   const [parkingInfo, setParkingInfo] = useState('');
   const [isProShop, setIsProShop] = useState(false);
+
+  // PRO feature state (persisted in the same save as the basics)
+  const [happeningNow, setHappeningNow] = useState({ title: '', message: '', sticker: '' });
+  const [coffeeTech, setCoffeeTech] = useState({ espressoMachine: '', grinderDetails: '', sourcingInfo: '' });
+  const [currentMenu, setCurrentMenu] = useState<BrewItem[]>([]);
+  const [specialtyDrinks, setSpecialtyDrinks] = useState<{ name: string; desc: string }[]>([]);
+  const [veganFoodOptions, setVeganFoodOptions] = useState(false);
+  const [plantMilks, setPlantMilks] = useState<PlantMilkInfo[]>([]);
+  const [baristas, setBaristas] = useState<Barista[]>([]);
+  const [premiumLinks, setPremiumLinks] = useState({ spotifyPlaylistUrl: '', onlineOrderUrl: '', mapsUrl: '' });
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedVibes, setSelectedVibes] = useState<Vibe[]>([]);
   const [selectedCheekyVibes, setSelectedCheekyVibes] = useState<string[]>([]);
@@ -65,6 +84,9 @@ const EditShop: React.FC = () => {
   const [newBrandData, setNewBrandData] = useState({ name: '', description: '', websiteUrl: '' });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Tracks which shop the form was populated for, so a background refreshShops()
+  // doesn't re-run the populate effect and wipe the owner's in-progress edits.
+  const populatedShopIdRef = useRef<string | null>(null);
 
   // Fetch Shop Data on Mount
   useEffect(() => {
@@ -88,6 +110,9 @@ const EditShop: React.FC = () => {
     const shopToEdit = shops.find(s => s.id === id || s.slug === id);
 
     if (!shopToEdit) return;
+
+    // Only populate once per shop — later `shops` updates must not reset the form mid-edit
+    if (populatedShopIdRef.current === shopToEdit.id) return;
 
     // Security Check: Ensure user owns this shop or is admin
     const isActualOwner = shopToEdit.claimedBy && shopToEdit.claimedBy === user?.id;
@@ -119,6 +144,32 @@ const EditShop: React.FC = () => {
     setParkingInfo(shopToEdit.parkingInfo || '');
     setIsProShop(shopToEdit.subscriptionTier === 'pro' || shopToEdit.subscriptionTier === 'pro_plus');
 
+    // PRO fields
+    // Only prefill a Happening Now post that is still live (no expiry, or expiry in the future);
+    // an expired 4h post must not be silently revived as a persistent post on save.
+    const hn = shopToEdit.happeningNow;
+    const hnLive = !!hn && (!hn.expiresAt || new Date(hn.expiresAt) > new Date());
+    setHappeningNow({
+      title: hnLive ? hn.title || '' : '',
+      message: hnLive ? hn.message || '' : '',
+      sticker: hnLive ? hn.sticker || '' : '',
+    });
+    setCoffeeTech({
+      espressoMachine: shopToEdit.espressoMachine || '',
+      grinderDetails: shopToEdit.grinderDetails || '',
+      sourcingInfo: shopToEdit.sourcingInfo || '',
+    });
+    setCurrentMenu(shopToEdit.currentMenu || []);
+    setSpecialtyDrinks(shopToEdit.specialtyDrinks || []);
+    setVeganFoodOptions(!!shopToEdit.veganFoodOptions);
+    setPlantMilks(shopToEdit.plantMilks || []);
+    setBaristas(shopToEdit.baristas || []);
+    setPremiumLinks({
+      spotifyPlaylistUrl: shopToEdit.spotifyPlaylistUrl || '',
+      onlineOrderUrl: shopToEdit.onlineOrderUrl || '',
+      mapsUrl: shopToEdit.mapsUrl || '',
+    });
+
     // Load opening hours
     if (shopToEdit.openHours) {
       setOpenHours(prev => ({ ...prev, ...shopToEdit.openHours }));
@@ -132,6 +183,7 @@ const EditShop: React.FC = () => {
       isNew: false
     })));
 
+    populatedShopIdRef.current = shopToEdit.id;
     setIsLoading(false);
   }, [id, shops, user, navigate, toast]);
 
@@ -201,6 +253,40 @@ const EditShop: React.FC = () => {
       next.splice(to, 0, moved);
       return next;
     });
+  };
+
+  // Empty strings → null so we never persist blank PRO text fields
+  const textOrNull = (v: string) => v.trim() || null;
+  const urlOrNull = (v: string) => {
+    const t = v.trim();
+    if (!t) return null;
+    return /^https?:\/\//i.test(t) ? t : `https://${t}`;
+  };
+
+  // PRO columns — only included in the save payload when the shop is PRO / PRO+
+  const buildProUpdates = () => {
+    const hnTitle = textOrNull(happeningNow.title);
+    const hnMessage = textOrNull(happeningNow.message);
+    const hasHappeningNow = !!(hnTitle || hnMessage);
+    return {
+      parking_info: textOrNull(parkingInfo),
+      // Happening Now set from here is persistent (no 4h expiry) until the owner clears it
+      happening_now_title: hasHappeningNow ? hnTitle : null,
+      happening_now_message: hasHappeningNow ? hnMessage : null,
+      happening_now_sticker: hasHappeningNow ? textOrNull(happeningNow.sticker) : null,
+      happening_now_expires_at: null,
+      sourcing_info: textOrNull(coffeeTech.sourcingInfo),
+      espresso_machine: textOrNull(coffeeTech.espressoMachine),
+      grinder_details: textOrNull(coffeeTech.grinderDetails),
+      current_menu: currentMenu,
+      specialty_drinks: specialtyDrinks,
+      vegan_food_options: veganFoodOptions,
+      plant_milks: plantMilks,
+      baristas,
+      spotify_playlist_url: urlOrNull(premiumLinks.spotifyPlaylistUrl),
+      online_order_url: urlOrNull(premiumLinks.onlineOrderUrl),
+      maps_url: urlOrNull(premiumLinks.mapsUrl),
+    };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -314,7 +400,7 @@ const EditShop: React.FC = () => {
           if (!ig) return null;
           return /^https?:\/\//i.test(ig) ? ig : `https://instagram.com/${ig}`;
         })(),
-        ...(isProShop ? { parking_info: parkingInfo.trim() || null } : {}),
+        ...(isProShop ? buildProUpdates() : {}),
       };
 
       const updateResult = await updateShopInDB(originalShop.id, shopUpdates);
@@ -336,6 +422,9 @@ const EditShop: React.FC = () => {
     }
   };
 
+  // The reused OwnerTools editors require an onUpgrade handler; PRO upgrades live on the shop page
+  const goToShopPage = () => navigate(`/shop/${id}`);
+
   if (isLoading) {
     return <div className="min-h-screen pt-24 text-center text-coffee-500">Loading editor...</div>;
   }
@@ -353,7 +442,7 @@ const EditShop: React.FC = () => {
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form id="edit-shop-form" onSubmit={handleSubmit} className="space-y-8">
           {/* Section 1: Basic Info */}
           <section className="space-y-4">
             <h2 className="text-sm font-bold text-coffee-400 uppercase tracking-wider border-b border-coffee-100 pb-2">The Basics</h2>
@@ -517,27 +606,6 @@ const EditShop: React.FC = () => {
                   onChange={e => setFormData({ ...formData, instagramUrl: e.target.value })}
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-coffee-900 mb-2">
-                Parking Info{' '}
-                <span className="ml-1 rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-purple-700">PRO</span>
-              </label>
-              {isProShop ? (
-                <textarea
-                  placeholder="e.g. Parking Pro Tip: there is free parking all day on the block behind our cafe."
-                  className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none resize-none"
-                  rows={3}
-                  value={parkingInfo}
-                  onChange={e => setParkingInfo(e.target.value)}
-                />
-              ) : (
-                <div className="flex items-center gap-3 rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 text-sm text-purple-700">
-                  <i className="fas fa-lock"></i>
-                  <span>Upgrade to PRO to share parking tips with visitors.</span>
-                </div>
-              )}
             </div>
           </section>
 
@@ -746,10 +814,224 @@ const EditShop: React.FC = () => {
               />
             </div>
           </section>
+        </form>
+
+        {/*
+          PRO FEATURES — rendered as a sibling of the form (not inside it) because the reused
+          OwnerTools editors have untyped buttons / a nested <form> modal that would otherwise
+          submit the whole page. The Save button below targets the form via its `form` attribute.
+        */}
+        <div className="mt-8 space-y-8">
+          <section className="space-y-6">
+            <h2 className="text-sm font-bold text-coffee-400 uppercase tracking-wider border-b border-coffee-100 pb-2 flex items-center gap-2">
+              Pro Features
+              <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-purple-700">PRO</span>
+            </h2>
+            {isProShop ? (
+              <p className="text-xs text-coffee-500 -mt-3">These sections are saved together with everything above when you hit Save Changes.</p>
+            ) : (
+              <p className="text-xs text-coffee-500 -mt-3">Upgrade to PRO from your shop page to unlock these sections.</p>
+            )}
+
+            {/* ⚡ Happening Now */}
+            <div>
+              <label className="block text-sm font-bold text-coffee-900 mb-2">⚡ Happening Now</label>
+              {isProShop ? (
+                <div className="space-y-3">
+                  <input
+                    placeholder="Title (e.g. Fresh Pastries!)"
+                    className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                    value={happeningNow.title}
+                    onChange={e => setHappeningNow({ ...happeningNow, title: e.target.value })}
+                  />
+                  <textarea
+                    placeholder="Message — what's going on right now?"
+                    className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none resize-none"
+                    rows={3}
+                    value={happeningNow.message}
+                    onChange={e => setHappeningNow({ ...happeningNow, message: e.target.value })}
+                  />
+                  <input
+                    placeholder="Sticker (optional, e.g. FRESH DROP)"
+                    maxLength={20}
+                    className="w-full sm:w-1/2 px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                    value={happeningNow.sticker}
+                    onChange={e => setHappeningNow({ ...happeningNow, sticker: e.target.value })}
+                  />
+                  <p className="text-xs text-coffee-400">Clear the title and message to take the board down. Posts made here stay live until you clear them.</p>
+                </div>
+              ) : (
+                <ProLockedTeaser text="Upgrade to PRO to post real-time updates on your shop page." />
+              )}
+            </div>
+
+            {/* 🅿️ Parking Info */}
+            <div>
+              <label className="block text-sm font-bold text-coffee-900 mb-2">🅿️ Parking Info</label>
+              {isProShop ? (
+                <textarea
+                  placeholder="e.g. Parking Pro Tip: there is free parking all day on the block behind our cafe."
+                  className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none resize-none"
+                  rows={3}
+                  value={parkingInfo}
+                  onChange={e => setParkingInfo(e.target.value)}
+                />
+              ) : (
+                <ProLockedTeaser text="Upgrade to PRO to share parking tips with visitors." />
+              )}
+            </div>
+
+            {/* ⚙️ Coffee Tech */}
+            <div>
+              <label className="block text-sm font-bold text-coffee-900 mb-2">⚙️ Coffee Tech</label>
+              {isProShop ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-coffee-900 mb-1">Espresso Machine</label>
+                    <input
+                      placeholder="e.g. La Marzocco Linea PB"
+                      className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                      value={coffeeTech.espressoMachine}
+                      onChange={e => setCoffeeTech({ ...coffeeTech, espressoMachine: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-coffee-900 mb-1">Grinder</label>
+                    <input
+                      placeholder="e.g. Mahlkönig EK43"
+                      className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                      value={coffeeTech.grinderDetails}
+                      onChange={e => setCoffeeTech({ ...coffeeTech, grinderDetails: e.target.value })}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-bold text-coffee-900 mb-1">Sourcing / Roaster</label>
+                    <textarea
+                      placeholder="Direct trade details, house roaster, origins..."
+                      className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none resize-none"
+                      rows={2}
+                      value={coffeeTech.sourcingInfo}
+                      onChange={e => setCoffeeTech({ ...coffeeTech, sourcingInfo: e.target.value })}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <ProLockedTeaser text="Upgrade to PRO to show off your espresso machine, grinder and sourcing." />
+              )}
+            </div>
+
+            {/* ☕ Now Brewing */}
+            <div>
+              <label className="block text-sm font-bold text-coffee-900 mb-2">☕ Now Brewing</label>
+              {isProShop ? (
+                <NowBrewingEditor
+                  menu={currentMenu}
+                  isOwner={true}
+                  isLocked={false}
+                  onUpgrade={goToShopPage}
+                  onUpdate={setCurrentMenu}
+                />
+              ) : (
+                <ProLockedTeaser text="Upgrade to PRO to list the beans you're brewing right now." />
+              )}
+            </div>
+
+            {/* 🌟 Specialty Menu */}
+            <div>
+              <label className="block text-sm font-bold text-coffee-900 mb-2">🌟 Specialty Menu</label>
+              {isProShop ? (
+                <SpecialtyMenuEditor
+                  items={specialtyDrinks}
+                  isOwner={true}
+                  isLocked={false}
+                  onUpgrade={goToShopPage}
+                  onUpdate={setSpecialtyDrinks}
+                />
+              ) : (
+                <ProLockedTeaser text="Upgrade to PRO to showcase your signature drinks." />
+              )}
+            </div>
+
+            {/* 🌱 Vegan & Plant Milks */}
+            <div>
+              <label className="block text-sm font-bold text-coffee-900 mb-2">🌱 Vegan & Plant Milks</label>
+              {isProShop ? (
+                <VeganInfoEditor
+                  hasOptions={veganFoodOptions}
+                  milks={plantMilks}
+                  isOwner={true}
+                  isLocked={false}
+                  isEditing={true}
+                  onUpgrade={goToShopPage}
+                  onUpdate={(updates) => {
+                    if (updates.veganFoodOptions !== undefined) setVeganFoodOptions(updates.veganFoodOptions);
+                    if (updates.plantMilks !== undefined) setPlantMilks(updates.plantMilks);
+                  }}
+                />
+              ) : (
+                <ProLockedTeaser text="Upgrade to PRO to list vegan food and plant milk options." />
+              )}
+            </div>
+
+            {/* 👤 Barista Profiles */}
+            <div>
+              <label className="block text-sm font-bold text-coffee-900 mb-2">👤 Barista Profiles</label>
+              {isProShop ? (
+                <BaristaEditor
+                  baristas={baristas}
+                  isOwner={true}
+                  isLocked={false}
+                  onUpgrade={goToShopPage}
+                  onUpdate={setBaristas}
+                />
+              ) : (
+                <ProLockedTeaser text="Upgrade to PRO to introduce your team." />
+              )}
+            </div>
+
+            {/* 🔗 Premium Links */}
+            <div>
+              <label className="block text-sm font-bold text-coffee-900 mb-2">🔗 Premium Links</label>
+              {isProShop ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-coffee-900 mb-1">Spotify Playlist URL</label>
+                    <input
+                      placeholder="https://open.spotify.com/..."
+                      className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                      value={premiumLinks.spotifyPlaylistUrl}
+                      onChange={e => setPremiumLinks({ ...premiumLinks, spotifyPlaylistUrl: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-coffee-900 mb-1">Online Order URL</label>
+                    <input
+                      placeholder="https://..."
+                      className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                      value={premiumLinks.onlineOrderUrl}
+                      onChange={e => setPremiumLinks({ ...premiumLinks, onlineOrderUrl: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-coffee-900 mb-1">Google Maps URL</label>
+                    <input
+                      placeholder="https://maps.app.goo.gl/..."
+                      className="w-full px-4 py-3 bg-coffee-50 border border-coffee-200 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none"
+                      value={premiumLinks.mapsUrl}
+                      onChange={e => setPremiumLinks({ ...premiumLinks, mapsUrl: e.target.value })}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <ProLockedTeaser text="Upgrade to PRO to add Spotify, online ordering and Google Maps links." />
+              )}
+            </div>
+          </section>
 
           <div className="pt-4 flex gap-4">
             <Button
               type="submit"
+              form="edit-shop-form"
               className="flex-1 py-4 text-lg shadow-xl hover:shadow-2xl"
               disabled={isUploading}
             >
@@ -763,7 +1045,7 @@ const EditShop: React.FC = () => {
               )}
             </Button>
           </div>
-        </form>
+        </div>
 
 
       </div>

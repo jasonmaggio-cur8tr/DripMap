@@ -364,6 +364,7 @@ const ShopDetail: React.FC = () => {
           sourcingInfo: changes.sourcingInfo ?? shop.sourcingInfo,
           espressoMachine: changes.espressoMachine ?? shop.espressoMachine,
           grinderDetails: changes.grinderDetails ?? shop.grinderDetails,
+          brewingMethods: shop.brewingMethods,
         });
         if (!res.success) throw res.error;
       }
