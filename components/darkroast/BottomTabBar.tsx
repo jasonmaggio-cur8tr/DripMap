@@ -30,7 +30,7 @@ const BottomTabBar: React.FC = () => {
               to={tab.to}
               aria-label="Add a shop"
               className="-mt-2 flex h-[46px] w-[46px] items-center justify-center rounded-full transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-volt-400"
-              style={{ background: '#ccff00', boxShadow: '0 8px 24px -4px rgba(204,255,0,0.45)' }}
+              style={{ background: '#a3e635', boxShadow: '0 8px 24px -4px rgba(163,230,53,0.45)' }}
             >
               <i className="fas fa-plus text-[18px]" style={{ color: '#231b15' }}></i>
             </Link>
@@ -42,12 +42,12 @@ const BottomTabBar: React.FC = () => {
             >
               <i
                 className={`fas ${tab.icon} text-[18px]`}
-                style={{ color: isActive(tab.to) ? '#ccff00' : 'rgba(243,239,224,0.45)' }}
+                style={{ color: isActive(tab.to) ? '#a3e635' : 'rgba(243,239,224,0.45)' }}
               ></i>
               <span
                 className="text-[10px]"
                 style={{
-                  color: isActive(tab.to) ? '#ccff00' : 'rgba(243,239,224,0.45)',
+                  color: isActive(tab.to) ? '#a3e635' : 'rgba(243,239,224,0.45)',
                   fontWeight: isActive(tab.to) ? 700 : 600,
                 }}
               >

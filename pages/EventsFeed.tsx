@@ -80,7 +80,7 @@ const EventsFeed: React.FC = () => {
 
     const chipStyle = (active: boolean): React.CSSProperties =>
         active
-            ? { background: '#ccff00', color: '#231b15' }
+            ? { background: '#a3e635', color: '#231b15' }
             : { background: '#2b221b', color: '#e4ddce', border: '1px solid rgba(255,255,255,0.09)' };
 
     return (
@@ -125,7 +125,7 @@ const EventsFeed: React.FC = () => {
                                     setShowCreateModal(true);
                                 }}
                                 className="flex items-center gap-2 whitespace-nowrap rounded-full px-3.5 py-2 text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-volt-400"
-                                style={{ background: '#ccff00', color: '#231b15' }}
+                                style={{ background: '#a3e635', color: '#231b15' }}
                             >
                                 <i className="fas fa-plus"></i> Suggest Event
                             </button>
@@ -209,7 +209,7 @@ const EventsFeed: React.FC = () => {
                             <button
                                 onClick={() => { setFilterType('All'); setSearch('') }}
                                 className="mt-4 rounded-lg font-bold hover:underline focus:outline-none focus:ring-2 focus:ring-volt-400"
-                                style={{ color: '#ccff00' }}
+                                style={{ color: '#a3e635' }}
                             >
                                 Clear Filters
                             </button>
@@ -230,7 +230,7 @@ const EventsFeed: React.FC = () => {
                     <Link
                         to="/auth"
                         className="inline-block rounded-full px-6 py-3 font-extrabold transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400"
-                        style={{ background: '#ccff00', color: '#231b15' }}
+                        style={{ background: '#a3e635', color: '#231b15' }}
                     >
                         Claim Your Shop
                     </Link>

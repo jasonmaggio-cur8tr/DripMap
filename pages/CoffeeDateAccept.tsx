@@ -173,7 +173,7 @@ const CoffeeDateAccept: React.FC = () => {
 
                     <div className="space-y-4 mb-8">
                         <div className="flex items-center gap-4 p-4 rounded-xl" style={{ background: '#2f251d' }}>
-                            <div className="w-10 h-10 rounded-full flex items-center justify-center border border-white/[0.09]" style={{ background: '#2b221b', color: '#ccff00' }}><i className="fas fa-map-marker-alt"></i></div>
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center border border-white/[0.09]" style={{ background: '#2b221b', color: '#a3e635' }}><i className="fas fa-map-marker-alt"></i></div>
                             <div>
                                 <p className="text-[10px] font-bold uppercase" style={{ color: 'rgba(243,239,224,0.5)', letterSpacing: '0.08em' }}>Where</p>
                                 <p className="font-bold" style={{ color: '#f3efe0' }}>{shop?.name}</p>
@@ -182,7 +182,7 @@ const CoffeeDateAccept: React.FC = () => {
                         </div>
 
                         <div className="flex items-center gap-4 p-4 rounded-xl" style={{ background: '#2f251d' }}>
-                            <div className="w-10 h-10 rounded-full flex items-center justify-center border border-white/[0.09]" style={{ background: '#2b221b', color: '#ccff00' }}><i className="fas fa-clock"></i></div>
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center border border-white/[0.09]" style={{ background: '#2b221b', color: '#a3e635' }}><i className="fas fa-clock"></i></div>
                             <div>
                                 <p className="text-[10px] font-bold uppercase" style={{ color: 'rgba(243,239,224,0.5)', letterSpacing: '0.08em' }}>When</p>
                                 <p className="font-bold" style={{ color: '#f3efe0' }}>{new Date(date?.starts_at).toLocaleDateString()}</p>

@@ -195,7 +195,7 @@ export const SpecialtyMenuEditor = ({
                     <button
                         onClick={() => setIsAdding(true)}
                         className="text-xs font-extrabold px-3.5 py-1.5 rounded-full transition-colors flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-volt-400"
-                        style={{ background: '#ccff00', color: '#231b15' }}
+                        style={{ background: '#a3e635', color: '#231b15' }}
                     >
                         <Icons.Plus /> Add
                     </button>
@@ -222,7 +222,7 @@ export const SpecialtyMenuEditor = ({
                                     onChange={e => setEditingItem({ ...editingItem, desc: e.target.value })}
                                 />
                                 <div className="flex gap-2">
-                                    <button onClick={saveEdit} className="px-3.5 py-1.5 rounded-full text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-volt-400" style={{ background: '#ccff00', color: '#231b15' }}>Save</button>
+                                    <button onClick={saveEdit} className="px-3.5 py-1.5 rounded-full text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-volt-400" style={{ background: '#a3e635', color: '#231b15' }}>Save</button>
                                     <button onClick={() => setEditingIdx(null)} className="text-xs font-bold" style={{ color: 'rgba(243,239,224,0.5)' }}>Cancel</button>
                                 </div>
                             </div>
@@ -266,7 +266,7 @@ export const SpecialtyMenuEditor = ({
                             onChange={e => setNewItem({ ...newItem, desc: e.target.value })}
                         />
                         <div className="flex gap-2">
-                            <button onClick={handleAdd} className="px-3.5 py-1.5 rounded-full text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-volt-400" style={{ background: '#ccff00', color: '#231b15' }}>Add</button>
+                            <button onClick={handleAdd} className="px-3.5 py-1.5 rounded-full text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-volt-400" style={{ background: '#a3e635', color: '#231b15' }}>Add</button>
                             <button onClick={() => setIsAdding(false)} className="text-xs font-bold" style={{ color: 'rgba(243,239,224,0.5)' }}>Cancel</button>
                         </div>
                     </div>
@@ -330,7 +330,7 @@ export const VeganInfoEditor = ({
                     <button
                         onClick={() => setIsAdding(true)}
                         className="text-xs font-extrabold px-4 py-2 rounded-full transition-all flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-volt-400"
-                        style={{ background: '#ccff00', color: '#231b15' }}
+                        style={{ background: '#a3e635', color: '#231b15' }}
                     >
                         <Icons.Plus /> Add Milk Offering
                     </button>
@@ -522,7 +522,7 @@ export const BaristaEditor = ({
                 name: newPerson.name,
                 role: newPerson.role,
                 bio: newPerson.bio || '',
-                imageUrl: newPerson.imageUrl || `https://ui-avatars.com/api/?name=${newPerson.name}&background=231b15&color=ccff00`
+                imageUrl: newPerson.imageUrl || `https://ui-avatars.com/api/?name=${newPerson.name}&background=231b15&color=a3e635`
             }]);
             setNewPerson({});
             setIsAdding(false);
@@ -543,7 +543,7 @@ export const BaristaEditor = ({
                     <button
                         onClick={() => setIsAdding(true)}
                         className="text-xs font-extrabold px-3.5 py-1.5 rounded-full transition-colors flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-volt-400"
-                        style={{ background: '#ccff00', color: '#231b15' }}
+                        style={{ background: '#a3e635', color: '#231b15' }}
                     >
                         <Icons.Plus /> Add Profile
                     </button>
@@ -603,7 +603,7 @@ export const BaristaEditor = ({
                         onChange={e => setNewPerson({ ...newPerson, bio: e.target.value })}
                     />
                     <div className="flex gap-2">
-                        <button onClick={handleAdd} className="px-4 py-2 rounded-full text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-volt-400" style={{ background: '#ccff00', color: '#231b15' }}>Save Profile</button>
+                        <button onClick={handleAdd} className="px-4 py-2 rounded-full text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-volt-400" style={{ background: '#a3e635', color: '#231b15' }}>Save Profile</button>
                         <button onClick={() => setIsAdding(false)} className="text-xs font-bold px-2" style={{ color: 'rgba(243,239,224,0.5)' }}>Cancel</button>
                     </div>
                 </div>
@@ -644,7 +644,7 @@ const AddBrewItemModal = ({ isOpen, onClose, onAdd }: { isOpen: boolean, onClose
                 </button>
 
                 <h3 className="text-xl font-serif font-black mb-6 flex items-center gap-2" style={{ color: '#f3efe0', letterSpacing: '-0.02em' }}>
-                    <i className="fas fa-mug-hot text-[#ccff00]"></i> Add to Menu
+                    <i className="fas fa-mug-hot text-[#a3e635]"></i> Add to Menu
                 </h3>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -700,7 +700,7 @@ const AddBrewItemModal = ({ isOpen, onClose, onAdd }: { isOpen: boolean, onClose
 
                     <button
                         type="submit"
-                        className="w-full py-3 bg-[#ccff00] text-[#231b15] font-bold rounded-xl hover:opacity-90 transition-colors mt-2"
+                        className="w-full py-3 bg-[#a3e635] text-[#231b15] font-bold rounded-xl hover:opacity-90 transition-colors mt-2"
                     >
                         Add to Menu
                     </button>
@@ -893,7 +893,7 @@ export const HappeningNowEditor = ({
                             <button
                                 onClick={handleRepost}
                                 className="text-xs font-extrabold px-3.5 py-1.5 rounded-full transition-colors flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-volt-400"
-                                style={{ background: '#ccff00', color: '#231b15' }}
+                                style={{ background: '#a3e635', color: '#231b15' }}
                             >
                                 <Icons.Refresh /> Repost
                             </button>
@@ -902,7 +902,7 @@ export const HappeningNowEditor = ({
                             <button
                                 onClick={() => setIsEditing(true)}
                                 className="text-xs font-extrabold px-3.5 py-1.5 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400"
-                                style={{ background: '#ccff00', color: '#231b15' }}
+                                style={{ background: '#a3e635', color: '#231b15' }}
                             >
                                 <Icons.Plus /> Create Post
                             </button>
@@ -1026,7 +1026,7 @@ export const HappeningNowEditor = ({
                                 <button
                                     onClick={() => setIsEditing(true)}
                                     className="mt-4 text-xs font-extrabold px-4 py-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400"
-                                    style={{ background: '#ccff00', color: '#231b15' }}
+                                    style={{ background: '#a3e635', color: '#231b15' }}
                                 >
                                     Create Post
                                 </button>
@@ -1231,7 +1231,7 @@ export const MarketingSuite = ({
                             onClick={handleSubmit}
                             disabled={!isValidDates}
                             className="w-full py-4 font-extrabold rounded-xl shadow-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-volt-400"
-                            style={{ background: '#ccff00', color: '#231b15' }}
+                            style={{ background: '#a3e635', color: '#231b15' }}
                         >
                             Submit for Approval
                         </button>
@@ -1295,7 +1295,7 @@ export const MarketingSuite = ({
                 <button
                     onClick={() => setView('create')}
                     className="text-xs font-extrabold px-3.5 py-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400"
-                    style={{ background: '#ccff00', color: '#231b15' }}
+                    style={{ background: '#a3e635', color: '#231b15' }}
                 >
                     + New Campaign
                 </button>

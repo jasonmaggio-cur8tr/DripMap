@@ -413,7 +413,7 @@ const AddSpot: React.FC = () => {
                          }}
                          className={`flex flex-col items-start gap-1 p-4 rounded-xl border-2 text-left transition-all focus:outline-none focus:ring-2 focus:ring-volt-400 ${
                            active
-                             ? 'border-volt-400 bg-[rgba(204,255,0,0.10)]'
+                             ? 'border-volt-400 bg-[rgba(163,230,53,0.10)]'
                              : 'border-white/[0.09] bg-[#2f251d] hover:border-white/[0.2]'
                          }`}
                        >

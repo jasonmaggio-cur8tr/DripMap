@@ -100,7 +100,7 @@ const ExpandableLogCard = ({ log }: { log: any }) => {
         <div className="flex flex-col items-end">
           <div
             className="flex items-center gap-1 px-2 py-1 rounded-xl border font-black"
-            style={{ background: 'rgba(204,255,0,0.16)', borderColor: 'rgba(204,255,0,0.5)', color: '#ccff00' }}
+            style={{ background: 'rgba(163,230,53,0.16)', borderColor: 'rgba(163,230,53,0.5)', color: '#a3e635' }}
           >
             <i className="fas fa-tint text-[10px]"></i>
             <span className="text-sm font-bold">{log.overallQuality}</span>
@@ -184,7 +184,7 @@ const ExpandableLogCard = ({ log }: { log: any }) => {
               ? "text-volt-400"
               : "bg-white/5 text-[rgba(243,239,224,0.5)] hover:bg-white/10"
             }`}
-          style={isLiked ? { background: 'rgba(204,255,0,0.12)' } : undefined}
+          style={isLiked ? { background: 'rgba(163,230,53,0.12)' } : undefined}
         >
           <i className={`${isLiked ? 'fas' : 'far'} fa-heart`}></i>
           {likesCount > 0 && <span>{likesCount}</span>}
@@ -767,7 +767,7 @@ const ShopDetail: React.FC = () => {
               {shopAggregate?.dripScore ? (
                 <span
                   className="inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[15px] font-black"
-                  style={{ background: 'rgba(204,255,0,0.16)', borderColor: 'rgba(204,255,0,0.5)', color: '#ccff00' }}
+                  style={{ background: 'rgba(163,230,53,0.16)', borderColor: 'rgba(163,230,53,0.5)', color: '#a3e635' }}
                 >
                   <i className="fas fa-tint text-xs"></i>
                   {shopAggregate.dripScore.toFixed(0)}
@@ -775,22 +775,22 @@ const ShopDetail: React.FC = () => {
               ) : (
                 <span
                   className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-black uppercase"
-                  style={{ background: 'rgba(204,255,0,0.15)', borderColor: 'rgba(204,255,0,0.5)', color: '#ccff00', letterSpacing: '0.07em' }}
+                  style={{ background: 'rgba(163,230,53,0.15)', borderColor: 'rgba(163,230,53,0.5)', color: '#a3e635', letterSpacing: '0.07em' }}
                 >
                   <i className="fas fa-tint"></i> Score Pending
                 </span>
               )}
               {shop.isClaimed && (
-                <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full flex items-center gap-1.5" style={{ background: '#ccff00', color: '#231b15', letterSpacing: '0.07em' }}>
+                <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full flex items-center gap-1.5" style={{ background: '#a3e635', color: '#231b15', letterSpacing: '0.07em' }}>
                   <i className="fas fa-certificate"></i> Verified
                 </span>
               )}
               {isProPlus ? (
-                <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full flex items-center gap-1.5 border" style={{ background: 'rgba(204,255,0,0.15)', borderColor: 'rgba(204,255,0,0.5)', color: '#ccff00', letterSpacing: '0.07em' }}>
+                <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full flex items-center gap-1.5 border" style={{ background: 'rgba(163,230,53,0.15)', borderColor: 'rgba(163,230,53,0.5)', color: '#a3e635', letterSpacing: '0.07em' }}>
                   <i className="fas fa-crown"></i> PRO+
                 </span>
               ) : isPro && (
-                <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full flex items-center gap-1.5 border" style={{ background: 'rgba(204,255,0,0.15)', borderColor: 'rgba(204,255,0,0.5)', color: '#ccff00', letterSpacing: '0.07em' }}>
+                <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full flex items-center gap-1.5 border" style={{ background: 'rgba(163,230,53,0.15)', borderColor: 'rgba(163,230,53,0.5)', color: '#a3e635', letterSpacing: '0.07em' }}>
                   <i className="fas fa-star"></i> PRO
                 </span>
               )}
@@ -832,7 +832,7 @@ const ShopDetail: React.FC = () => {
               <button
                 onClick={handleDirections}
                 className="flex-[1.3] h-[52px] rounded-2xl flex items-center justify-center gap-2 text-[13px] font-extrabold transition-transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-volt-400"
-                style={{ background: '#ccff00', color: '#231b15', boxShadow: '0 8px 24px -6px rgba(204,255,0,0.5)' }}
+                style={{ background: '#a3e635', color: '#231b15', boxShadow: '0 8px 24px -6px rgba(163,230,53,0.5)' }}
               >
                 <i className="fas fa-diamond-turn-right"></i>
                 Directions
@@ -841,7 +841,7 @@ const ShopDetail: React.FC = () => {
                 onClick={handleSaveClick}
                 className="flex-1 h-[52px] rounded-2xl border border-white/[0.08] bg-[#2b221b] flex items-center justify-center gap-2 text-[13px] font-extrabold text-[#f3efe0] transition-colors hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-volt-400"
               >
-                <i className={`${isSaved ? 'fas' : 'far'} fa-heart`} style={isSaved ? { color: '#ccff00' } : undefined}></i>
+                <i className={`${isSaved ? 'fas' : 'far'} fa-heart`} style={isSaved ? { color: '#a3e635' } : undefined}></i>
                 {isSaved ? 'Saved' : 'Save'}
               </button>
               <button
@@ -857,7 +857,7 @@ const ShopDetail: React.FC = () => {
             {/* Stat strip */}
             <div className="flex rounded-2xl border border-white/[0.06] bg-[#2b221b] divide-x divide-white/[0.06]">
               <div className="flex-1 py-4 text-center">
-                <div className="font-serif text-[22px] font-black" style={{ color: '#ccff00' }}>
+                <div className="font-serif text-[22px] font-black" style={{ color: '#a3e635' }}>
                   {shopAggregate?.dripScore ? shopAggregate.dripScore.toFixed(0) : '—'}
                 </div>
                 <div className="text-[10px] font-bold uppercase text-[rgba(243,239,224,0.5)]">Drip Score</div>
@@ -1026,7 +1026,7 @@ const ShopDetail: React.FC = () => {
                     onClick={() => photoInputRef.current?.click()}
                     disabled={isUploadingPhoto}
                     className="rounded-full px-5 py-2.5 text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-volt-400 disabled:opacity-50"
-                    style={{ background: '#ccff00', color: '#231b15' }}
+                    style={{ background: '#a3e635', color: '#231b15' }}
                   >
                     {isUploadingPhoto ? (
                       <><i className="fas fa-spinner fa-spin mr-1.5"></i>Uploading...</>
@@ -1217,7 +1217,7 @@ const ShopDetail: React.FC = () => {
                 {shopAggregate?.dripScore && (
                   <div
                     className="flex items-center gap-1 font-bold px-3 py-1 rounded-xl border"
-                    style={{ background: 'rgba(204,255,0,0.16)', borderColor: 'rgba(204,255,0,0.5)', color: '#ccff00' }}
+                    style={{ background: 'rgba(163,230,53,0.16)', borderColor: 'rgba(163,230,53,0.5)', color: '#a3e635' }}
                   >
                     <i className="fas fa-tint"></i>
                     <span>{shopAggregate.dripScore.toFixed(0)}</span>
@@ -1251,7 +1251,7 @@ const ShopDetail: React.FC = () => {
                   <div className="bg-[#2b221b] rounded-2xl p-4 mb-8 border border-white/[0.06] grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="text-center p-3 bg-[#2f251d] rounded-xl border border-white/[0.06]">
                       <div className="text-[10px] text-[rgba(243,239,224,0.5)] font-bold uppercase tracking-[0.08em] mb-1">Drip Score</div>
-                      <div className="font-serif text-[22px] font-black flex items-center justify-center gap-1" style={{ color: '#ccff00' }}>
+                      <div className="font-serif text-[22px] font-black flex items-center justify-center gap-1" style={{ color: '#a3e635' }}>
                         <i className="fas fa-tint text-sm"></i>
                         {shopAggregate.dripScore?.toFixed(0) || "--"}
                       </div>
@@ -1330,7 +1330,7 @@ const ShopDetail: React.FC = () => {
               {/* Trigger review modal manually if needed */}
               <button
                 className="w-full mt-6 rounded-full py-2.5 text-sm font-extrabold transition-transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-volt-400"
-                style={{ background: '#ccff00', color: '#231b15' }}
+                style={{ background: '#a3e635', color: '#231b15' }}
                 onClick={() => setShowExperienceLogModal(true)}
               >
                 Log Experience
@@ -1501,7 +1501,7 @@ const ShopDetail: React.FC = () => {
                           ? "text-volt-400 border border-volt-400/50"
                           : "text-[#f3efe0] bg-white/5 border border-white/[0.08] hover:border-white/20"
                           }`}
-                        style={isSaved ? { background: 'rgba(204,255,0,0.12)' } : undefined}
+                        style={isSaved ? { background: 'rgba(163,230,53,0.12)' } : undefined}
                         onClick={handleSaveClick}
                       >
                         <i
@@ -1514,7 +1514,7 @@ const ShopDetail: React.FC = () => {
                           ? "text-volt-400 border border-volt-400/50"
                           : "text-[#f3efe0] bg-white/5 border border-white/[0.08] hover:border-white/20"
                           }`}
-                        style={isVisited ? { background: 'rgba(204,255,0,0.12)' } : undefined}
+                        style={isVisited ? { background: 'rgba(163,230,53,0.12)' } : undefined}
                         onClick={handleVisitedClick}
                       >
                         <i
@@ -1528,7 +1528,7 @@ const ShopDetail: React.FC = () => {
                   <button
                     onClick={handleDirections}
                     className="w-full rounded-full py-2.5 font-extrabold transition-transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-volt-400"
-                    style={{ background: '#ccff00', color: '#231b15', boxShadow: '0 8px 24px -6px rgba(204,255,0,0.5)' }}
+                    style={{ background: '#a3e635', color: '#231b15', boxShadow: '0 8px 24px -6px rgba(163,230,53,0.5)' }}
                   >
                     <i className="fas fa-diamond-turn-right mr-2"></i> Get
                     Directions
@@ -1550,7 +1550,7 @@ const ShopDetail: React.FC = () => {
                         </p>
                         <button
                           className="w-full rounded-full py-2.5 font-extrabold focus:outline-none focus:ring-2 focus:ring-volt-400"
-                          style={{ background: '#ccff00', color: '#231b15' }}
+                          style={{ background: '#a3e635', color: '#231b15' }}
                           onClick={() => {
                             if (user) {
                               navigate(`/claim/${shop.id}`);

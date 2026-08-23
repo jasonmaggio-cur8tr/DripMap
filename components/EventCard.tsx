@@ -162,7 +162,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
           <div className="flex justify-between items-start mb-2">
             <div className="flex items-center gap-2">
               <div className="text-center border border-white/[0.09] rounded-lg p-1.5 min-w-[50px]" style={{ background: '#2f251d' }}>
-                <span className="block text-[10px] uppercase font-bold" style={{ color: '#ccff00' }}>{startDate.toLocaleDateString(undefined, { month: 'short' })}</span>
+                <span className="block text-[10px] uppercase font-bold" style={{ color: '#a3e635' }}>{startDate.toLocaleDateString(undefined, { month: 'short' })}</span>
                 <span className="block text-lg font-black leading-none" style={{ color: '#f3efe0' }}>{startDate.getDate()}</span>
               </div>
               <div>
@@ -179,7 +179,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) =
         {/* Content */}
         <div className="mb-3">
           {event.coverImage && (
-            <p className="text-xs font-bold mb-1 uppercase tracking-wide" style={{ color: '#ccff00' }}>
+            <p className="text-xs font-bold mb-1 uppercase tracking-wide" style={{ color: '#a3e635' }}>
               {dateStr} &bull; {timeStr}
             </p>
           )}

@@ -70,7 +70,7 @@ const CHIP = "#2f251d";
 const TEXT = "#f3efe0";
 const MUTED = "rgba(243,239,224,0.55)";
 const FAINT = "rgba(243,239,224,0.45)";
-const VOLT = "#ccff00";
+const VOLT = "#a3e635";
 
 type UserMetric = "points" | "alltime" | "logs" | "matcha" | "driplikes" | "explorer";
 type ShopMetric = "logged" | "dates" | "loved";
@@ -294,7 +294,7 @@ const Leaderboard: React.FC = () => {
                 {tab === "users" && standing && (
                     <div
                         className="mb-6 flex items-center gap-4 rounded-2xl border p-4"
-                        style={{ background: "rgba(204,255,0,0.10)", borderColor: "rgba(204,255,0,0.35)" }}
+                        style={{ background: "rgba(163,230,53,0.10)", borderColor: "rgba(163,230,53,0.35)" }}
                     >
                         <div
                             className="flex h-13 w-13 shrink-0 items-center justify-center rounded-full font-black"
@@ -344,7 +344,7 @@ const Leaderboard: React.FC = () => {
                                 const chip = (
                                     <div
                                         className="flex flex-shrink-0 items-center gap-2.5 rounded-2xl border px-3 py-2"
-                                        style={{ background: SURFACE, borderColor: "rgba(204,255,0,0.35)" }}
+                                        style={{ background: SURFACE, borderColor: "rgba(163,230,53,0.35)" }}
                                     >
                                         {isUser ? (
                                             <BadgedAvatar

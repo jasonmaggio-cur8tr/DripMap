@@ -21,13 +21,13 @@ const NavRow: React.FC<{
     onClick={onClick}
     className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400"
     style={{
-      background: highlight ? 'rgba(204,255,0,0.10)' : 'transparent',
+      background: highlight ? 'rgba(163,230,53,0.10)' : 'transparent',
       borderRadius: highlight ? 14 : 11,
     }}
   >
     <span
       className="flex h-[38px] w-[38px] items-center justify-center rounded-[11px]"
-      style={{ background: highlight ? '#ccff00' : '#2f251d' }}
+      style={{ background: highlight ? '#a3e635' : '#2f251d' }}
     >
       <i className={`fas ${icon} text-[15px]`} style={{ color: highlight ? '#231b15' : '#e4ddce' }}></i>
     </span>
@@ -78,12 +78,12 @@ const MenuDrawer: React.FC<MenuDrawerProps> = ({ open, onClose }) => {
                 src={user.avatarUrl}
                 alt={user.username}
                 className="h-[54px] w-[54px] rounded-full object-cover"
-                style={{ border: '2px solid #ccff00' }}
+                style={{ border: '2px solid #a3e635' }}
               />
             ) : (
               <span
                 className="flex h-[54px] w-[54px] items-center justify-center rounded-full"
-                style={{ background: '#2f251d', border: '2px solid #ccff00' }}
+                style={{ background: '#2f251d', border: '2px solid #a3e635' }}
               >
                 <i className="fas fa-user" style={{ color: '#e4ddce' }}></i>
               </span>
@@ -104,7 +104,7 @@ const MenuDrawer: React.FC<MenuDrawerProps> = ({ open, onClose }) => {
               </p>
               <span
                 className="mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider"
-                style={{ background: 'rgba(204,255,0,0.14)', color: '#ccff00' }}
+                style={{ background: 'rgba(163,230,53,0.14)', color: '#a3e635' }}
               >
                 <i className="fas fa-mug-hot"></i>
                 {(user.dripScore ?? 0)} Drip Score
@@ -118,7 +118,7 @@ const MenuDrawer: React.FC<MenuDrawerProps> = ({ open, onClose }) => {
               <button
                 onClick={() => go('/auth')}
                 className="mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-volt-400"
-                style={{ background: '#ccff00', color: '#231b15' }}
+                style={{ background: '#a3e635', color: '#231b15' }}
               >
                 Sign in
               </button>
@@ -138,7 +138,7 @@ const MenuDrawer: React.FC<MenuDrawerProps> = ({ open, onClose }) => {
             onClick={() => go('/dripclub')}
             highlight
             trailing={
-              <span className="rounded-full px-2 py-0.5 text-[9px] font-black" style={{ background: '#ccff00', color: '#231b15' }}>
+              <span className="rounded-full px-2 py-0.5 text-[9px] font-black" style={{ background: '#a3e635', color: '#231b15' }}>
                 10% OFF
               </span>
             }
@@ -148,7 +148,7 @@ const MenuDrawer: React.FC<MenuDrawerProps> = ({ open, onClose }) => {
             label="Scout Bounty"
             onClick={() => go('/scout-bounty')}
             trailing={
-              <span className="text-[11px] font-extrabold" style={{ color: '#ccff00' }}>
+              <span className="text-[11px] font-extrabold" style={{ color: '#a3e635' }}>
                 $10 / spot
               </span>
             }

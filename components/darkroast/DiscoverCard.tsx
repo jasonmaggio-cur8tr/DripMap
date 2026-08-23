@@ -46,7 +46,7 @@ interface DiscoverCardProps {
 const DiscoverCard: React.FC<DiscoverCardProps> = ({ shop, isSaved, onToggleSave, distanceMi, categoryBadge, eager, savers }) => {
   const photo = shop.gallery?.[0]?.url;
   const addedLabel = categoryBadge ? null : justAddedLabel(shop.createdAt);
-  const tint = categoryBadge ? CATEGORY_TINTS[categoryBadge] ?? { bg: 'rgba(204,255,0,0.92)', text: '#231b15' } : null;
+  const tint = categoryBadge ? CATEGORY_TINTS[categoryBadge] ?? { bg: 'rgba(163,230,53,0.92)', text: '#231b15' } : null;
 
   const metaParts: string[] = [];
   if (shop.location?.address) metaParts.push(shop.location.address);
@@ -98,7 +98,7 @@ const DiscoverCard: React.FC<DiscoverCardProps> = ({ shop, isSaved, onToggleSave
       ) : addedLabel ? (
         <span
           className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black uppercase"
-          style={{ background: '#ccff00', color: '#231b15', letterSpacing: '0.07em' }}
+          style={{ background: '#a3e635', color: '#231b15', letterSpacing: '0.07em' }}
         >
           <i className="fas fa-bolt"></i>
           Just Added · {addedLabel}
@@ -116,7 +116,7 @@ const DiscoverCard: React.FC<DiscoverCardProps> = ({ shop, isSaved, onToggleSave
         className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-volt-400"
         style={{ background: 'rgba(35,27,21,0.45)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
       >
-        <i className={`${isSaved ? 'fas' : 'far'} fa-heart text-lg`} style={{ color: isSaved ? '#ccff00' : '#fff' }}></i>
+        <i className={`${isSaved ? 'fas' : 'far'} fa-heart text-lg`} style={{ color: isSaved ? '#a3e635' : '#fff' }}></i>
       </button>
 
       {/* Glass detail capsule */}
@@ -132,7 +132,7 @@ const DiscoverCard: React.FC<DiscoverCardProps> = ({ shop, isSaved, onToggleSave
           {shop.dripScore ? (
             <span
               className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[15px] font-black"
-              style={{ background: 'rgba(204,255,0,0.16)', borderColor: 'rgba(204,255,0,0.5)', color: '#ccff00' }}
+              style={{ background: 'rgba(163,230,53,0.16)', borderColor: 'rgba(163,230,53,0.5)', color: '#a3e635' }}
             >
               <i className="fas fa-tint text-xs"></i>
               {Math.round(shop.dripScore)}
@@ -166,7 +166,7 @@ const DiscoverCard: React.FC<DiscoverCardProps> = ({ shop, isSaved, onToggleSave
                         key={s.id}
                         title={s.username}
                         className="flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-black uppercase"
-                        style={{ background: '#ccff00', color: '#231b15', border: '1.5px solid rgba(35,27,21,0.9)' }}
+                        style={{ background: '#a3e635', color: '#231b15', border: '1.5px solid rgba(35,27,21,0.9)' }}
                       >
                         {s.username?.[0] ?? '?'}
                       </span>
