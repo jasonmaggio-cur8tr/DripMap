@@ -389,7 +389,7 @@ export const fetchShops = async (): Promise<Shop[]> => {
           parkingInfo: shop.parking_info,
 
           // Happening Now
-          happeningNow: shop.happening_now_title ? {
+          happeningNow: (shop.happening_now_title || shop.happening_now_message) ? {
             id: shop.id, // Use shop ID as happening now ID
             title: shop.happening_now_title,
             message: shop.happening_now_message,
@@ -550,7 +550,7 @@ export const fetchShopBySlug = async (slugOrId: string): Promise<Shop | null> =>
       onlineOrderUrl: shop.online_order_url,
       parkingInfo: shop.parking_info,
 
-      happeningNow: shop.happening_now_title ? {
+      happeningNow: (shop.happening_now_title || shop.happening_now_message) ? {
         id: shop.id,
         title: shop.happening_now_title,
         message: shop.happening_now_message,
@@ -749,9 +749,26 @@ export const updateShopInDB = async (
     custom_vibes?: string[];
     open_hours?: any;
     brand_id?: string | null;
+    country?: string;
     website_url?: string | null;
     instagram_url?: string | null;
     parking_info?: string | null;
+    // PRO fields (EditShop writes these only for pro / pro_plus shops)
+    happening_now_title?: string | null;
+    happening_now_message?: string | null;
+    happening_now_sticker?: string | null;
+    happening_now_expires_at?: string | null;
+    sourcing_info?: string | null;
+    espresso_machine?: string | null;
+    grinder_details?: string | null;
+    current_menu?: Array<{ id: string; type: 'Espresso' | 'Pour Over' | 'Drip' | 'Cold Brew'; roaster: string; beanName: string; notes: string }>;
+    specialty_drinks?: Array<{ name: string; desc: string }>;
+    vegan_food_options?: boolean;
+    plant_milks?: Array<{ name: string; upcharge: string }>;
+    baristas?: Array<{ id?: string; name: string; role: string; bio: string; imageUrl?: string; favoriteOrder?: string }>;
+    spotify_playlist_url?: string | null;
+    online_order_url?: string | null;
+    maps_url?: string | null;
   }
 ) => {
   try {

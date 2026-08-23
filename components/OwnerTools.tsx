@@ -814,8 +814,8 @@ export const HappeningNowEditor = ({
     });
     const { toast } = useToast();
 
-    // Check if expired
-    const isExpired = status ? new Date(status.expiresAt) < new Date() : true;
+    // Check if expired. A status with no expiresAt (set from Edit Shop Details) stays live until cleared.
+    const isExpired = status ? (!!status.expiresAt && new Date(status.expiresAt) < new Date()) : true;
     const isLive = status && !isExpired;
 
     // Load data into form when editing starts or if expired
@@ -1011,7 +1011,7 @@ export const HappeningNowEditor = ({
                             ) : (
                                 <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-volt-400 animate-pulse">
                                     <span className="w-2 h-2 bg-volt-400 rounded-full"></span>
-                                    Live &bull; Ends in {formatTimeLeft(status.expiresAt)}
+                                    Live{status.expiresAt ? <> &bull; Ends in {formatTimeLeft(status.expiresAt)}</> : null}
                                 </div>
                             )}
                         </div>
