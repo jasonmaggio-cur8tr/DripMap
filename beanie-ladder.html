@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Beanie Ladder — DripMap</title>
+
+  <!-- DripMap type stack, already CDN-hosted in the app (see index.css). -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
+
+  <style>
+    /* ------------------------------------------------------------------
+       DripMap design tokens — read from tailwind.config.js / index.css.
+       These are the single source of truth for colour and type.
+       ------------------------------------------------------------------ */
+    :root {
+      --coffee-900: #231b15;  /* Dark Roast — ink */
+      --coffee-200: #c8b8a8;  /* border token (dominant border in the app) */
+      --coffee-50:  #faf9f6;  /* Cream — surface */
+
+      --font-display: 'Fraunces', serif;  /* tailwind fontFamily.serif */
+
+      /* Canvas geometry */
+      --canvas-w: 1080px;
+      --canvas-h: 1920px;
+      --cell-w: 540px;
+      --cell-h: 680px;
+      --divider: 3px;         /* 1 app px at the 1080/390 canvas scale */
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: var(--canvas-w);
+      height: var(--canvas-h);
+      overflow: hidden;
+      background: var(--coffee-50);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #stage {
+      position: relative;
+      width: var(--canvas-w);
+      height: var(--canvas-h);
+      background: var(--coffee-50);
+    }
+
+    /* ---------------------------- headline ---------------------------- */
+    #headline {
+      position: absolute;
+      top: 104px;
+      left: 72px;
+      width: 936px;
+      font-family: var(--font-display);
+      font-weight: 900;                 /* app headline idiom: font-serif font-black */
+      font-size: 78px;
+      line-height: 1.02;
+      letter-spacing: -0.022em;         /* tracking-tight */
+      color: var(--coffee-900);
+      text-wrap: balance;
+    }
+
+    /* ------------------------------ grid ------------------------------ */
+    /* Grid is vertically centred in the space left under the headline. */
+    #grid {
+      position: absolute;
+      left: 0;
+      top: 480px;                       /* headline block ends here */
+      width: var(--canvas-w);
+      height: 1440px;                   /* 1920 - 480 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #grid-inner {
+      position: relative;
+      width: calc(var(--cell-w) * 2);
+      height: calc(var(--cell-h) * 2);
+    }
+
+    .panel {
+      position: absolute;
+      width: var(--cell-w);
+      height: var(--cell-h);
+      background: var(--coffee-50);
+      overflow: hidden;
+    }
+
+    .panel[data-slot="tl"] { left: 0;            top: 0; }
+    .panel[data-slot="tr"] { left: var(--cell-w); top: 0; }
+    .panel[data-slot="bl"] { left: 0;            top: var(--cell-h); }
+    .panel[data-slot="br"] { left: var(--cell-w); top: var(--cell-h); }
+
+    /* Head image occupies the panel above the label band. */
+    .head {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: var(--cell-w);
+      height: 530px;
+      object-fit: contain;
+      will-change: transform;
+    }
+
+    .label {
+      position: absolute;
+      left: 36px;
+      right: 36px;
+      bottom: 40px;
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 52px;
+      line-height: 1.04;
+      letter-spacing: -0.02em;
+      color: var(--coffee-900);
+      text-align: left;
+      will-change: transform, opacity;
+    }
+
+    /* --------------------------- dividers ----------------------------- */
+    /* Between panels only: one vertical, one horizontal. */
+    .divider {
+      position: absolute;
+      background: var(--coffee-200);
+    }
+
+    .divider--v {
+      left: calc(var(--cell-w) - var(--divider) / 2);
+      top: 0;
+      width: var(--divider);
+      height: 100%;
+    }
+
+    .divider--h {
+      left: 0;
+      top: calc(var(--cell-h) - var(--divider) / 2);
+      width: 100%;
+      height: var(--divider);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="stage">
+    <h1 id="headline">Every café has four people. One of them makes the coffee.</h1>
+
+    <div id="grid">
+      <div id="grid-inner">
+        <div class="panel" data-slot="tl">
+          <img class="head" src="./assets/consultant.png" alt="" />
+          <div class="label" data-slot="tl">Coffee Consultant</div>
+        </div>
+
+        <div class="panel" data-slot="tr">
+          <img class="head" src="./assets/owner.png" alt="" />
+          <div class="label" data-slot="tr">Shop Owner</div>
+        </div>
+
+        <div class="panel" data-slot="bl">
+          <img class="head" src="./assets/roaster.png" alt="" />
+          <div class="label" data-slot="bl">Roaster</div>
+        </div>
+
+        <div class="panel" data-slot="br">
+          <img class="head" src="./assets/barista.png" alt="" />
+          <div class="label" data-slot="br">Barista</div>
+        </div>
+
+        <div class="divider divider--v"></div>
+        <div class="divider divider--h"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    'use strict';
+
+    /* ==================================================================
+       Motion spec
+       ------------------------------------------------------------------
+       DURATION_S      10s total, captured at 30fps => 300 frames.
+       LABEL_STARTS    TL 0.6s, TR 1.4s, BL 2.2s, BR 3.0s.
+       LABEL_DUR_S     400ms fade-in + 8px rise, ease-out.
+       DRIFT           One shared horizontal drift across all four heads.
+                       Linear, transform only, and exactly seam-matched at
+                       t=0 and t=10 (a linear out-and-back, so f(0)===f(10)).
+       ================================================================== */
+
+    const DURATION_S = 10;
+    const FPS = 30;
+    const FRAME_COUNT = DURATION_S * FPS;   // 300
+
+    const LABEL_STARTS = { tl: 0.6, tr: 1.4, bl: 2.2, br: 3.0 };
+    const LABEL_DUR_S = 0.4;
+    const LABEL_RISE_PX = 8;
+
+    const DRIFT_AMPLITUDE_PX = 14;
+
+    const heads = Array.from(document.querySelectorAll('.head'));
+    const labels = Array.from(document.querySelectorAll('.label'));
+
+    if (heads.length !== 4) throw new Error('Expected 4 head images, found ' + heads.length);
+    if (labels.length !== 4) throw new Error('Expected 4 labels, found ' + labels.length);
+
+    function easeOutCubic(p) {
+      return 1 - Math.pow(1 - p, 3);
+    }
+
+    function clamp01(v) {
+      return v < 0 ? 0 : v > 1 ? 1 : v;
+    }
+
+    /* Linear triangle over the full 10s: -A at t=0, +A at t=5, -A at t=10.
+       Constant speed throughout, and the last frame hands back to the
+       first with no positional seam. */
+    function driftX(t) {
+      const phase = (t % DURATION_S) / DURATION_S;
+      const tri = phase < 0.5 ? phase * 2 : 2 - phase * 2;
+      return -DRIFT_AMPLITUDE_PX + 2 * DRIFT_AMPLITUDE_PX * tri;
+    }
+
+    function labelState(t, slot) {
+      const p = clamp01((t - LABEL_STARTS[slot]) / LABEL_DUR_S);
+      const eased = easeOutCubic(p);
+      return { opacity: eased, y: LABEL_RISE_PX * (1 - eased) };
+    }
+
+    /* The single source of truth for what the frame looks like at time t.
+       Both the live preview clock and the Puppeteer capture drive this. */
+    function seek(t) {
+      const x = driftX(t);
+      for (const head of heads) {
+        head.style.transform = 'translateX(' + x.toFixed(4) + 'px)';
+      }
+      for (const label of labels) {
+        const s = labelState(t, label.dataset.slot);
+        label.style.opacity = s.opacity.toFixed(4);
+        label.style.transform = 'translateY(' + s.y.toFixed(4) + 'px)';
+      }
+    }
+
+    let rafId = null;
+
+    function stopClock() {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    }
+
+    function startClock() {
+      const t0 = performance.now();
+      const tick = (now) => {
+        seek(((now - t0) / 1000) % DURATION_S);
+        rafId = requestAnimationFrame(tick);
+      };
+      rafId = requestAnimationFrame(tick);
+    }
+
+    /* Fail loudly if an asset is missing rather than rendering a hole. */
+    function loadHeads() {
+      return Promise.all(heads.map((img) => new Promise((resolve, reject) => {
+        if (img.complete && img.naturalWidth > 0) return resolve();
+        img.addEventListener('load', () => resolve(), { once: true });
+        img.addEventListener('error', () => reject(
+          new Error('Missing asset: ' + img.getAttribute('src'))
+        ), { once: true });
+      })));
+    }
+
+    const ready = Promise.all([loadHeads(), document.fonts.ready]).then(() => {
+      seek(0);
+    });
+
+    window.beanieLadder = { seek, stopClock, ready, DURATION_S, FPS, FRAME_COUNT };
+
+    ready.then(startClock);
+  </script>
+</body>
+
+</html>
