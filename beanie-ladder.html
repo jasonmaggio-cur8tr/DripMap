@@ -28,7 +28,7 @@
       --canvas-w: 1080px;
       --canvas-h: 1920px;
       --cell-w: 540px;
-      --cell-h: 680px;
+      --cell-h: 720px;
       --divider: 3px;         /* 1 app px at the 1080/390 canvas scale */
     }
 
@@ -57,7 +57,7 @@
       width: 936px;
       font-family: var(--font-display);
       font-weight: 900;                 /* app headline idiom: font-serif font-black */
-      font-size: 78px;
+      font-size: 92px;
       line-height: 1.02;
       letter-spacing: -0.022em;         /* tracking-tight */
       color: var(--coffee-900);
@@ -69,9 +69,9 @@
     #grid {
       position: absolute;
       left: 0;
-      top: 480px;                       /* headline block ends here */
+      top: 400px;                       /* headline block ends here */
       width: var(--canvas-w);
-      height: 1440px;                   /* 1920 - 480 */
+      height: 1520px;                   /* 1920 - 400 */
       display: flex;
       align-items: center;
       justify-content: center;
@@ -102,8 +102,9 @@
       left: 0;
       top: 0;
       width: var(--cell-w);
-      height: 530px;
+      height: 570px;
       object-fit: contain;
+      transform-origin: 50% 100%;   /* pivot at the neck */
       will-change: transform;
     }
 
@@ -147,7 +148,7 @@
 
 <body>
   <div id="stage">
-    <h1 id="headline">Every café has four people. One of them makes the coffee.</h1>
+    <h1 id="headline">Where does your beanie sit?</h1>
 
     <div id="grid">
       <div id="grid-inner">
@@ -199,7 +200,8 @@
     const LABEL_DUR_S = 0.4;
     const LABEL_RISE_PX = 8;
 
-    const DRIFT_AMPLITUDE_PX = 14;
+    const DRIFT_AMPLITUDE_PX = 8;
+    const SWIVEL_AMPLITUDE_DEG = 1.6;
 
     const heads = Array.from(document.querySelectorAll('.head'));
     const labels = Array.from(document.querySelectorAll('.label'));
@@ -218,10 +220,16 @@
     /* Linear triangle over the full 10s: -A at t=0, +A at t=5, -A at t=10.
        Constant speed throughout, and the last frame hands back to the
        first with no positional seam. */
-    function driftX(t) {
+    function triangle(t) {
       const phase = (t % DURATION_S) / DURATION_S;
-      const tri = phase < 0.5 ? phase * 2 : 2 - phase * 2;
-      return -DRIFT_AMPLITUDE_PX + 2 * DRIFT_AMPLITUDE_PX * tri;
+      return phase < 0.5 ? phase * 2 : 2 - phase * 2;
+    }
+
+    function headTransform(t) {
+      const tri = triangle(t);
+      const x = -DRIFT_AMPLITUDE_PX + 2 * DRIFT_AMPLITUDE_PX * tri;
+      const deg = -SWIVEL_AMPLITUDE_DEG + 2 * SWIVEL_AMPLITUDE_DEG * tri;
+      return 'translateX(' + x.toFixed(4) + 'px) rotate(' + deg.toFixed(4) + 'deg)';
     }
 
     function labelState(t, slot) {
@@ -233,9 +241,9 @@
     /* The single source of truth for what the frame looks like at time t.
        Both the live preview clock and the Puppeteer capture drive this. */
     function seek(t) {
-      const x = driftX(t);
+      const transform = headTransform(t);
       for (const head of heads) {
-        head.style.transform = 'translateX(' + x.toFixed(4) + 'px)';
+        head.style.transform = transform;
       }
       for (const label of labels) {
         const s = labelState(t, label.dataset.slot);
