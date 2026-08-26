@@ -9,10 +9,12 @@
       "DOM",
       "DOM.Iterable"
     ],
+    "types": [
+      "vite/client"
+    ],
     "baseUrl": ".",
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    
     "moduleResolution": "bundler",
     "isolatedModules": true,
     "moduleDetection": "force",
@@ -25,5 +27,10 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "supabase/functions",
+    "scripts"
+  ]
 }
