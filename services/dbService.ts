@@ -387,6 +387,7 @@ export const fetchShops = async (): Promise<Shop[]> => {
           mapsUrl: shop.maps_url,
           onlineOrderUrl: shop.online_order_url,
           parkingInfo: shop.parking_info,
+          createdBy: shop.created_by,
 
           // Happening Now
           happeningNow: (shop.happening_now_title || shop.happening_now_message) ? {
@@ -549,6 +550,7 @@ export const fetchShopBySlug = async (slugOrId: string): Promise<Shop | null> =>
       mapsUrl: shop.maps_url,
       onlineOrderUrl: shop.online_order_url,
       parkingInfo: shop.parking_info,
+          createdBy: shop.created_by,
 
       happeningNow: (shop.happening_now_title || shop.happening_now_message) ? {
         id: shop.id,
@@ -601,11 +603,13 @@ export const createShop = async (shopData: {
   locationName?: string;
   openHours?: any;
   images: { url: string; type: "owner" | "community" }[];
+  createdBy?: string;
 }) => {
   try {
     const { data: shop, error: shopError } = await supabase
       .from("shops")
       .insert({
+        created_by: shopData.createdBy ?? null,
         name: shopData.name,
         slug: shopData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''), // Basic Auto-slug
         description: shopData.description,
