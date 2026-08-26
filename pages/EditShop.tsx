@@ -7,6 +7,7 @@ import { ALL_VIBES, CHEEKY_VIBES_OPTIONS } from '../constants';
 import { generateShopDescription } from '../services/geminiService';
 import { uploadImages } from '../services/storageService';
 import { updateShopInDB, addShopImages, deleteShopImage, reorderShopImages, fetchShops } from '../services/dbService';
+import { supabase } from '../lib/supabase';
 import Button from '../components/Button';
 import TagChip from '../components/TagChip';
 import LocationPicker from '../components/LocationPicker';
@@ -42,6 +43,7 @@ const EditShop: React.FC = () => {
   });
 
   const [parkingInfo, setParkingInfo] = useState('');
+  const [addedBy, setAddedBy] = useState<string | null>(null); // admin-only attribution
   const [isProShop, setIsProShop] = useState(false);
 
   // PRO feature state (persisted in the same save as the basics)
@@ -143,6 +145,10 @@ const EditShop: React.FC = () => {
     setBrandId((shopToEdit as any).brandId || '');
     setParkingInfo(shopToEdit.parkingInfo || '');
     setIsProShop(shopToEdit.subscriptionTier === 'pro' || shopToEdit.subscriptionTier === 'pro_plus');
+    if (user?.isAdmin && shopToEdit.createdBy) {
+      supabase.from('profiles').select('username').eq('id', shopToEdit.createdBy).single()
+        .then(({ data }) => { if (data?.username) setAddedBy(data.username); });
+    }
 
     // PRO fields
     // Only prefill a Happening Now post that is still live (no expiry, or expiry in the future);
@@ -435,6 +441,9 @@ const EditShop: React.FC = () => {
         <div className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-center md:text-left">
             <h1 className="text-3xl font-serif font-bold text-coffee-900 mb-2">Edit Shop Details</h1>
+          {addedBy && (
+            <p className="text-xs text-coffee-400 mb-2">Added by @{addedBy} <span className="opacity-60">(visible to admins only)</span></p>
+          )}
             <p className="text-coffee-500">Update the Lowdown for <span className="font-bold">{formData.name}</span>.</p>
           </div>
           <Button variant="outline" onClick={() => navigate(`/shop/${id}`)}>

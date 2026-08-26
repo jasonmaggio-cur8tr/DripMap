@@ -476,6 +476,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     // shopData comes from AddSpot form which has strictly typed shape matching Shop interface (mostly)
     // but dbService expects flat structure.
     const dbData = {
+      createdBy: user?.id,
       name: shopData.name,
       description: shopData.description,
       // specific mapping for location object
