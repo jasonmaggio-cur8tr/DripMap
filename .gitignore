@@ -33,3 +33,7 @@ dist-ssr
 .vercel
 docs_shared
 supabase
+
+# Beanie Ladder render output
+frames
+out
