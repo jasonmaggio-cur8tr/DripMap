@@ -8,6 +8,7 @@ import { Shop, Vibe, ShopImage, Brand } from '../types';
 import { ALL_VIBES, CHEEKY_VIBES_OPTIONS } from '../constants';
 import { generateShopDescription } from '../services/geminiService';
 import { uploadImages } from '../services/storageService';
+import { submitShopDraftForReview } from '../services/dbService';
 import Button from '../components/Button';
 import TagChip from '../components/TagChip';
 import LocationPicker from '../components/LocationPicker';
@@ -239,6 +240,26 @@ const AddSpot: React.FC = () => {
         url,
         type: 'owner'
       }));
+
+      // Fewer than 3 photos: the spot can't go live yet — send it to the admin
+      // shop queue for review instead.
+      if (uploadedImages.length < 3) {
+        const draftRes = await submitShopDraftForReview(user.id, {
+          name: formData.name,
+          description: formData.description,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          country: formData.country,
+          lat: location.lat,
+          lng: location.lng,
+          vibeTags: [...selectedVibes, ...selectedCheekyVibes],
+        }, uploadResult.urls);
+        if (!draftRes.success) throw (draftRes as { error?: Error }).error ?? new Error('Failed to submit for review');
+        toast.success("Spots need at least 3 photos to go live right away — we've sent yours to our review team instead. It'll appear on the map once approved!");
+        navigate('/');
+        return;
+      }
 
       // Handle Brand Logic
       let finalBrandId = formData.brandId;
@@ -765,7 +786,7 @@ const AddSpot: React.FC = () => {
             </div>
              <p className="text-xs text-[rgba(243,239,224,0.45)] mt-2">
                <i className="fas fa-info-circle mr-1"></i>
-               Photos are auto-compressed. Max 3MB per image after compression. For large phone photos, they will be resized automatically.
+               Add at least 3 photos to go live instantly — with fewer, your spot is sent to our review team first. Photos are auto-compressed (max 3MB each).
              </p>
           </section>
 

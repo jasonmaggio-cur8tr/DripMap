@@ -1164,6 +1164,56 @@ export const toggleVisitedShop = async (
 
 // ==================== CLAIM REQUESTS ====================
 
+// User-submitted shop with fewer than 3 photos: goes to the admin shop queue
+// (shop_drafts) for review instead of publishing live. Photos are already in
+// storage — we just record their URLs on the draft.
+export const submitShopDraftForReview = async (
+  userId: string,
+  shop: {
+    name: string; description: string; address: string; city: string;
+    state: string; country: string; lat: number; lng: number; vibeTags: string[];
+  },
+  photoUrls: string[]
+) => {
+  try {
+    const { data: draft, error } = await supabase
+      .from("shop_drafts")
+      .insert({
+        status: "pending",
+        submitted_by: userId,
+        shop_data: {
+          name: shop.name,
+          description: shop.description,
+          address: shop.address,
+          city: shop.city,
+          state: shop.state,
+          country: shop.country,
+          lat: shop.lat,
+          lng: shop.lng,
+          vibe_tags: shop.vibeTags,
+          source: "user_submission",
+        },
+      })
+      .select("id")
+      .single();
+    if (error || !draft) throw error ?? new Error("Failed to create draft");
+
+    for (let i = 0; i < photoUrls.length; i++) {
+      const { error: photoErr } = await supabase.from("shop_draft_photos").insert({
+        shop_draft_id: draft.id,
+        url: photoUrls[i],
+        position: i,
+        is_primary: i === 0,
+      });
+      if (photoErr) console.error("Error attaching draft photo:", photoErr);
+    }
+    return { success: true };
+  } catch (error) {
+    console.error("Error submitting shop draft for review:", error);
+    return { success: false, error };
+  }
+};
+
 export const submitClaimRequest = async (request: {
   shopId: string;
   userId: string;
