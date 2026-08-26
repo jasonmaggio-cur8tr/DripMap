@@ -148,7 +148,8 @@ const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shop, onC
                         time: time,
                         message,
                         inviteeCount: validInvitees.length,
-                        link: googleCalLink
+                        link: googleCalLink,
+                        calendarLink: googleCalLink
                     }
                 );
                 toast.success("Debug: Host Email sent!");
@@ -169,6 +170,7 @@ const CoffeeDateCreateModal: React.FC<CoffeeDateCreateModalProps> = ({ shop, onC
                                     time,
                                     message,
                                     link: googleCalLink, // Directly adding to calendar instead of the Accept page
+                                    calendarLink: googleCalLink,
                                     shopLink: `https://dripmap.space/#/shop/${shop.id}`
                                 }
                             );
