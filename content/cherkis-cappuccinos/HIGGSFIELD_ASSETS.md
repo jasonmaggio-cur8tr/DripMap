@@ -28,3 +28,15 @@ Higgsfield calls, so the character look carries forward without re-describing it
 | 12 · Rashford on the house phone | `cdd5c015-7121-4d33-8ef5-ba3e949a6863` |
 | 13 · Cherki flips the sign, night | `68bddebb-db8f-4e80-9401-77b16bfcbba7` |
 | 14 · car silhouettes (cliffhanger) | `719f41b9-4be3-49d3-9c8e-1d56a7c32b98` |
+
+## Round 3 — test video clips (kling3_0 pro, 5 s, 9:16, sound on)
+
+| Shot | Job ID | URL |
+|---|---|---|
+| 1 · hook, hands whisking + Cherki V.O. | `96c37304-5112-4e5d-9c77-1c7b1897f473` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_024646_96c37304-5112-4e5d-9c77-1c7b1897f473.mp4 |
+| 5 · Rashford freezes mid-pour | `a35b64bf-ec3e-4212-8074-9f2a7784631a` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_024656_a35b64bf-ec3e-4212-8074-9f2a7784631a.mp4 |
+
+Kling may return a preset recommendation instead of a job on dialogue-heavy prompts; resubmit
+with `declined_preset_id` set to the recommended preset to force a plain generation.
+
+Spend so far: 15 stills × 2 credits + 2 clips × 12.5 credits = 55 credits.
