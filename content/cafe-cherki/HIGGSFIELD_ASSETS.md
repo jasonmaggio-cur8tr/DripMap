@@ -47,3 +47,6 @@ Spend so far: 15 stills × 2 credits + 2 clips × 12.5 credits = 55 credits.
 |---|---|---|
 | Ident still, take A (used for the clip) | `b5b0d3fa-b18c-429d-b324-86eafba621c2` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_025620_b5b0d3fa-b18c-429d-b324-86eafba621c2.png |
 | Ident still, take B | `34eeaafd-fac8-4f58-8d2e-877b9cc4f9c7` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_025620_34eeaafd-fac8-4f58-8d2e-877b9cc4f9c7.png |
+| Ident clip, 3 s, kling3_0 pro, sound on (reuse on every episode) | `8f7e3a75-ef12-441e-b2ae-93cd74243417` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_025722_8f7e3a75-ef12-441e-b2ae-93cd74243417.mp4 |
+
+Trim the ident clip to 2 s in the edit (0:03–0:05). Spend so far: 71.5 credits.
