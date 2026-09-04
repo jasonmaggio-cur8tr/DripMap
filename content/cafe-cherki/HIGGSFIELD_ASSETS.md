@@ -166,3 +166,22 @@ Same line on every take: "Rash, Cherki's opened a trendy matcha shop."
 The ElevenLabs takes have no performance tag, so what you hear is each preset's native
 accent. Whichever preset is natively British becomes Maguire's base voice; Yorkshire
 colour then comes from the seed_audio tag on that same preset.
+
+## Rashford sweep — ElevenLabs engine, native accents, exact lines
+
+Both lines in one take: "I'm back from Barcelona, and ready to sell some tea. There's only one type of tea in Manchester." No performance tag.
+
+| # | Preset | Voice ID | Job ID |
+|---|---|---|---|
+| 101 | Alistair | `d9d5c263-f84e-4752-97b5-3750fcc6fd2f` | `12b7f06b-5b47-49a1-a738-5b3da8a08558` |
+| 102 | Sterling | `dc382508-c8bd-443c-8cb2-46e57b8d2e6f` | `ce5fa06d-6d5b-43ff-8e15-4ca876bb6515` |
+| 103 | Harrison | `573e5163-59b3-4926-aab1-951ef2985f81` | `cf706eea-3f19-4835-88a9-3ad8bcc698b5` |
+| 104 | Archie | `bd072316-f77c-588b-b6e5-e46b9b03d008` | `4d8010a5-0752-4914-8e39-1dfde26db8b6` |
+| 105 | Jasper | `a7b8abe9-47f1-553e-a9df-87945a7e5bc8` | `3484f460-291c-4f2a-b00c-dd242bcbb641` |
+| 106 | Julian | `95429266-c0ac-4137-a209-63b8812b0f23` | `3439a79e-9a12-4c3d-b7b2-6fcdaa463835` |
+| 107 | Caspian | `ef70cc83-3015-4bad-9359-0ea968c43ec0` | `e63cacf3-562e-432d-a421-3bcb001fa37d` |
+| 108 | Gideon | `1ad38ba4-9cc4-4f2f-9fde-b0fefdf67ae5` | `02cdecaa-776e-496a-9266-409d96fb63bb` |
+| 109 | Brooks | `c2acff45-84b2-4974-892d-89fa2d4e5598` | `1e59b718-ea98-4846-ac41-2dba292691e0` |
+| 110 | Fraser | `6705e465-7b52-5915-a1d8-b1222885e01d` | `1cd73059-f72d-4a71-9064-1714ed3e996a` |
+| 111 | Orion | `ed69c516-92d2-4b30-a967-617737a342e5` | `1b266cd9-5b1b-49d0-95a6-26172c4205c8` |
+| 112 | Arthur | `30fc8796-ceb6-4a66-b3a7-4a145ef7f346` | `f5005571-db7c-415f-b399-eaee87bf2eca` |
