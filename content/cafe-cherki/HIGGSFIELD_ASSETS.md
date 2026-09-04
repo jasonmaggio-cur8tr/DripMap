@@ -405,3 +405,35 @@ Normal pace with a sigh in front clears the minimum length. Owner approved the "
 | 8a · Haaland "Black coffee. Big." wan2_7 10 s | `73d8b289-e0af-490b-9458-781a80c042ec` |
 | 11a · Grealish "It's two in the afternoon, Rash." wan2_7 8 s | `5f6a53cd-0b8e-4a0a-b70c-2d14a35531a2` |
 | 11b · Kane "Is this about the oat milk again?" wan2_7 8 s | `a28a118c-3ab4-4eef-81da-e101a282acd0` |
+
+## Owner notes round 3 (2026-09-04): costumes and shot 8b line
+
+Line change: shot 8b is now "Matchas only, mate!" (was "We don't do coffee.").
+Haaland wears a leopard-print silk pyjama set (owner reference photo).
+Rooney wears a black twin-tipped pique polo (owner reference photo), no apron.
+Shot 3a re-cut: the Seed Audio Yorkshire tag had drifted off Callum and stretched
+"mate", so the line now uses the ElevenLabs Callum voice with no tag, padded with
+silence in ffmpeg to clear the Wan minimum length.
+
+| Asset | Job / media ID |
+|---|---|
+| Haaland character sheet v2, leopard silk pyjamas | `18a09900-af8f-4c87-b997-b2b36e28fab0` |
+| Rooney still, black tipped polo | `0bc885d3-3fcf-4d5d-8745-2a7be633ba7d` |
+| Still 8, Haaland enters in pyjamas | `00e67541-f92c-4093-b873-bfddf8010b7e` |
+| Still 9, Haaland takes the madeleine, pyjamas | `9b3f70e7-16d8-4771-90cf-1d18281e4fae` |
+| Audio, Cherki "Matchas only, mate!" take A | `65b5e44b-d817-4350-901e-8efa5c6ec43f` |
+| Audio, Cherki "Matchas only, mate!" take B (used) | `a11c39de-0019-4210-9349-da40e29bfa72` |
+| Audio, Cherki "Matchas only, mate!" take C | `d74554bb-2d5a-4bc6-b144-05b2e5eeb9db` |
+| Audio, Maguire cuppa, ElevenLabs Callum native | `9a23c329-3869-4a14-a98d-f10b2c10eaa9` |
+| Audio, same padded to 5.2 s (used) | media `668ed581-176f-41ab-9db4-ccce4f50d9e9` |
+| Audio, Cherki "C'est de l'art." padded to 5.7 s | media `17955102-527b-42ac-aebf-ebf6d7975423` |
+
+### Replacement clips
+
+| Shot | Model | Length | Job ID | URL |
+|---|---|---|---|---|
+| 3a · Maguire "Oi, can I get a cuppa, mate?" (Callum native) | wan2_7 | 8 s | `70578de7-90df-4245-899d-34d0178a20c3` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_134811_70578de7-90df-4245-899d-34d0178a20c3.mp4 |
+| 8a · Haaland "Black coffee. Big." in pyjamas | wan2_7 | 10 s | `1b136168-a436-4a6b-8cae-75eeef31871f` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_134811_1b136168-a436-4a6b-8cae-75eeef31871f.mp4 |
+| 8b · Cherki "Matchas only, mate!" | wan2_7 | 8 s | `5005275e-7f30-4adf-b945-12a2fe4cc048` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_134811_5005275e-7f30-4adf-b945-12a2fe4cc048.mp4 |
+| 9 · Haaland leaves in pyjamas, "C'est de l'art." | wan2_7 | 8 s | `e30a9619-2e74-42b5-bed4-a93731b37f89` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_135104_e30a9619-2e74-42b5-bed4-a93731b37f89.mp4 |
+| 11c · Rooney grunt in the black tipped polo | kling3_0 | 5 s | `005ad477-4701-4a7d-b7f5-7c81c0c67c38` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_134811_005ad477-4701-4a7d-b7f5-7c81c0c67c38.mp4 |
