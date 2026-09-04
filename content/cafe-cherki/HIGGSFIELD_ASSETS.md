@@ -50,3 +50,25 @@ Spend so far: 15 stills × 2 credits + 2 clips × 12.5 credits = 55 credits.
 | Ident clip, 3 s, kling3_0 pro, sound on (reuse on every episode) | `8f7e3a75-ef12-441e-b2ae-93cd74243417` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_025722_8f7e3a75-ef12-441e-b2ae-93cd74243417.mp4 |
 
 Trim the ident clip to 2 s in the edit (0:03–0:05). Spend so far: 71.5 credits.
+
+## Voice samples — A/B round 1 (seed_audio unless noted, ~0.1 credit each)
+
+Pick one voice ID per character; the winner gets locked in VOICE_BIBLE.md.
+
+| # | Character / direction | Preset voice | Voice ID | Job ID |
+|---|---|---|---|---|
+| 1 | Cherki, exaggerated French | Andre | `f1e8226e-2248-4d5f-b43c-0a79e9949dbf` | `ca8defe6-b64c-4698-b0d1-657c65b32278` |
+| 2 | Cherki, exaggerated French | Xavier | `43173c95-3ec8-446a-a162-6504332c578b` | `94b4455e-570a-45e4-b90d-ace17f7ab5fb` |
+| 3 | Cherki, exaggerated French | Julian | `95429266-c0ac-4137-a209-63b8812b0f23` | `3359dcb5-19ad-437f-8951-81bef5f0f266` |
+| 4 | Rashford, 1950s BBC RP | Alistair | `d9d5c263-f84e-4752-97b5-3750fcc6fd2f` | `e24978b2-a897-4b9c-9c9e-5a4dee827500` |
+| 5 | Rashford, 1950s BBC RP | Harrison | `573e5163-59b3-4926-aab1-951ef2985f81` | `b1088419-b431-4420-b0ac-3ca001826e60` |
+| 6 | Rashford, 1950s BBC RP | Sterling | `dc382508-c8bd-443c-8cb2-46e57b8d2e6f` | `0a1aa4f8-564a-4723-af58-e46a447c5dd3` |
+| 7 | Foden, London roadman (+15 speed) | Callum | `858499d9-fef5-40e1-bc29-b4dc661dc283` | `a110815e-0079-45f3-99a3-e36d07f73c07` |
+| 8 | Foden, London roadman (+15 speed) | Archie | `bd072316-f77c-588b-b6e5-e46b9b03d008` | `fc22fdf9-24f4-4fd1-a513-82d6e8d667cc` |
+| 9 | Haaland, Nordic monotone (−3 pitch, −15 speed) | Vlad | `e5666b9c-99a2-4fac-8b4e-abee078b186d` | `53a56e8d-54d5-4708-93cb-1d83c0ffc8dd` |
+| 10 | Haaland, Nordic monotone (−3 pitch, −15 speed) | Fraser | `6705e465-7b52-5915-a1d8-b1222885e01d` | `4c12258d-bad3-4ca0-81c6-5aa83715dea5` |
+| 11 | Cherki, ElevenLabs engine, no performance tag | Andre | `f1e8226e-2248-4d5f-b43c-0a79e9949dbf` | `b042d686-23a1-4208-8acb-a6f29e544803` |
+| 12 | Rashford, ElevenLabs engine, no performance tag | Alistair | `d9d5c263-f84e-4752-97b5-3750fcc6fd2f` | `dce965b9-be2d-4937-954d-9b4db4c29dc7` |
+
+Samples 11 and 12 test whether the ElevenLabs engine holds an accent from the eye-dialect
+alone; the Seed Audio takes get the bracketed performance tag as well.
