@@ -107,6 +107,7 @@ Format: **direction** → performance tag → tuning → eye-dialect rules → t
 - **Test line:** "Rash, bruv, listen yeah. Cherki's only gone an' opened a matcha shop innit. Green ting. Eleven bag. Eleven! Man's takin' the piss, fam. Allow it."
 
 ### Erling Haaland
+- **LOCKED VOICE:** Seed Audio preset Alexey `7c2133e5-68ab-511f-9aed-9a67664382b1` with a British tag (owner pick). Tag: `[British English only, a huge Norwegian man who learned his English in Yorkshire, flat northern British accent, deadpan monotone, zero emotion, very slow]`. Speed −30 on short lines.
 - **Direction:** his real deadpan, turned to eleven. Enormous, slow, Scandinavian
   monotone, zero emotion, long pauses. Every line is a complete sentence of three words.
   "Not bad" is the highest praise in the universe.
@@ -116,6 +117,7 @@ Format: **direction** → performance tag → tuning → eye-dialect rules → t
 - **Test line:** "Black coffee. Big. … We don't do coffee? … Okay. … I take the cake. … Not bad."
 
 ### Jack Grealish
+- **LOCKED VOICE:** ElevenLabs engine, preset Jasper `a7b8abe9-47f1-553e-a9df-87945a7e5bc8`, no tag (owner pick).
 - **Direction:** Brummie and proud, cheeky, half-asleep, always sounds like he's just
   woken up (because he has). Laughs mid-sentence.
 - **Tag:** `[Young man from Birmingham, strong Brummie accent, cheeky, sleepy, laughing at his own jokes]`
@@ -123,6 +125,7 @@ Format: **direction** → performance tag → tuning → eye-dialect rules → t
 - **Test line:** "It's two in the afternoon, Rash. … Yeah I'm up. I'm up. What's a matcha?"
 
 ### Harry Kane
+- **LOCKED VOICE:** Seed Audio preset Julian `95429266-c0ac-4137-a209-63b8812b0f23` with a British Essex tag (owner pick). Tag: `[British English only, English man from Essex, flat estuary London accent, calm, extremely media-trained, slightly robotic]`.
 - **Direction:** the most media-trained man alive. Every sentence starts "yeah, no,
   listen, obviously". Estuary English, flat, weirdly calm about everything, counting
   under his breath.

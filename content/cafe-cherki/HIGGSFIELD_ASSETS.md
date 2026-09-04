@@ -353,3 +353,37 @@ Rashford: "The mandem wants aesthetic? Say less." Earlier clip `c65f69cd…` sup
 | Hook clip, take C, wan2_7 12 s | `f20d3a40-701c-4d1e-a9b0-bb9e280d7378` |
 | Shot 14 audio, Alistair, "The mandem wants aesthetic? Say less." | `495810d3-79ce-4bfd-84ba-5a2cc87b58ff` |
 | Shot 14 clip, wan2_7 8 s | `745ef389-ffc7-4762-aa03-45c393ad0ead` |
+
+## Shot 3 fixes (owner notes: drag the "a" in cuppa; rain indoors; two Maguires; "Bin man" not spoken)
+
+Root cause of the indoor rain: "rain" in the prompt's atmosphere line. Prompts now say
+"indoors completely dry, rain only through the window glass". Two-person shots now say
+"exactly two people, no duplicate people, no reflections of people".
+
+| Asset | Job ID |
+|---|---|
+| Audio, "Oi, can I get a cuppaaaa, mate?" (10.8 s) | `9068c4c8-9d80-4f98-9864-bca83a460a49` |
+| Audio, "Bin. Man." at speech −40 (10.0 s, words clearly spoken) | `b2812598-f374-49bf-8ede-15dae407972e` |
+| Clip, Cherki "ceremonial grade", dry interior, wan2_7 6 s | `ef6d6d6f-96e7-41b2-9dff-88097d0657d4` |
+| Clip, cuppa, wan2_7 6 s (audio longer than clip, may be truncated; superseded) | `f881bb00-517b-4056-9ecf-1e23d2466314` |
+| Clip, cuppa, wan2_7 12 s | `99273f04-04b7-4374-b0a1-97296d006352` |
+| Clip, Bin man, wan2_7 12 s | `d3ad1779-7edb-4d88-a91c-8b9464da4599` |
+
+Hook take C clip `f20d3a40…` and shot 14 clip `745ef389…` APPROVED by owner.
+
+## Cameo voices LOCKED (owner, 2026-09-04)
+
+| Character | Voice | Engine / tag |
+|---|---|---|
+| Grealish | Jasper `a7b8abe9-47f1-553e-a9df-87945a7e5bc8` | ElevenLabs native |
+| Haaland | Alexey `7c2133e5-68ab-511f-9aed-9a67664382b1` | Seed Audio + "British English, Norwegian who learned English in Yorkshire, flat deadpan" tag |
+| Kane | Julian `95429266-c0ac-4137-a209-63b8812b0f23` | Seed Audio + "British English, Essex estuary, media-trained" tag |
+
+| Asset | Job ID |
+|---|---|
+| Haaland "Black coffee. Big." | `6d6a9ff3-e1ba-45d5-a855-e5497abb9198` |
+| Grealish "It's two in the afternoon, Rash." | `251c5553-d574-4d01-82df-1f6547c9e1f2` |
+| Kane "Is this about the oat milk again?" | `8e7ea684-63a3-4d9a-96ec-371cd8cd2402` |
+| Clip 8b, Cherki "We don't do coffee." wan2_7 8 s | `ab711503-1c42-47fd-8272-301e672286a9` |
+| Clip 11a-reply, Rashford "I know." wan2_7 6 s | `877c48e5-50e1-4c6d-8009-0ef9e8b28a6a` |
+| Clip 11c, Rooney grunt, kling3_0 5 s | `b11503a1-67f9-47a6-b684-ad23b4cb25e3` |
