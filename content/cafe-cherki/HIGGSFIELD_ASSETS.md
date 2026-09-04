@@ -186,3 +186,12 @@ Both lines in one take: "I'm back from Barcelona, and ready to sell some tea. Th
 | 110 | Fraser | `6705e465-7b52-5915-a1d8-b1222885e01d` | `1cd73059-f72d-4a71-9064-1714ed3e996a` |
 | 111 | Orion | `ed69c516-92d2-4b30-a967-617737a342e5` | `1b266cd9-5b1b-49d0-95a6-26172c4205c8` |
 | 112 | Arthur | `30fc8796-ceb6-4a66-b3a7-4a145ef7f346` | `f5005571-db7c-415f-b399-eaee87bf2eca` |
+
+## Shot 5 · Nan's, full three-line exchange, both locked voices (14 s)
+
+| Inputs | Model | Job ID | URL |
+|---|---|---|---|
+| start_image `4c790c5b…` + audio_references in order: Rashford L1 `368e81a8…` (Alistair), Maguire `0e2ef828…` (Callum), Rashford L2 `26e856ce…` (Alistair) | seedance_2_5 omni_reference, 720p, 14 s | `c3b66385-d3d9-4044-94e7-6b747bae271f` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_044103_c3b66385-d3d9-4044-94e7-6b747bae271f.mp4 |
+
+Seedance accepted three audio references in one call. If the ordering or lip-sync drifts,
+fall back to one clip per line and cut them together.
