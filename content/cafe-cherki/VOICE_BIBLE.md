@@ -81,47 +81,12 @@ Format: **direction** → performance tag → tuning → eye-dialect rules → t
   most *proper* voice in football. 1950s BBC Received Pronunciation, slow, precise, every
   word finished, quietly offended at all times, never swears above a murmur. The joke is
   that nobody in the show ever comments on it.
-- **VOICE SOURCE: ElevenLabs Voice Design** (owner decision, 2026-09-04). Higgsfield's
-  presets could not hold a convincing British accent, so his voice is designed in
-  ElevenLabs and the audio is brought into Higgsfield for lip-sync. See § ElevenLabs
-  Voice Design workflow below.
+- **LOCKED VOICE:** seed_audio preset **Alistair**, `d9d5c263-f84e-4752-97b5-3750fcc6fd2f`, with the RP performance tag below (owner pick, 2026-09-04, after the ElevenLabs Voice Design route was tried and dropped).
+- **Tag:** `[Extremely proper, plummy, upper-class British Received Pronunciation, like a BBC announcer from 1950, slow and precise, every consonant finished, quietly offended]`
+- **Tuning:** pitch −1, speed −10.
 - **Eye-dialect:** none. Script lines verbatim. "I'm" stays "I'm".
 - **Test lines:** "I'm back from Barcelona, and ready to sell some tea." /
   "There's only one type of tea in Manchester."
-
-#### Rashford · Voice Design brief
-
-Paste one description at a time into ElevenLabs → Voices → Voice Design. Generate three
-previews per description, keep the best, name it `Rashford · Cafe Cherki`. Try A first.
-
-**A (recommended):**
-> Young British man in his late twenties, immaculate upper-class Received Pronunciation,
-> the crisp clipped precision of a 1950s BBC newsreader, warm mid-low baritone, slow and
-> unhurried, every consonant finished, faintly amused and quietly offended at the same
-> time, effortless authority, no regional accent whatsoever, studio-clean.
-
-**B (younger, lighter):**
-> British man in his mid twenties, polished public-school Received Pronunciation, light
-> tenor, precise and measured, softly spoken, sounds like a young Oxford don explaining
-> something obvious, dry, unflappable, no rasp, no regional accent.
-
-**C (deeper, more theatrical):**
-> British man around thirty, deep resonant baritone, grand old-fashioned Received
-> Pronunciation like a Shakespearean stage actor doing a wine advert, slow, deliberate,
-> rich, faintly pompous, warm chest resonance, clean studio recording.
-
-**Preview text (use this so the takes are comparable):**
-> I'm back from Barcelona, and ready to sell some tea. There's only one type of tea in
-> Manchester. He is, I'm afraid, taking the piss. Not you, Doreen.
-
-**Settings:** guidance scale 30–40 (higher sticks closer to the description), loudness
-default, quality high. If the result drifts American, add "British, not American" to the
-end of the description and regenerate.
-
-**Text-to-Speech settings once the voice is saved:** model Multilingual v2 or v3,
-stability ~55%, similarity ~75%, style ~20%, speaker boost on. Generate each script line
-as its own file, named `ep01_s05_rashford_01.mp3` and so on, so they drop straight into
-the shot list.
 
 ### Harry Maguire (Rashford's right-hand man)
 - **Direction:** broad, warm South Yorkshire (Sheffield), slow, friendly, slightly
