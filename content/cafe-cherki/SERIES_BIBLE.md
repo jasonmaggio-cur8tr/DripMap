@@ -81,7 +81,7 @@ photos as references. Decision on naming real players on-screen is the owner's c
 
 | # | Character | Venue | Streetwear identity | Signature cue |
 |---|---|---|---|---|
-| 1 | **Rayan Cherki** (lead) | *Café Cherki* — minimalist matcha bar, Ancoats | French fashion-house streetwear: oversized cream wool overcoat, boxy tee, wide tailored trousers, chunky loafers, tiny leather crossbody, rings | Whisks matcha like he's dribbling. Says "c'est de l'art" about everything |
+| 1 | **Rayan Cherki** (lead) | *Café Cherki* — minimalist matcha bar, Ancoats | French fashion-house streetwear: cream mock-neck knit with rust flame print, orange-tinted shades, black wide trousers, chunky loafers, oversized tan leather tote, rings. Alt: raw-denim trucker jacket, white tee, wide embroidered jeans | Whisks matcha like he's dribbling. Says "c'est de l'art" about everything |
 | 2 | **Marcus Rashford** (antagonist S1) | *Nan's* — cosy English tea room, Withington | Very British: beige check hooded jacket, white tee, straight-leg jeans, Clarks Wallabees, cornrows sharp | Serves everything with a biscuit. Just back from Barcelona. "There is only one type of tea in Manchester" |
 | 3 | **Erling Haaland** | *The Deadlift* — protein-coffee bar | Nordic loungewear, oversized hoodie, silky pyjama trousers, slides with socks | Drinks 2 litres of black coffee from a bucket. Says very little |
 | 4 | **Kevin De Bruyne** | *Assist* — quiet Belgian filter bar | Understated: navy quarter-zip, chinos, New Balance | Never orders for himself; always "passes" the cup to someone |

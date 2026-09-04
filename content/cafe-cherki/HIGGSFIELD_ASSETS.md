@@ -104,3 +104,23 @@ alone; the Seed Audio takes get the bracketed performance tag as well.
 
 Round 1 sheets and Round 2 scene stills are in the old Aardman style and need regenerating
 against the Round 6 sheets before any more clips are made.
+
+## Round 7 — hyperreal, current character locks and Ep 1 stills
+
+| Asset | Job ID |
+|---|---|
+| Maguire, hyperreal (retry, first attempt failed) | `ef2914e6-c1fa-4115-8e22-649587317f70` |
+| Cherki v2, hyperreal, flame-print knit + orange shades + tan tote (from owner references) | `66f3e55f-fbbb-4798-8836-d1aab8017d20` |
+| Shot 1 · Dr. Evil hook, Cherki in swivel chair (old Cherki look, superseded) | `852dc134-d861-436e-8396-1b0fb6ce46d1` |
+| Shot 1 · Dr. Evil hook, Cherki v2 | `f8c82cf7-77e1-4c2e-be8b-e20f37c822c7` |
+| Shot 5 · Nan's two-shot, Rashford overflows, Maguire in doorway | `4c790c5b-9894-4477-9d91-c9222452aff2` |
+
+Current locks: Rashford `f2b4ec2f…`, Maguire `ef2914e6…`, Cherki `66f3e55f…`, Haaland `03e08ae6…`.
+The Cherki sheet at `1e406226…` (overcoat look) is superseded.
+
+## Voice lines for lip-sync test (single lines, seed_audio)
+
+| Line | Voice | Job ID |
+|---|---|---|
+| Rashford: "I am back from Barcelona, Harry. And I am ready to sell some tea." | Alistair | `b9bf2197-361b-4ae8-aaa6-35338b404459` |
+| Maguire: "Rash. Cherki's only gone an' opened a trendy matcha shop." | Harrison | `5b119ac9-5d3b-4336-9355-c77c756cba3d` |

@@ -12,8 +12,8 @@ Dialogue budget is ~130 words. Every line is short so the clay mouths can carry 
 
 **SHOT 1 · Cherki in his chair, Dr. Evil**
 A high-backed swivel chair, back to camera, in front of the rain-streaked window. It
-turns. Cherki, cream overcoat, one eyebrow up, slowly stroking a bamboo whisk like a
-cat. He raises his pinky to the corner of his mouth.
+turns. Cherki, cream flame-print knit, orange shades, one eyebrow up, slowly stroking a bamboo
+whisk like a cat. He raises his pinky to the corner of his mouth.
 
 > **CHERKI (thick French accent, villain-calm):** Manchester. It rains three 'undred
 > days a year. Nobody 'ere 'as ever seen ze sun… or a matcha.
@@ -39,9 +39,9 @@ beneath. The whisk does one fast spin, steam puffs, the green neon flickers on.
 
 **SHOT 2 · WIDE · Café Cherki interior**
 White-washed brick, blonde wood, three pastries in a glass case, one green neon sign:
-*c'est de l'art*. Total silence except the whisk. Cherki stands behind the counter in an
-oversized cream wool overcoat, boxy white tee, wide black trousers, chunky loafers,
-tiny leather crossbody.
+*c'est de l'art*. Total silence except the whisk. Cherki stands behind the counter in the
+cream flame-print mock-neck knit, orange-tinted shades, wide black trousers, chunky
+loafers, the tan tote parked on the counter like a pet.
 
 > **CHERKI:** No sugar. No music. No cow.
 > *(gestures at the empty room)* Silence is… aesthetic.
@@ -208,11 +208,16 @@ no football kits.
 ### Character lock (Cherki)
 
 ```
-Young French man in his early twenties, light brown skin, short dark tight curls with faded
-sides, slim build, sharp cheeky grin, small gold hoop earring, wearing an oversized cream
-wool overcoat over a boxy white tee, wide-leg black tailored trousers, chunky black leather
-loafers, tiny black leather crossbody bag, several silver rings.
+Young French man of North African descent in his early twenties, light olive-brown skin,
+short dark tight curls on top with faded shaved sides, full short dark beard neatly trimmed,
+roundish face, thick dark eyebrows, warm brown eyes, wide confident smile, orange-tinted
+rectangular sunglasses, a cream mock-neck knitted jumper with a large abstract rust-orange
+and brown flame-like print across the chest, black wide-leg trousers, chunky black leather
+loafers, oversized tan leather tote bag, several silver rings.
 ```
+
+Alternate look (Ep 2 onward): dark indigo raw-denim trucker jacket open over a white tee,
+wide dark denim jeans with a tonal embroidered motif on one thigh, same beard and curls.
 
 ### Character lock (Rashford)
 
