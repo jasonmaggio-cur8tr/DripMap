@@ -8,23 +8,21 @@ Dialogue budget is ~130 words. Every line is short so the clay mouths can carry 
 
 ---
 
-## Cold open (0:00–0:06) — HOOK
+## Cold open (0:00–0:05) — HOOK
 
 **SHOT 1 · Cherki in his chair, Dr. Evil**
 A high-backed swivel chair, back to camera, in front of the rain-streaked window. It
-turns. Cherki, cream flame-print knit, orange shades, one eyebrow up, slowly stroking a bamboo
-whisk like a cat. He raises his pinky to the corner of his mouth.
+turns. Cherki, cream flame-print knit, orange shades, one eyebrow up, slowly stroking a
+bamboo whisk like a cat. He raises his pinky to the corner of his mouth.
 
-> **CHERKI (thick French accent, villain-calm):** Manchester. It rains three 'undred
-> days a year. Nobody 'ere 'as ever seen ze sun… or a matcha.
-> *(pinky to lip)* So I will sell zem matcha. Wiz sugary cloud foam. To every Gen Z in
-> ze city. And I will make… so many Ps.
+> **CHERKI (thick French accent, villain-calm):** I am going to make Ps… selling
+> matchas, wiz sugary cloud foams, to all ze Gen Z of Manchester.
 
 Thunder. The neon flickers on.
 
 ---
 
-## Logo ident (0:06–0:08)
+## Logo ident (0:05–0:07)
 
 **IDENT · Café Cherki**
 Hard cut. Chunky cream clay letters *CAFÉ CHERKI* on the blonde wood counter, matcha bowl
@@ -35,7 +33,7 @@ beneath. The whisk does one fast spin, steam puffs, the green neon flickers on.
 
 ---
 
-## Scene 1 — Café Cherki (0:08–0:14)
+## Scene 1 — Café Cherki (0:07–0:14)
 
 **SHOT 2 · WIDE · Café Cherki interior**
 White-washed brick, blonde wood, three pastries in a glass case, one green neon sign:
@@ -71,17 +69,14 @@ Clarks Wallabees. A half-unpacked suitcase with a Barcelona luggage tag sits by 
 armchair. He pours from a pot in a knitted cosy and lays a custard cream on the saucer
 with total care.
 
-> **RASHFORD (impossibly proper):** I am back from Barcelona, Harry. And I am ready to
-> sell some tea.
-> **MAGUIRE:** Rash. Cherki's only gone an' opened a trendy matcha shop.
+> **RASHFORD (impossibly proper):** I'm back from Barcelona, and ready to sell some tea.
+> **MAGUIRE (broad Yorkshire):** Rash, Cherki's opened a trendy matcha shop.
 
 Rashford freezes mid-pour. Tea keeps pouring. Overflows the cup. He does not look down.
 
 **SHOT 6 · CU · Rashford**
 
-> **RASHFORD:** A what?
-> **MAGUIRE:** Matcha. It's green. He whisks it. Eleven quid.
-> **RASHFORD (slow, precise):** Harry. There is only one type of tea in Manchester.
+> **RASHFORD (slow, precise):** There's only one type of tea in Manchester.
 
 He sets the pot down very gently.
 
@@ -170,10 +165,10 @@ single deep bass hit). Cream text on coffee-dark, tiny clay matcha whisk icon.
 | Time | Text |
 |---|---|
 | 0:00–1:00 | DripMap overlay, every frame (overlay/dripmap-overlay-1080x1920.png) |
-| 0:00–0:06 | Cherki's villain monologue, captions from the first word |
-| 0:06–0:08 | Café Cherki logo ident |
-| 0:08 | ANCOATS · GRAND OPENING |
-| 0:08–0:57 | Burned-in dialogue captions, one line at a time |
+| 0:00–0:05 | Cherki's villain line, captions from the first word |
+| 0:05–0:07 | Café Cherki logo ident |
+| 0:07 | ANCOATS · GRAND OPENING |
+| 0:07–0:57 | Burned-in dialogue captions, one line at a time |
 | 0:57 | NEXT TIME ON CHERKI'S CAPPUCCINOS |
 
 ## Instagram copy
@@ -242,12 +237,12 @@ collar, grey straight-leg jeans, black Adidas Samba trainers, holding a Yorkshir
 
 | Shot | Still prompt (after style block + character lock) | Video motion / audio prompt for kling3_0 |
 |---|---|---|
-| 1 | Cherki in a high-backed swivel chair in front of the rain-streaked window, one eyebrow raised, stroking a bamboo whisk like a cat, pinky raised to the corner of his mouth, green neon glow | Chair swivels to camera, slow whisk-stroking, pinky to lip on the last line, thunder, neon flickers on. Villain-calm heavy French voice delivers the monologue |
+| 1 | Cherki in a high-backed swivel chair in front of the rain-streaked window, one eyebrow raised, stroking a bamboo whisk like a cat, pinky raised to the corner of his mouth, green neon glow | Chair swivels to camera, slow whisk-stroking, pinky to lip on the last line, thunder, neon flickers on. Villain-calm heavy French voice: "I am going to make Ps… selling matchas, wiz sugary cloud foams, to all ze Gen Z of Manchester." |
 | 2 | Wide interior of a minimalist matcha bar: white-washed brick, blonde wood counter, three pastries in a glass case, green neon sign glowing, Cherki behind the counter arms open | Cherki gestures at the empty room. Voice: "No sugar. No music. No cow. Silence is… aesthetic." Whisk foley |
 | 3 | Medium two-shot across the counter, Maguire's huge head under the pendant light squinting at a tiny two-item menu, Cherki serene | Maguire: "Ey up. You got a brew, pal?" Cherki: "We have ceremonial grade." Maguire: "…So no, then." Eyebrows shoot up at the price card |
 | 4 | Exterior of a red-brick terraced house converted into a tea room, net curtains, hanging basket, hand-painted NAN'S sign, rain, Maguire ducking through the door head first | Rain, Maguire ducks in, door bell jingles |
-| 5 | Interior cosy English tea room, floral wallpaper, doilies, gas fire, mismatched teacups, framed photo on the mantel, Rashford in the check hooded jacket pouring from a teapot in a knitted cosy, suitcase with a Barcelona tag by the armchair, custard cream on saucer | Rashford pours: "I am back from Barcelona, Harry. And I am ready to sell some tea." Maguire: "Rash. Cherki's only gone an' opened a trendy matcha shop." Rashford freezes, tea overflows |
-| 6 | Close-up Rashford, teapot held mid-air, disbelief, grey cat on floral armchair behind | "A what?" / "Matcha. Green. He whisks it. Eleven quid." / "Harry. There is only one type of tea in Manchester. He is, I'm afraid, taking the piss." Cat meows. "Not you, Doreen." |
+| 5 | Interior cosy English tea room, floral wallpaper, doilies, gas fire, mismatched teacups, framed photo on the mantel, Rashford in the check hooded jacket pouring from a teapot in a knitted cosy, suitcase with a Barcelona tag by the armchair, custard cream on saucer | Rashford pours: "I'm back from Barcelona, and ready to sell some tea." Maguire: "Rash, Cherki's opened a trendy matcha shop." Rashford freezes, tea overflows |
+| 6 | Close-up Rashford, teapot held mid-air, disbelief, grey cat on floral armchair behind | "There's only one type of tea in Manchester. He is, I'm afraid, taking the piss." Cat meows. "Not you, Doreen." |
 | 7 | Medium Cherki placing one madeleine on a slate with tweezers | Adjusts pastry 2 mm, nods once. Tweezers click |
 | 8 | Wide, very tall Nordic man ducking under the door frame in oversized grey hoodie, silky pyjama trousers, slides with socks, hair tied back, holding a huge thermos, Cherki small behind counter | Haaland: "Black coffee. Big." Cherki: "We don't do coffee." Long stare, neon buzz |
 | 9 | Medium Haaland turning to leave, hand taking the madeleine off the slate, Cherki watching | Silent exit, door bell, Cherki whispers "…C'est de l'art." |
@@ -263,6 +258,6 @@ collar, grey straight-leg jeans, black Adidas Samba trainers, holding a Yorkshir
 
 1. Stills → approve look per shot → kling3_0 image-to-video 5 s (dialogue in prompt for lip-sync audio).
 2. Trim each clip to the timing above in the video-editing workflow (higgsedit) and burn captions.
-3. Insert the reusable ident clip at 0:06, then cut back into shot 2.
+3. Insert the reusable ident clip at 0:05, then cut back into shot 2.
 4. End card is a static still with the sting layered.
 5. Top track: `overlay/dripmap-overlay-1080x1920.png` for the full duration, 100% opacity.

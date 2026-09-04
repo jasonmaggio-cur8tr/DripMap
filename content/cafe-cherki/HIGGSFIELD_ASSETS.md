@@ -133,3 +133,35 @@ The Cherki sheet at `1e406226…` (overcoat look) is superseded.
 
 Seedance also returns a preset recommendation on dialogue prompts; pass `declined_preset_id`
 to force a literal generation. Cost ≈ 40 credits per 6 s clip at 720p. Spend so far ≈ 135 credits.
+
+## Voice takes — exact script lines (owner wording restored)
+
+Cherki voice LOCKED: Andre `f1e8226e-2248-4d5f-b43c-0a79e9949dbf`.
+
+| # | Line | Voice | Engine | Job ID |
+|---|---|---|---|---|
+| 80 | Cherki: "I am going to make Ps… selling matchas, wiz sugary cloud foams, to all ze Gen Z of Manchester." | Andre (locked) | seed_audio | `8b097cfa-c3d4-44b6-b6fd-fd0e82451cb4` |
+| 81 | Rashford: "I'm back from Barcelona, and ready to sell some tea." | Alistair | seed_audio | `368e81a8-7b8c-431a-9c64-4a8dc4650568` |
+| 82 | Rashford: "There's only one type of tea in Manchester." | Alistair | seed_audio | `26e856ce-d6ef-4daa-bac6-4e77c769d77b` |
+| 83 | Rashford, both lines | Sterling | seed_audio | `91d02030-f182-4623-8ab0-57ea3cf58056` |
+| 84 | Maguire: "Rash, Cherki's opened a trendy matcha shop." | Harrison | seed_audio | failed |
+| 85 | Maguire, same line | Callum | seed_audio | `6b8968b1-0ec3-4fc3-92b6-85845e602c6a` |
+
+## Maguire British-accent sweep (owner: "needs to be an actual British accent")
+
+Same line on every take: "Rash, Cherki's opened a trendy matcha shop."
+
+| # | Voice | Engine | Tag | Job ID |
+|---|---|---|---|---|
+| 90 | Alistair, pitch +2 | seed_audio | British-only Yorkshire tag | `42fe23a9-cfc7-4cd2-9c3c-7c255738b116` |
+| 91 | Sterling, pitch +1 | seed_audio | British-only Yorkshire tag | `1174876a-cfc5-49d5-a525-6cada054a31d` |
+| 92 | Archie, pitch −2 | seed_audio | British-only Yorkshire tag | `c2ccb271-1f3d-46fa-a454-aa2ab394c74f` |
+| 93 | Archie | elevenlabs | none (voice's native accent) | `f7ffcf56-5cdc-4b3b-81f7-0cdbeb90dd4e` |
+| 94 | Callum | elevenlabs | none | `0e2ef828-0823-419d-a1ea-927d5bc0c2cc` |
+| 95 | Sterling | elevenlabs | none | `40d2c678-0c9f-4026-8fff-e668b403cdcf` |
+| 96 | Harrison | elevenlabs | none | `1a8af23e-709d-4f5b-9ebc-ef412deddf91` |
+| 97 | Fraser | elevenlabs | none | `202d55df-60ce-4753-957b-8d0f9e8dc7ba` |
+
+The ElevenLabs takes have no performance tag, so what you hear is each preset's native
+accent. Whichever preset is natively British becomes Maguire's base voice; Yorkshire
+colour then comes from the seed_audio tag on that same preset.

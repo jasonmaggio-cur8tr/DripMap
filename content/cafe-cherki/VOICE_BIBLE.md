@@ -6,6 +6,12 @@ audience recognises who's who and where the jokes land. Every voice here is an
 pushed to an exaggerated version, or deliberately twisted against type where that's
 funnier.
 
+## Rule: the script is the script
+
+Dialogue in the episode files is the owner's wording. Accent goes in through the
+performance tag and light eye-dialect spelling only; never add or rewrite lines to make
+a voice "work". If a line needs changing, flag it, don't change it.
+
 ## Rule: reference, don't clone
 
 We research each player's real speech (accent, pace, tics, catchphrases) and write the
@@ -65,9 +71,10 @@ Format: **direction** → performance tag → tuning → eye-dialect rules → t
   last syllable), a little rolled "r". Never raises his voice. Signature: "…c'est de
   l'art." and the pinky.
 - **Tag:** `[Young French man from Lyon speaking English as a second language with a very thick, heavy, exaggerated French accent, rolled r, drops every h, th becomes z, French sentence rhythm, calm, deadpan, quietly villainous, like a cartoon supervillain explaining his plan]`
+- **LOCKED VOICE:** seed_audio preset **Andre**, `f1e8226e-2248-4d5f-b43c-0a79e9949dbf` (owner pick, 2026-09-04).
 - **Tuning:** pitch 0, speed −5.
 - **Eye-dialect:** 'undred, 'ere, 'as, ze, zis, zem, wiz, "I will sell" not "I'll sell", French filler "euh" and "you know" at the end of statements.
-- **Test line:** "Manchester. It rains three 'undred days a year. Nobody 'ere 'as ever seen ze sun… or a matcha. So I will sell zem matcha. Wiz sugary cloud foam. To every Gen Z in ze city. And I will make… so many Ps."
+- **Test line:** "I am going to make Ps… selling matchas, wiz sugary cloud foams, to all ze Gen Z of Manchester."
 
 ### Marcus Rashford (antagonist)
 - **Direction:** the twist. Real Rashford is the most Manc voice in football; ours is the
@@ -78,7 +85,7 @@ Format: **direction** → performance tag → tuning → eye-dialect rules → t
 - **Tag:** `[Extremely proper, plummy, upper-class British Received Pronunciation, like a BBC announcer from 1950, slow and precise, every consonant finished, quietly offended]`
 - **Tuning:** pitch −1, speed −10.
 - **Eye-dialect:** none. Full words, full stops. "I am" never "I'm". "Pounds" not "quid". "I'm afraid" before every insult. "Harry" as a full sentence.
-- **Test line:** "I am back from Barcelona, Harry. And I am ready to sell some tea. … A what? … Harry. There is only one type of tea in Manchester. He is, I'm afraid, taking the piss."
+- **Test line:** "I'm back from Barcelona, and ready to sell some tea. … There's only one type of tea in Manchester."
 
 ### Harry Maguire (Rashford's right-hand man)
 - **Direction:** broad, warm South Yorkshire (Sheffield), slow, friendly, slightly
@@ -87,7 +94,7 @@ Format: **direction** → performance tag → tuning → eye-dialect rules → t
 - **Tag:** `[Big friendly man from Sheffield, broad South Yorkshire accent, slow, warm, slightly bewildered, mouth half full]`
 - **Tuning:** pitch −2, speed −5.
 - **Eye-dialect:** ey up, pal, reyt, nowt, summat, "only gone an'", "int it", t' for "the".
-- **Test line:** "Ey up. Rash. Cherki's only gone an' opened a trendy matcha shop. … Matcha. It's green, int it. He whisks it. Eleven quid, pal."
+- **Test line:** "Rash, Cherki's opened a trendy matcha shop."
 
 ### Phil Foden (roadman, from Ep 2)
 - **Direction:** real Foden is quiet Stockport. Ours is a full London roadman who has
