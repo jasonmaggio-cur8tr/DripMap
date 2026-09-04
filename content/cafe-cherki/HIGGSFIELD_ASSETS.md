@@ -195,3 +195,60 @@ Both lines in one take: "I'm back from Barcelona, and ready to sell some tea. Th
 
 Seedance accepted three audio references in one call. If the ordering or lip-sync drifts,
 fall back to one clip per line and cut them together.
+
+## Round 8 — Episode 1 hyperreal scene stills (all shots)
+
+| Shot | Job ID |
+|---|---|
+| 1 · Dr. Evil hook (Cherki v2) | `f8c82cf7-77e1-4c2e-be8b-e20f37c822c7` |
+| 2 · Cherki presents the empty room | `1f489814-453a-4dab-bdab-eda181e49f81` |
+| 3 · Maguire reads the menu | `fc10f130-2337-4f87-b1df-b5ec86907a77` |
+| 4 · Nan's exterior, Maguire ducks in | `587e209e-1577-485f-9a29-2e15e6174709` |
+| 5 · Nan's two-shot, overflow | `4c790c5b-9894-4477-9d91-c9222452aff2` |
+| 6 · Rashford CU with Doreen | `a5ade7b4-75d2-417a-a354-da7abd0e506b` |
+| 7 · Cherki plates the madeleine | `5dca8326-d99b-414c-9018-c89781bf3471` |
+| 8 · Haaland ducks in | `9d37dc33-e50a-4dbc-84d2-1166bbfb0bc3` |
+| 9 · Haaland takes the madeleine | `13762448-06f3-4633-97a4-5ec4ce5c2ccc` |
+| 10 · Rashford lifts the phone | `5fc40561-25dd-458f-8d78-50129b4032b7` |
+| 11a · Grealish in bed | `7262a779-eda1-4d67-857a-f4a83d01c383` |
+| 11b · Kane measuring flour | `de50fef6-67aa-4c18-b555-5cf92c90f50b` |
+| 11c · Rooney, greasy spoon | `7ba9a2ed-f4d4-4309-86fd-73229f6141f6` |
+| 12 · Rashford on the phone, Maguire behind | `9330d49c-6c3b-4d97-af9d-a8c719a74bc4` |
+| 13 · Café Cherki exterior, night | `b84d84b8-b1e1-4384-a358-a80afbc88f13` |
+| 14 · Car silhouettes | `abcf90d5-012b-4ff6-8513-4215d290cc87` |
+
+## Episode 1 dialogue lines in locked voices
+
+| Shot | Line | Voice | Job ID |
+|---|---|---|---|
+| 1 | Cherki hook | Andre | `8b097cfa-c3d4-44b6-b6fd-fd0e82451cb4` |
+| 2 | Cherki "No sugar. No music. No cow. Silence is… aesthetic." | Andre | `3131c3e8-dc94-473d-a9d0-0b862d6f6e95` |
+| 3 | Cherki "We 'ave ceremonial grade." | Andre | `098b0979-2211-403b-b02c-1389038e9733` |
+| 3 | Maguire "Ey up. You got a brew, pal?" | Callum/11L | `e44c2a1a-d460-405a-8401-c388e7febb55` |
+| 3 | Maguire "…So no, then." (short, padded retake 614) | Callum/11L | `645676ca-643b-43a6-8f42-ace8ae7cb33f` |
+| 5 | Rashford L1 / Maguire / Rashford L2 | locked | `368e81a8…` / `0e2ef828…` / `26e856ce…` |
+| 6 | Rashford "He is, I'm afraid, taking the piss. … Not you, Doreen." | Alistair | `76df65c4-cce5-460b-b3e3-c1cdadbda92e` |
+| 8 | Cherki "We don't do coffee." (short, padded retake 608) | Andre | `3fa7b1e2-631a-484d-a893-2361f776b69c` |
+| 9 | Cherki "…C'est de l'art." (short, padded retake 609) | Andre | `1c6250af-a039-49f0-9d40-c33b5c4f6312` |
+| 11a | Rashford "I know." (short, padded retake 633) | Alistair | `953bcc5e-62b3-46a0-8bd0-90b5a58ea030` |
+| 12 | Rashford "Lads. There's a Frenchman…" | Alistair | `5b278f1d-63dd-4aa2-ba28-fe203cfbbbbf` |
+| 12 | Maguire "Bring a what?" (short, padded retake 622) | Callum/11L | `786b4c66-59b3-4056-8ad1-cc3e3e305d30` |
+| 14 | Rashford "He wants aesthetic? … Let's give him aesthetic." | Alistair | `1be62986-5851-45f6-81f9-60e27c80b646` |
+
+Seedance returns 422 at submission when a reference audio clip is under ~3 s, and fails
+in-flight when the audio is longer than the requested duration. Pad short lines with
+pauses; set duration ≥ audio length + 1 s.
+
+## Cameo voice picks (one line each)
+
+| # | Character / line | Voice | Engine | Job ID |
+|---|---|---|---|---|
+| 301 | Haaland "Black coffee. Big." | Vlad + Nordic tag | seed_audio | `0581ed7c-74b8-417b-9617-5a4aec17852c` |
+| 302 | Haaland | Vlad | elevenlabs | `acce8926-57bd-4d0a-8276-8b667b8d69c4` |
+| 303 | Haaland | Alexey | elevenlabs | `63461e69-32fb-4668-a621-72ec13953231` |
+| 311 | Grealish "It's two in the afternoon, Rash." | Archie | elevenlabs | `818719d6-7e33-47c4-a9d9-6d19bc067f03` |
+| 312 | Grealish | Harrison | elevenlabs | `75388204-3871-4eb2-bb3b-b1dfb4980e2b` |
+| 313 | Grealish | Jasper | elevenlabs | `0e7ff6bf-5b93-468b-b48b-ad388f3db0e0` |
+| 321 | Kane "Is this about the oat milk again?" | Julian | elevenlabs | `d6b9524d-3dc4-4a28-86e5-4051822fffda` |
+| 322 | Kane | Caspian | elevenlabs | `70a38873-b22b-4d16-a700-005b1904bb52` |
+| 323 | Kane | Gideon | elevenlabs | `3a0d23ef-7aaa-4cfe-b8f8-81554c1c69b0` |
