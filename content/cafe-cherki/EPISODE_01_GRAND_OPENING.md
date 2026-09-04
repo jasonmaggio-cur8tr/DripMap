@@ -283,17 +283,47 @@ Overlay `overlay/dripmap-overlay-1080x1920.png` on the top track for the full du
 | 6 | "He is, I'm afraid, taking the piss. … Not you, Doreen." | `ec23fe2c-5d45-4744-8bd4-84310ee10927` | seedance | 8 s | |
 | 7 | Madeleine with tweezers | `e8da70ec-8e32-4c3e-8024-7999cd6f047c` | kling3_0 | 5 s | silent + foley |
 | 8a | Haaland "Black coffee. Big." | `c7f58665-b888-415f-93b0-b12c14359347` | wan2_7 | 8 s | Haaland v3 puppet, British take A |
-| 8b | Cherki "Matchas only mate!" | `159f26cd-877e-48e2-a942-aeb0d5fefce9` | wan2_7 | 8 s | take B, comma removed |
+| 8b | Cherki "Matchas only mate!" | `159f26cd-877e-48e2-a942-aeb0d5fefce9` | wan2_7 | 8 s | take B; hold 1 s after the line before cutting |
 | 9 | Cherki CU, "C'est de l'art." | `5a8d4fd9-9886-4e46-8339-30ee67b49320` | seedance_2_5 | 6 s | Cherki alone in frame; Seedance after Wan could not hold sync |
-| 10 | Rashford dials, Maguire on the tea behind | `06c1d515-f1a6-4304-a5a2-3564b7e42c40` | kling3_0 | 5 s | silent + foley, corkboard fixed to wall |
+| 10 | Rashford dials, Maguire on the tea behind | `056829d1-796c-4c89-9c29-5db788450495` | kling3_0 | 5 s | silent + foley; corkboard re-pinned, camera locked off |
 | 11a | Grealish "I'm training in Ibiza, wot are you on about?" | `2633064a-e868-4ec8-b284-0d22d41e4c0d` | wan2_7 | 8 s | Ibiza terrace, blonde hair |
 | 11a′ | Rashford "I know." | `877c48e5-50e1-4c6d-8009-0ef9e8b28a6a` | wan2_7 | 6 s | |
 | 11b | Kane "Is this about the oat milk again?" | `38b7d7e8-d416-4b5f-8ba5-e1584f3a2dd8` | wan2_7 | 6 s | audio padded to 4.6 s, APPROVED |
-| 11c | Rooney grunt | `1d1c5888-8ef2-44bc-bde9-07d47db775d6` | kling3_0 | 5 s | black twin-tipped polo |
+| 11c | Rooney grunt | `0c112726-00f1-4992-9811-5dcad0e495d9` | kling3_0 | 5 s | polo + ROONEY'S sign |
 | 12a | Rashford "Lads. There's a Frenchman…" | `edce9885-22e8-495d-a5a4-cf40c42f9b4c` | seedance | 12 s | |
 | 12b | Maguire "Bring a what?" | `2f5b19fb-ab9b-4f8a-92d5-a49e59e840b3` | wan2_7 | 6 s | |
 | 13 | Cherki flips the sign | `30c958ac-c5b8-47bd-aaf7-473d42120cc1` | kling3_0 | 5 s | silent + foley |
 | 14 | Car, "The mandem wants aesthetic? Say less." | `745ef389-ffc7-4762-aa03-45c393ad0ead` | wan2_7 | 8 s | APPROVED |
-| — | End card "NEXT TIME AT CAFÉ CHERKI" | to build in the edit | | 3 s | |
+| — | End card | built in ffmpeg | | 14 s | copy below; sting loops under, fades at 12.6 s |
 
 Raw material runs ~180 s; the cut targets 60 s, so most clips use 2–4 s of their length.
+
+
+---
+
+## End card copy (locked)
+
+Runs 14 s over the bumper sting. Lines fade in staggered.
+
+> **NEXT TIME AT**
+> **CAFÉ CHERKI**
+>
+> What are Rash and the lads up to?
+> Who's Cherki's direct source?
+> Who runs London?
+>
+> **Follow @dripmap.space**
+> for more episodes
+
+## Cut timings — derived, not guessed
+
+Every trim is generated from measured speech. Each source clip is transcribed with
+word-level timestamps; the in point is 0.30 s before the first word and the out point
+0.50 s after the last. Silent inserts get fixed short durations.
+
+This exists because hand-picked trims cut into dialogue on the first assembly — the hook
+runs to 7.8 s and had been given 5.5 s, Nan's three-line exchange runs to 13.4 s and had
+been given 7 s. Re-measure and regenerate rather than adjusting trims by eye.
+
+Full-dialogue runtime is 98 s of clips plus a 2.2 s ident and a 14 s end card, 112 s in
+all. Getting under 60 s means cutting lines or a cameo, not shaving handles.

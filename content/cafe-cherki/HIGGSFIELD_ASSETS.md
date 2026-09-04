@@ -619,3 +619,36 @@ ident via the full-duration overlay, so it is not drawn into the ident itself.
   as `start_image`.
 - Guard prompts against duplicate people with "no duplicate people", never "exactly one
   person", which silently deletes characters the scene needs.
+
+## Episode 1 assembled cut (2026-09-04)
+
+Built in the Higgsfield sandbox with ffmpeg. All segments normalised to 1080x1920, 30 fps,
+square pixels, audio loudness-matched to -16 LUFS with 60 ms / 80 ms fades at each join,
+then concatenated and the DripMap overlay burned over the full duration.
+
+| Version | Media ID | Note |
+|---|---|---|
+| v3 FINAL | `379352e5-2f3f-4389-bae0-e9e4276631f0` | 112 s, 40 MB. Owner approved |
+| v2 | `fb9bddc1-36be-4e95-9f73-3a60822d7984` | full dialogue, new logo, 100 s |
+| v1 | `86deec7c-208f-450f-ad36-c8392ca72c3c` | superseded, dialogue was clipped |
+| Overlay PNG v2 | `8643cbd2-d2aa-440a-84b6-be7269428dd4` | also committed under `overlay/` |
+| Ident + episode line preview | `d61b215c-fdca-40ec-ba45-ee9a2963d376` | |
+| Logo source for the knockout | `131182c3-0ed4-4907-805e-1387cf50272b` | `public/logo-dark.jpg` |
+
+Late fixes in v3: shot 8b holds a second longer after the line; shot 10 re-rendered
+(`056829d1…`) because the corkboard floated in the previous take; shot 11c corrected to the
+clip with the ROONEY'S sign; end card rewritten and doubled to 14 s.
+
+### Pipeline notes
+
+- **Getting files in and out.** The build environment cannot reach the Higgsfield CDN, but
+  it *can* PUT to the media upload endpoint. So local assets reach the sandbox by
+  media_upload from here, then curl from the CDN inside the sandbox. Base64 chunking is
+  not needed.
+- ffmpeg inside a `while read` loop eats stdin and silently corrupts the loop. Always pass
+  `-nostdin`.
+- `bc` is not installed in the sandbox; use awk for arithmetic.
+- Never run two builds against the same output directory at once — the second one clobbers
+  the first mid-write and the failure looks like a corrupt file.
+- The sandbox is discarded between calls unless a background job holds the lease. Long
+  builds must run with `background: true`.

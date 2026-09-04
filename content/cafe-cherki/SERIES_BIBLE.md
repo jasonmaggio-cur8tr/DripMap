@@ -67,19 +67,22 @@ Rules:
 ## DripMap overlay
 
 Every video carries the DripMap badge for its full duration, including the ident and
-the end card. Assets in `overlay/`:
+the end card.
 
-- `dripmap-overlay-1080x1920.png`: transparent full-frame layer, drop it on the top
-  track of the edit at 100% and it sits correctly. Built from the official
-  `public/logo-volt.jpg` (Brand Guidelines: volt variation for marketing assets), not
-  redrawn.
-- `overlay-preview.jpg`: the same layer over a coffee-dark ground with the Reels UI
-  safe zones shaded and the caption box outlined.
+Built from `public/logo-dark.jpg` — the colourway that is already the volt bean mark plus
+the white wordmark, with no green panel behind it. The dark ground is removed by flood
+filling from the image border using a brightness test (anything below 140 max-channel is
+ground), which clears the background while leaving the dark drip shape *inside* the mark
+intact. The artwork is never redrawn or recoloured, only unbacked.
 
-Placement: badge 300 px wide at x=48, y=270, which clears the Instagram header
-(top 250 px), the action rail (right 130 px) and the caption/UI area (bottom 420 px).
-Captions live inside the outlined box above the bottom safe zone so the overlay,
-captions and IG chrome never collide.
+- Lockup trims to 487x108, placed at 400 px wide, top-left at x=48, y=252.
+- A 50% black gaussian shadow sits 4 px under it so the white wordmark holds against pale
+  footage.
+- Clear of the Instagram header (top 250 px), the right action rail (130 px) and the
+  caption area (bottom 420 px).
+
+Assets in `overlay/`: `dripmap-overlay-1080x1920.png` (transparent, full frame) and
+`overlay-preview.jpg` (shown against mid-grey to check the knockout).
 
 ## Style rules (locked)
 
