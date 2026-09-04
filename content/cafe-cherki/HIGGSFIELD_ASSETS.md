@@ -387,3 +387,21 @@ Hook take C clip `f20d3a40…` and shot 14 clip `745ef389…` APPROVED by owner.
 | Clip 8b, Cherki "We don't do coffee." wan2_7 8 s | `ab711503-1c42-47fd-8272-301e672286a9` |
 | Clip 11a-reply, Rashford "I know." wan2_7 6 s | `877c48e5-50e1-4c6d-8009-0ef9e8b28a6a` |
 | Clip 11c, Rooney grunt, kling3_0 5 s | `b11503a1-67f9-47a6-b684-ad23b4cb25e3` |
+
+## Bin man, final (owner: −40 take too slow; "waste man" offered as fallback)
+
+Normal pace with a sigh in front clears the minimum length. Owner approved the "Bin man" take.
+
+| Asset | Job ID |
+|---|---|
+| Audio "Bin man." normal pace + sigh (6.7 s) APPROVED | `a6a0ee44-4cf0-4134-9592-ccdba73ab5b8` |
+| Audio "Waste man." same treatment (backup, unused) | `faf30295-2b86-4a61-a2a8-1cbdbb36393e` |
+| Clip, Bin man, wan2_7 8 s | `feeb287a-b040-4f4f-8c1f-01996741783d` |
+
+## Cameo clips
+
+| Shot | Job ID |
+|---|---|
+| 8a · Haaland "Black coffee. Big." wan2_7 10 s | `73d8b289-e0af-490b-9458-781a80c042ec` |
+| 11a · Grealish "It's two in the afternoon, Rash." wan2_7 8 s | `5f6a53cd-0b8e-4a0a-b70c-2d14a35531a2` |
+| 11b · Kane "Is this about the oat milk again?" wan2_7 8 s | `a28a118c-3ab4-4eef-81da-e101a282acd0` |
