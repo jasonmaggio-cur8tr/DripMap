@@ -336,4 +336,8 @@ Earlier shot 3 clips (`e4ebf5c1…`, `0995a12b…`, `23b127c5…`) are supersede
 |---|---|---|---|
 | Maguire "Oi, can I get a cuppa, mate?" | Callum on Seed Audio, Yorkshire tag (short-line fallback) | `455d28d5-0970-4778-90e0-3142d32639a9` | `40371e70-d0bf-4f62-b03e-5d3fbb5089e2` |
 | Cherki "We 'ave ceremonial grade, single source matcha." | Andre | `2df6bc8e-9d0c-48fa-b2b7-655b0a620d63` | `fc13c798-f65a-4b07-bb8d-6d4422255ba6` |
-| Maguire "Bin man." | Callum on Seed Audio, Yorkshire tag | `e1df0bcd-69ca-4138-93e5-164779351595` | `2b9e963a-e5b4-4ff3-a1f7-8ba4b271c25f` |
+| Maguire "Bin man." | Callum on Seed Audio, Yorkshire tag | `e1df0bcd…` too short, failed; retake `1cff003e-a4a2-4350-a017-c52921eec70a` (speech −30, long pauses) | `2b9e963a…` failed; retake see below |
+| Maguire "Bin man." retake clip | wan2_7, 8 s | `1454e6b4-6d20-4373-b14c-2ccbbe785939` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_072347_1454e6b4-6d20-4373-b14c-2ccbbe785939.mp4 |
+
+Two-word lines need `speech_rate` around −30 and four or more "..." on each side to clear
+the ~3 s minimum on Seed Audio; the standard "..." padding was not enough for "Bin man."
