@@ -544,3 +544,78 @@ mouthed a phantom line at the end. Three causes, all fixed together:
 Also new: a Seed Audio take can leak words from its own performance tag into the speech
 (take `7b161c53-81e0-4507-8aca-cd75fe6a8b85` began "Leon Andreath, you can find…" before
 the line). Always transcribe a take before using it rather than trusting the duration.
+
+## Owner notes round 3 (2026-09-04)
+
+Owner notes: shot 9 audio was not saying the line; shot 10 had lost Maguire and the
+corkboard floated; 11b lip-sync drifted; 11a replaced entirely with an Ibiza gag; Grealish
+hair to blonde.
+
+### Shot 11a rewritten — Grealish in Ibiza
+
+New line, owner's wording: **"I'm training in Ibiza, wot are you on about?"** — the island
+name said the lads' way, "eye-BEE-tha". Replaces "It's two in the afternoon, Rash." The
+bed setting, that line, and the sigh-then-"Rash" audio are all superseded.
+
+| Asset | Job / media ID |
+|---|---|
+| Still, Ibiza terrace, blonde hair | `2cae05fa-d0db-4cfa-847d-908af36eb7b9` |
+| Still, first pass (darker hair, superseded) | `eea05678-0d9b-45cb-9a4c-243800712c8f` |
+| Audio take A, phonetic, trailing "I say." trimmed at 5.15 s | `cefc8e13-0be4-417c-85d1-ed0fc346f523` |
+| Clip 11a | `2633064a-e868-4ec8-b284-0d22d41e4c0d` |
+
+### Shot 9 — the line was never being spoken
+
+Transcribing the take exposed it: Seed Audio returned "Said... Said... Laugh", not
+"C'est de l'art". Phonetic respellings ("Say duh LAAR", "Seh duh lahrr") came back as
+stuttering garbage. Only the **ElevenLabs engine on the same Andre preset** says the French
+correctly. That is a deliberate exception to Cherki's locked Seed Audio setup, for this
+line only. Wan then failed to lip-sync it across five attempts, so the shot moved to
+Seedance omni_reference.
+
+| Asset | Job / media ID |
+|---|---|
+| Still, Cherki alone, tight CU | `2b9abc35-d901-4916-aa3c-f17e28bdcb8f` |
+| Audio, ElevenLabs French, padded, line at 1.3 s | `20771900-f1cc-49e4-b2d4-47807a39cd60` |
+| Clip 9, seedance_2_5 omni_reference 6 s | `5a8d4fd9-9886-4e46-8339-30ee67b49320` |
+
+### Shots 10 and 11b
+
+| Asset | Job / media ID |
+|---|---|
+| Still 10, Rashford dialling + Maguire with tea, corkboard wall-mounted | `c2ab8824-0127-4e27-bddb-d19151f9b5eb` |
+| Clip 10 | `06c1d515-f1a6-4304-a5a2-3564b7e42c40` |
+| Still 11b, phone gripped in hand, green matcha powder | `0a622d99-b337-423f-b5ce-c898e8f4fd79` |
+| Audio 11b padded to 4.6 s, line at 1.2 s | `8ff31bfb-5959-4e89-bb95-6637a86d5061` |
+| Clip 11b APPROVED | `38b7d7e8-d416-4b5f-8ba5-e1584f3a2dd8` |
+| Still 11c, ROONEY'S sign | `bb54722b-878c-484f-baf1-9c813c54c921` |
+| Clip 11c | `1d1c5888-8ef2-44bc-bde9-07d47db775d6` |
+| Still 11a-prime, Rashford phone already at ear | `a85cab9f-3693-4325-a080-aafba859bfa8` |
+| Clip 11a-prime | `68c81ec1-31d6-4069-b48f-3363cc97992e` |
+
+### Ident card with episode line
+
+"SEASON 1 | EPISODE 1" is composited onto the ident in ffmpeg (Montserrat ExtraBold, 44 px,
+centred at 80% height, fading in at 0.5 s) rather than generated, so the text is always
+correct. Only the episode number changes each week. The DripMap badge already rides on the
+ident via the full-duration overlay, so it is not drawn into the ident itself.
+
+| Asset | Media ID |
+|---|---|
+| Ident + sting + episode line, 2.6 s preview | `d61b215c-fdca-40ec-ba45-ee9a2963d376` |
+
+### Constraints learned this round
+
+- **Verify a TTS take says the line before spending a video credit on it.** Transcribe
+  every take; a take that transcribes as nonsense is nonsense. This caught shot 9 after
+  three video renders had already been built on unusable audio.
+- Seed Audio cannot speak French phrases in an English-accented voice. Use the ElevenLabs
+  engine for non-English lines.
+- Dead air is the enemy of lip-sync: audio much shorter than the clip lets the model invent
+  mouth movement. Pad the line and cut the clip to roughly audio length plus two seconds.
+- Wan drives sync on the dominant puppet; when it still fails on a short line, switch model
+  (Seedance omni_reference) rather than re-rolling the same setup.
+- Seedance rejects `omni_reference` as a media role — it is a `mode`, with the image passed
+  as `start_image`.
+- Guard prompts against duplicate people with "no duplicate people", never "exactly one
+  person", which silently deletes characters the scene needs.

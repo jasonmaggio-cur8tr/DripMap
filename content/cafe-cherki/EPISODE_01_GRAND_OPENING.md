@@ -248,8 +248,8 @@ collar, grey straight-leg jeans, black Adidas Samba trainers, holding a Yorkshir
 | 8 | Wide, tall lean young Norwegian man ducking under the door frame in leopard-print silk pyjama set, slides with socks, faded short sides with a small tight blonde bun at the crown, holding a huge thermos, Cherki behind counter | Haaland: "Black coffee. Big." Cherki: "Matchas only mate!" Long stare, neon buzz |
 | 9 | Medium Haaland turning to leave, hand taking the madeleine off the slate, Cherki watching | Silent exit, door bell, Cherki whispers "…C'est de l'art." |
 | 10 | Close-up Rashford lifting a chunky cordless house phone, corkboard behind with a pinned Polaroid of the matcha bar, Maguire eating a biscuit in the background | Rashford dials, jaw tight |
-| 11a | Man in bed with an alice band and eye mask pushed up on his forehead, holding a phone, bedroom lit by daylight | Grealish: "It's two in the afternoon, Rash." Rashford (phone): "I know." |
-| 11b | Man in a gilet measuring flour on a scale with a ruler, precise bakery counter | Kane: "Is this about the oat milk again?" |
+| 11a | Tanned man at an outdoor cafe table on a sunny Ibiza terrace, swim shorts, dark sunglasses, leather loafers, phone already at his ear, sipping a cappuccino | Grealish: "I'm training in Ibiza, wot are you on about?" Rashford (phone): "I know." |
+| 11b | Man in a gilet at a spotless kitchen worktop, phone gripped to his ear in one hand, chopping a pile of vivid matcha green powder with the other | Kane: "Is this about the oat milk again?" |
 | 11c | Stocky man in a greasy spoon café in a black twin-tipped polo holding a spatula, glaring at a phone on the counter | Grunt. Sizzle foley |
 | 12 | Medium Rashford on the phone, determined, Maguire behind mid-bite | "Lads. There's a Frenchman selling green water for eleven quid. Round mine. Tonight. Bring a plan." Maguire: "Bring a what?" |
 | 13 | Exterior of the matcha bar at night, Cherki flipping a small sign to FERMÉ, neon reflected in puddles | Cherki flips sign, exhales, admires shop. Rain |
@@ -284,11 +284,11 @@ Overlay `overlay/dripmap-overlay-1080x1920.png` on the top track for the full du
 | 7 | Madeleine with tweezers | `e8da70ec-8e32-4c3e-8024-7999cd6f047c` | kling3_0 | 5 s | silent + foley |
 | 8a | Haaland "Black coffee. Big." | `c7f58665-b888-415f-93b0-b12c14359347` | wan2_7 | 8 s | Haaland v3 puppet, British take A |
 | 8b | Cherki "Matchas only mate!" | `159f26cd-877e-48e2-a942-aeb0d5fefce9` | wan2_7 | 8 s | take B, comma removed |
-| 9 | Haaland leaves, "…C'est de l'art." | `aab8e31c-15c8-4451-a48f-7230107ad799` | wan2_7 | 6 s | Cherki-forward reframe, voiced read, line at 2.2 s |
-| 10 | Rashford lifts the phone | `9ddded3a-da55-4b43-ab00-190e2b96d3d7` | kling3_0 | 5 s | silent + foley |
-| 11a | Grealish "It's two in the afternoon, Rash." | `f994aa26-27a7-48e3-af39-297cbeb043b3` | wan2_7 | 8 s | full line, yawn trimmed |
+| 9 | Cherki CU, "C'est de l'art." | `5a8d4fd9-9886-4e46-8339-30ee67b49320` | seedance_2_5 | 6 s | Cherki alone in frame; Seedance after Wan could not hold sync |
+| 10 | Rashford dials, Maguire on the tea behind | `06c1d515-f1a6-4304-a5a2-3564b7e42c40` | kling3_0 | 5 s | silent + foley, corkboard fixed to wall |
+| 11a | Grealish "I'm training in Ibiza, wot are you on about?" | `2633064a-e868-4ec8-b284-0d22d41e4c0d` | wan2_7 | 8 s | Ibiza terrace, blonde hair |
 | 11a′ | Rashford "I know." | `877c48e5-50e1-4c6d-8009-0ef9e8b28a6a` | wan2_7 | 6 s | |
-| 11b | Kane "Is this about the oat milk again?" | `a28a118c-3ab4-4eef-81da-e101a282acd0` | wan2_7 | 8 s | |
+| 11b | Kane "Is this about the oat milk again?" | `38b7d7e8-d416-4b5f-8ba5-e1584f3a2dd8` | wan2_7 | 6 s | audio padded to 4.6 s, APPROVED |
 | 11c | Rooney grunt | `1d1c5888-8ef2-44bc-bde9-07d47db775d6` | kling3_0 | 5 s | black twin-tipped polo |
 | 12a | Rashford "Lads. There's a Frenchman…" | `edce9885-22e8-495d-a5a4-cf40c42f9b4c` | seedance | 12 s | |
 | 12b | Maguire "Bring a what?" | `2f5b19fb-ab9b-4f8a-92d5-a49e59e840b3` | wan2_7 | 6 s | |
