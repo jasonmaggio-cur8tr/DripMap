@@ -314,3 +314,15 @@ is approved and re-rendered.
 | Asset | Job ID |
 |---|---|
 | Audio, Andre | `35617d04-5077-404b-9974-9994d6f20fee` |
+| Audio, Andre, tighter (5.9 s, use this) | `4c7d1cc7-10c4-48ea-a639-dbf01eb18019` |
+| Clip, wan2_7 8 s, tight take | `2f622ee4-2e88-49ba-b35c-74a0aea95b2e` |
+| Clip, wan2_7 10 s, first 15 s take (superseded) | `bac4c89b-5b9c-4933-8bb5-8369fb9d98f5` |
+
+## Hook line, takes C and D (owner: A and B drew out the "s" on "peas")
+
+Ellipsis after "peas" removed; the engine stretches a word before "...". Tag also asks for crisp word endings.
+
+| Take | Text | Job ID |
+|---|---|---|
+| C | "I am going to make peas, selling matchas wiz cold foams, to all ze Gen Z in Manchester." | `065b8127-277b-473f-b020-d6f5d2fb433d` |
+| D | "I am going to make peas. Selling matchas wiz cold foams to all ze Gen Z in Manchester." | `ea56554c-a400-4060-9bb2-f01a3436602e` |
