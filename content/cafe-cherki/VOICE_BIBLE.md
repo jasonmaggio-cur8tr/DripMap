@@ -79,13 +79,49 @@ Format: **direction** → performance tag → tuning → eye-dialect rules → t
 ### Marcus Rashford (antagonist)
 - **Direction:** the twist. Real Rashford is the most Manc voice in football; ours is the
   most *proper* voice in football. 1950s BBC Received Pronunciation, slow, precise, every
-  word finished, quietly offended at all times, never swears above a murmur. Just back from
-  Barcelona, so he occasionally pronounces "Barcelona" with a full Castilian lisp. The joke
-  is that nobody in the show ever comments on any of it.
-- **Tag:** `[Extremely proper, plummy, upper-class British Received Pronunciation, like a BBC announcer from 1950, slow and precise, every consonant finished, quietly offended]`
-- **Tuning:** pitch −1, speed −10.
-- **Eye-dialect:** none. Full words, full stops. "I am" never "I'm". "Pounds" not "quid". "I'm afraid" before every insult. "Harry" as a full sentence.
-- **Test line:** "I'm back from Barcelona, and ready to sell some tea. … There's only one type of tea in Manchester."
+  word finished, quietly offended at all times, never swears above a murmur. The joke is
+  that nobody in the show ever comments on it.
+- **VOICE SOURCE: ElevenLabs Voice Design** (owner decision, 2026-09-04). Higgsfield's
+  presets could not hold a convincing British accent, so his voice is designed in
+  ElevenLabs and the audio is brought into Higgsfield for lip-sync. See § ElevenLabs
+  Voice Design workflow below.
+- **Eye-dialect:** none. Script lines verbatim. "I'm" stays "I'm".
+- **Test lines:** "I'm back from Barcelona, and ready to sell some tea." /
+  "There's only one type of tea in Manchester."
+
+#### Rashford · Voice Design brief
+
+Paste one description at a time into ElevenLabs → Voices → Voice Design. Generate three
+previews per description, keep the best, name it `Rashford · Cafe Cherki`. Try A first.
+
+**A (recommended):**
+> Young British man in his late twenties, immaculate upper-class Received Pronunciation,
+> the crisp clipped precision of a 1950s BBC newsreader, warm mid-low baritone, slow and
+> unhurried, every consonant finished, faintly amused and quietly offended at the same
+> time, effortless authority, no regional accent whatsoever, studio-clean.
+
+**B (younger, lighter):**
+> British man in his mid twenties, polished public-school Received Pronunciation, light
+> tenor, precise and measured, softly spoken, sounds like a young Oxford don explaining
+> something obvious, dry, unflappable, no rasp, no regional accent.
+
+**C (deeper, more theatrical):**
+> British man around thirty, deep resonant baritone, grand old-fashioned Received
+> Pronunciation like a Shakespearean stage actor doing a wine advert, slow, deliberate,
+> rich, faintly pompous, warm chest resonance, clean studio recording.
+
+**Preview text (use this so the takes are comparable):**
+> I'm back from Barcelona, and ready to sell some tea. There's only one type of tea in
+> Manchester. He is, I'm afraid, taking the piss. Not you, Doreen.
+
+**Settings:** guidance scale 30–40 (higher sticks closer to the description), loudness
+default, quality high. If the result drifts American, add "British, not American" to the
+end of the description and regenerate.
+
+**Text-to-Speech settings once the voice is saved:** model Multilingual v2 or v3,
+stability ~55%, similarity ~75%, style ~20%, speaker boost on. Generate each script line
+as its own file, named `ep01_s05_rashford_01.mp3` and so on, so they drop straight into
+the shot list.
 
 ### Harry Maguire (Rashford's right-hand man)
 - **Direction:** broad, warm South Yorkshire (Sheffield), slow, friendly, slightly
@@ -223,6 +259,39 @@ Format: **direction** → performance tag → tuning → eye-dialect rules → t
 ### Kevin De Bruyne
 - **Direction:** Flemish-accented English, quiet, dry, no filler, mildly irritated that he has to explain.
 - **Tag:** `[Belgian man speaking English with a Flemish accent, quiet, dry, matter-of-fact, mildly irritated]`
+
+## ElevenLabs Voice Design workflow (any character)
+
+1. In ElevenLabs: Voices → Voice Design → paste the character's description → generate
+   previews with the character's test line → save the winner as `<Name> · Cafe Cherki`.
+2. Text to Speech with that voice, one script line per file, settings as above.
+3. Download the MP3s. In this chat, say "uploading Rashford lines" and the Higgsfield
+   upload widget opens; drop the files in. Each upload returns a `media_id`.
+4. The `media_id` goes into the video generation as `audio_references` alongside the
+   shot's still as `start_image` (Seedance 2.5 omni_reference), exactly as the Nan's
+   lip-sync test was made. The clay mouth follows the ElevenLabs take.
+5. Record the ElevenLabs voice ID and the media_ids in HIGGSFIELD_ASSETS.md so the same
+   voice is reused every episode.
+
+Voice Design briefs for the rest of the cast, if the presets fail them too:
+
+| Character | Voice Design description |
+|---|---|
+| Cherki (backup; Andre is locked for now) | Young French man from Lyon in his early twenties speaking English as a second language, thick French accent, drops his h's, calm and deadpan, quietly amused, light tenor, unhurried, clean studio recording |
+| Haaland | Very tall Norwegian man in his mid twenties speaking English with a flat Scandinavian accent, deep monotone, zero emotion, very slow, long pauses, dry, clean studio recording |
+| Grealish | Young man from Birmingham, strong Brummie accent, cheeky, sleepy, warm, laughs under his breath, mid tenor, relaxed pace |
+| Kane | English man from Essex in his early thirties, flat estuary accent, calm, media-trained, slightly robotic, even pace, no emotion |
+| Rooney | Middle-aged man from Liverpool, thick gravelly Scouse accent, blunt, low, permanently annoyed, short phrases |
+| Foden | Young man from Stockport, quiet soft Mancunian accent, mumbly, short answers, light tenor |
+| Palmer | Young man from Manchester, nasal flat Mancunian accent, slow, cold, completely unbothered, low energy |
+| Guardiola | Catalan man in his fifties speaking fast English with a strong Spanish-Catalan accent, warm, intense, repeats words for emphasis, interrupts himself |
+| Henry | French man in his late forties speaking polished fluent English with a French accent, deep smooth baritone, slow, elegant, quietly disappointed, TV pundit |
+| Beckham | English man from East London in his forties, light high-pitched cockney accent, extremely polite, gentle, soft |
+| Zlatan | Swedish man in his forties speaking English with a Swedish accent, deep, arrogant, slow, self-assured, theatrical |
+| Van Dijk | Tall Dutch man in his thirties speaking English with a Dutch accent, very deep, calm, slow, authoritative |
+| De Bruyne | Belgian man in his thirties speaking English with a Flemish accent, quiet, dry, matter-of-fact, mildly irritated |
+| Messi | Argentine man in his late thirties speaking soft English with a Spanish accent, mumbling, humble, quiet, trailing off |
+| Ronaldo | Portuguese man in his late thirties speaking English with total confidence, loud, precise, motivational-speaker energy, rich baritone |
 
 ## Sample takes
 
