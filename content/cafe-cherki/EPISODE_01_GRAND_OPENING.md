@@ -262,3 +262,38 @@ collar, grey straight-leg jeans, black Adidas Samba trainers, holding a Yorkshir
 3. Insert the reusable ident clip at 0:05, then cut back into shot 2.
 4. End card is a static still with the sting layered.
 5. Top track: `overlay/dripmap-overlay-1080x1920.png` for the full duration, 100% opacity.
+
+---
+
+## Edit decision list (approved clips, 2026-09-04)
+
+All clips 9:16. Trim each to the timing in the script; every clip has spare handles.
+Overlay `overlay/dripmap-overlay-1080x1920.png` on the top track for the full duration.
+
+| # | Shot | Clip job | Model | Length | Notes |
+|---|---|---|---|---|---|
+| 1 | Hook, Cherki "make peas…" (take C) | `f20d3a40-701c-4d1e-a9b0-bb9e280d7378` | wan2_7 | 12 s | APPROVED. Use first ~6 s |
+| — | Ident | `8f7e3a75-ef12-441e-b2ae-93cd74243417` | kling3_0 | 3 s | Trim to 2 s |
+| 2 | "No couches, card only…" | `2f622ee4-2e88-49ba-b35c-74a0aea95b2e` | wan2_7 | 8 s | |
+| 3a | Maguire "Oi, can I get a cuppaaa, mate?" | `99273f04-04b7-4374-b0a1-97296d006352` | wan2_7 | 12 s | dry interior |
+| 3b | Cherki "We 'ave ceremonial grade, single source matcha." | `ef6d6d6f-96e7-41b2-9dff-88097d0657d4` | wan2_7 | 6 s | dry interior |
+| 3c | Maguire "Bin man." | `feeb287a-b040-4f4f-8c1f-01996741783d` | wan2_7 | 8 s | audio APPROVED |
+| 4 | Maguire ducks into Nan's | `e58e6f0c-ee0b-4fe8-82d1-22b7cc829e08` | kling3_0 | 5 s | silent + foley |
+| 5 | Nan's three lines | `c3b66385-d3d9-4044-94e7-6b747bae271f` | seedance | 14 s | APPROVED |
+| 6 | "He is, I'm afraid, taking the piss. … Not you, Doreen." | `ec23fe2c-5d45-4744-8bd4-84310ee10927` | seedance | 8 s | |
+| 7 | Madeleine with tweezers | `e8da70ec-8e32-4c3e-8024-7999cd6f047c` | kling3_0 | 5 s | silent + foley |
+| 8a | Haaland "Black coffee. Big." | `73d8b289-e0af-490b-9458-781a80c042ec` | wan2_7 | 10 s | |
+| 8b | Cherki "We don't do coffee." | `ab711503-1c42-47fd-8272-301e672286a9` | wan2_7 | 8 s | |
+| 9 | Haaland leaves, "…C'est de l'art." | `553cf64f-25d5-41a3-83c5-e5ca4a0aaa82` | seedance | 8 s | |
+| 10 | Rashford lifts the phone | `9ddded3a-da55-4b43-ab00-190e2b96d3d7` | kling3_0 | 5 s | silent + foley |
+| 11a | Grealish "It's two in the afternoon, Rash." | `5f6a53cd-0b8e-4a0a-b70c-2d14a35531a2` | wan2_7 | 8 s | |
+| 11a′ | Rashford "I know." | `877c48e5-50e1-4c6d-8009-0ef9e8b28a6a` | wan2_7 | 6 s | |
+| 11b | Kane "Is this about the oat milk again?" | `a28a118c-3ab4-4eef-81da-e101a282acd0` | wan2_7 | 8 s | |
+| 11c | Rooney grunt | `b11503a1-67f9-47a6-b684-ad23b4cb25e3` | kling3_0 | 5 s | |
+| 12a | Rashford "Lads. There's a Frenchman…" | `edce9885-22e8-495d-a5a4-cf40c42f9b4c` | seedance | 12 s | |
+| 12b | Maguire "Bring a what?" | `2f5b19fb-ab9b-4f8a-92d5-a49e59e840b3` | wan2_7 | 6 s | |
+| 13 | Cherki flips the sign | `30c958ac-c5b8-47bd-aaf7-473d42120cc1` | kling3_0 | 5 s | silent + foley |
+| 14 | Car, "The mandem wants aesthetic? Say less." | `745ef389-ffc7-4762-aa03-45c393ad0ead` | wan2_7 | 8 s | APPROVED |
+| — | End card "NEXT TIME AT CAFÉ CHERKI" | to build in the edit | | 3 s | |
+
+Raw material runs ~180 s; the cut targets 60 s, so most clips use 2–4 s of their length.
