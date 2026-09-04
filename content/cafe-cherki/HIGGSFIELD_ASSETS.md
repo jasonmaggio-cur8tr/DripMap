@@ -652,3 +652,33 @@ clip with the ROONEY'S sign; end card rewritten and doubled to 14 s.
   the first mid-write and the failure looks like a corrupt file.
 - The sandbox is discarded between calls unless a background job holds the lease. Long
   builds must run with `background: true`.
+
+## Episode 2 teaser assembled (2026-09-04)
+
+Same pipeline as Episode 1 (sandbox `/home/user/t3/build.sh`, `edl.txt` rows of
+`file start dur kind`). One new row kind, `sfx`, drops the clip's own audio and lays a
+generated effect under it instead — needed because Kling's audio cannot be directed and
+the T3 engine kept idling instead of cutting off.
+
+| Item | Media ID | Note |
+|---|---|---|
+| Teaser v2 FINAL | `dcddee50-d39b-4909-a109-69fa97245a4b` | 34 s, 22 MB, overlay burned, ident tail with subline |
+| Teaser v1 | `0e755d37-0d59-4201-8203-989a0215937f` | superseded, single-shot snatch |
+| Engine cut-off SFX | `593adcea…` | mirelo, replaces T3 clip audio |
+| Cherki "Kyoto" take | `f5190198…` | seed_audio, Andre |
+| Liam "Peas" take | `046d8821…` | Callum ElevenLabs native, −2 semitones |
+| Cherki "nicked" take | `680e2572…` | seed_audio, Andre |
+
+Clip IDs and trims per shot are in `EPISODE_02_TEASER.md`.
+
+### Constraints learned this round
+
+- The video models cannot stage a hand-to-hand grab from a moving bike. Three attempts:
+  bag dropped, bike left the wrong way, rider vanished. Cut around it — handover, rider,
+  reaction, rider with bag — and the audience does the theft themselves.
+- The image filter refuses "snatch / steal / grab" plus a masked rider. Describe postures
+  and objects ("bag held from the top", "rider leaning forward") and it passes.
+- Scooter mods (spotlights, mirror stalks, fox tail) drop out of a prompt that only says
+  "the Lambretta". Enumerate them every time.
+- A drawtext subline with an accented character has to come in via `textfile=`; inline `é`
+  broke the filter escaping.

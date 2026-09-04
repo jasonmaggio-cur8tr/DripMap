@@ -23,20 +23,33 @@ by, grabs it and is gone. Very fast e-motorcycle sound.
 
 "Peas" is the callback to Cherki's Episode 1 hook. Keep the spelling — it is the joke.
 
-## Shot list
+## Shot list — final cut (v2, assembled 2026-09-04)
 
-| # | Shot | Sound | Still |
-|---|---|---|---|
-| T1 | Wide, Lambretta rides toward camera down the wet street, lamps blazing | Scooter engine, rain | `487d0b32-754a-4e78-925e-ea74b1ff6ee8` |
-| T2 | Low detail — chrome spotlights, mirror stalks, parka | Engine, spray | `226bf03a-b63a-4c7e-94cc-26a4defe47de` |
-| T3 | Pulls up outside Café Cherki, Cherki in the doorway | Engine cuts, door bell | `33edd287-d4df-48ba-a72e-cbeba3b771af` |
-| T4 | Cherki: "You get the shipment from Kyoto, Liam?" | Dialogue | `ab3f2842-2e3d-4ab9-9a52-bf33407792c1` |
-| T5 | Liam: "Yes twin, hand me the Peas." | Dialogue | `6584e9c9-4b7f-4622-ab72-f8930a788fd0` |
-| T6 | CU Nike TNs on the footpeg, tilt up | E-moto whine building | `26fca267-2aa5-4c03-98c7-84048a92eb41` |
-| T7 | Foden masked up, speeding | Whine peaking | `cc2763ec-4667-46f5-8cfa-271a029d0ff2` |
-| T8 | The hand-off — pouch centre frame, bike rips through, gone | Doppler past | `c2e99fe3-6ab3-4c43-9317-442e1540d39e` |
-| T9 | Two faces. Cherki: "Who just nicked my matcha!?" | Dialogue | to build |
-| — | Café Cherki ident + "On the next episode of Café Cherki" | Bumper sting | composited |
+The snatch is never animated. It is cut: both hands on the bag → Foden speeding → the two
+of them clock him → Foden riding off with the bag → Cherki's line. Same joke, no shot the
+video model has to physically stage. Trims are measured from the dialogue takes (0.30 s
+pre-roll, 0.50 s tail), not guessed.
+
+| # | Shot | Sound | Clip | In / dur |
+|---|---|---|---|---|
+| T1 | Wide, Lambretta rides toward camera down the wet street, lamps blazing | Scooter engine, rain | `a025e602` | 0.30 / 3.20 |
+| T2 | Low detail — chrome spotlights, mirror stalks, parka | Engine, spray | `187e6182` | 0.30 / 2.60 |
+| T3 | Pulls up outside Café Cherki, engine dies, Cherki in the doorway | Engine cutting off (separate SFX `593adcea`, replaces the clip's own audio) | `38f136f2` | 0.20 / 3.20 |
+| T4 | Cherki: "You get the shipment from Kyoto, Liam?" | Dialogue `f5190198` | `76579430` | 0.55 / 3.55 |
+| T5 | Liam: "Yes twin, hand me the Peas." | Dialogue `046d8821` | `ec22b074` | 0.55 / 2.95 |
+| A | The handover — both hands on the clear bag, centre frame | Rain, street | `2fe36c7d` | 0.30 / 2.40 |
+| T6 | CU Nike TNs on the footpeg — stays on the trainers, no tilt | E-moto whine building | `8ecb830e` | 0.30 / 2.20 |
+| B | Foden masked up, speeding | Whine peaking | `1f64aa07` | 0.30 / 2.40 |
+| C | Liam and Cherki turn and clock him | Doppler past | `189eb38c` | 0.30 / 2.20 |
+| D | Foden riding away, bag held from the top | Whine fading | `624076c1` | 0.30 / 2.60 |
+| E | Two faces. Cherki: "Who just nicked my matcha!?" | Dialogue `680e2572` | `c0c2ad10` | 0.45 / 3.60 |
+| — | Café Cherki ident + "On the next episode of Café Cherki" | Bumper sting | composited | 3.00 |
+
+**Assembled teaser v2:** media `dcddee50-d39b-4909-a109-69fa97245a4b`, 34 s, 22 MB.
+
+Superseded: T7 speeding take `cc2763ec`, T8 single-shot snatch `c2e99fe3` (bag fell, bike
+went the wrong way, Foden missing — the reason for the cut structure above), and the tilt-up
+T6 (revealed a white hoodie and a missing hand; the camera now never leaves the trainers).
 
 ## New characters
 
