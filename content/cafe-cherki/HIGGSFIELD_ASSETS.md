@@ -437,3 +437,62 @@ silence in ffmpeg to clear the Wan minimum length.
 | 8b · Cherki "Matchas only, mate!" | wan2_7 | 8 s | `5005275e-7f30-4adf-b945-12a2fe4cc048` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_134811_5005275e-7f30-4adf-b945-12a2fe4cc048.mp4 |
 | 9 · Haaland leaves in pyjamas, "C'est de l'art." | wan2_7 | 8 s | `e30a9619-2e74-42b5-bed4-a93731b37f89` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_135104_e30a9619-2e74-42b5-bed4-a93731b37f89.mp4 |
 | 11c · Rooney grunt in the black tipped polo | kling3_0 | 5 s | `005ad477-4701-4a7d-b7f5-7c81c0c67c38` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_134811_005ad477-4701-4a7d-b7f5-7c81c0c67c38.mp4 |
+
+## Owner notes round 2 (2026-09-04) — Haaland rebuild, line and voice fixes
+
+Owner notes: 8b line becomes "Matchas only mate!" (no comma — the comma made Seed Audio
+pause between "only" and "mate"); Haaland British and at normal pace, not the slowed
+Nordic read; Haaland hair in a small tight bun with faded short sides per reference photo,
+and a younger, boyish face; Rooney in a black twin-tipped polo; Grealish audio was
+dropping the final word "Rash"; shot 9 had no lip movement on Cherki.
+
+### Character sheets, current locks
+
+| Character | Job ID | Note |
+|---|---|---|
+| Haaland v3 (bun, faded sides, younger, leopard silk pyjamas) | `1919e40c-45b5-45b2-b57c-196aa0fa90d1` | CURRENT |
+| Haaland v2 (ponytail, slim) | `b914d6b4-f098-4cd7-b0ad-f0779c1532b7` | superseded |
+| Haaland v1 (leopard pyjamas, original build) | `18a09900-af8f-4c87-b997-b2b36e28fab0` | superseded |
+
+### Stills
+
+| Shot | Job ID | Note |
+|---|---|---|
+| 8 · Haaland enters, v3 puppet | `14b60bd8-094b-4459-b69f-0749bdbfdf83` | CURRENT |
+| 9 · Cherki-forward reframe, Haaland small in background | `6cd5b479-ca32-42e4-8a96-02b0935b95aa` | CURRENT |
+| 11c · Rooney in black twin-tipped polo | `0bc885d3-3fcf-4d5d-8745-2a7be633ba7d` | CURRENT |
+
+### Audio
+
+| Line | Voice | Job ID | Note |
+|---|---|---|---|
+| Cherki "Matchas only mate!" take B | Andre, seed_audio, +5 speed | `4fb478f7-c2a4-47b4-9d8c-dee3e84346c7` | OWNER PICK |
+| Haaland "Black coffee. Big." take A | Alexey + British tag, normal pace | `d54d507f-60cb-416c-af1e-eee14c6b71f1` | OWNER PICK |
+| Grealish "It's two in the afternoon, Rash." | Jasper, seed_audio, yawn trimmed in ffmpeg | `58d581c3-43fe-44d0-8095-e75110a0bb36` | media_id, transcript-verified |
+| Maguire "Oi, can I get a cuppa, mate?" | Callum, ElevenLabs native, padded in ffmpeg | `e961baf7-4c77-4b2e-93cc-02e7af14107b` | media_id |
+| Cherki "…C'est de l'art." | Andre, seed_audio | `7cc53e21-9954-417b-8c9d-044df96f4d94` | replaces failed short retake |
+
+### Clips, current
+
+| Shot | Job ID |
+|---|---|
+| 8a · Haaland "Black coffee. Big." | `c7f58665-b888-415f-93b0-b12c14359347` |
+| 8b · Cherki "Matchas only mate!" | `159f26cd-877e-48e2-a942-aeb0d5fefce9` |
+| 9 · Cherki "…C'est de l'art." | `076c3932-084a-4094-bb79-331a2bde8f1f` |
+| 11a · Grealish | `f994aa26-27a7-48e3-af39-297cbeb043b3` |
+| 11c · Rooney grunt, polo | `1d1c5888-8ef2-44bc-bde9-07d47db775d6` |
+| 3a · Maguire cuppa | `59b1dc80-d1b4-41ab-877a-e73dde7ec038` |
+
+### Constraints learned this round
+
+- A comma in a short Seed Audio line becomes an audible pause. Write short lines without
+  internal punctuation and direct "one breath, no pause between the words".
+- ElevenLabs drops or clips the final word of a short line. Pad with a trailing
+  `<break>` or trailing silence, and verify with faster-whisper word timestamps before use.
+- Seed Audio needs a sigh, laugh or yawn to clear its minimum length on a short line. Trim
+  that filler in ffmpeg afterwards and upload the trimmed file via media_upload rather than
+  leaving it in the take.
+- Wan drives lip-sync on whichever puppet dominates the frame. A character who speaks from
+  the background will not move their mouth — reframe so the speaker is the subject.
+- An audio_references job ID from an old failed or very short take will fail the video job.
+  Regenerate the line rather than reusing it.

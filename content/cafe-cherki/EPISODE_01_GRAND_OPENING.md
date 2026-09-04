@@ -99,7 +99,7 @@ Door opens. Haaland ducks under the frame: leopard-print silk pyjama set,
 slides with socks, hair tied back. He carries a bucket-sized thermos.
 
 > **HAALAND:** Black coffee. Big.
-> **CHERKI:** Matchas only, mate!
+> **CHERKI:** Matchas only mate!
 
 Long stare. Rain. The neon buzzes.
 
@@ -245,7 +245,7 @@ collar, grey straight-leg jeans, black Adidas Samba trainers, holding a Yorkshir
 | 5 | Interior cosy English tea room, floral wallpaper, doilies, gas fire, mismatched teacups, framed photo on the mantel, Rashford in the check hooded jacket pouring from a teapot in a knitted cosy, suitcase with a Barcelona tag by the armchair, custard cream on saucer | Rashford pours: "I'm back from Barcelona, and ready to sell some tea." Maguire: "Rash, Cherki's opened a trendy matcha shop." Rashford freezes, tea overflows |
 | 6 | Close-up Rashford, teapot held mid-air, disbelief, grey cat on floral armchair behind | "There's only one type of tea in Manchester. He is, I'm afraid, taking the piss." Cat meows. "Not you, Doreen." |
 | 7 | Medium Cherki placing one madeleine on a slate with tweezers | Adjusts pastry 2 mm, nods once. Tweezers click |
-| 8 | Wide, very tall Nordic man ducking under the door frame in leopard-print silk pyjama set, slides with socks, hair tied back, holding a huge thermos, Cherki small behind counter | Haaland: "Black coffee. Big." Cherki: "Matchas only, mate!" Long stare, neon buzz |
+| 8 | Wide, tall lean young Norwegian man ducking under the door frame in leopard-print silk pyjama set, slides with socks, faded short sides with a small tight blonde bun at the crown, holding a huge thermos, Cherki behind counter | Haaland: "Black coffee. Big." Cherki: "Matchas only mate!" Long stare, neon buzz |
 | 9 | Medium Haaland turning to leave, hand taking the madeleine off the slate, Cherki watching | Silent exit, door bell, Cherki whispers "…C'est de l'art." |
 | 10 | Close-up Rashford lifting a chunky cordless house phone, corkboard behind with a pinned Polaroid of the matcha bar, Maguire eating a biscuit in the background | Rashford dials, jaw tight |
 | 11a | Man in bed with an alice band and eye mask pushed up on his forehead, holding a phone, bedroom lit by daylight | Grealish: "It's two in the afternoon, Rash." Rashford (phone): "I know." |
@@ -275,21 +275,21 @@ Overlay `overlay/dripmap-overlay-1080x1920.png` on the top track for the full du
 | 1 | Hook, Cherki "make peas…" (take C) | `f20d3a40-701c-4d1e-a9b0-bb9e280d7378` | wan2_7 | 12 s | APPROVED. Use first ~6 s |
 | — | Ident | `8f7e3a75-ef12-441e-b2ae-93cd74243417` | kling3_0 | 3 s | Trim to 2 s |
 | 2 | "No couches, card only…" | `2f622ee4-2e88-49ba-b35c-74a0aea95b2e` | wan2_7 | 8 s | |
-| 3a | Maguire "Oi, can I get a cuppa, mate?" | `70578de7-90df-4245-899d-34d0178a20c3` | wan2_7 | 8 s | Callum native, normal pace, supersedes `99273f04…` |
+| 3a | Maguire "Oi, can I get a cuppa, mate?" | `59b1dc80-d1b4-41ab-877a-e73dde7ec038` | wan2_7 | 8 s | Callum native, normal pace, padded in ffmpeg |
 | 3b | Cherki "We 'ave ceremonial grade, single source matcha." | `ef6d6d6f-96e7-41b2-9dff-88097d0657d4` | wan2_7 | 6 s | dry interior |
 | 3c | Maguire "Bin man." | `feeb287a-b040-4f4f-8c1f-01996741783d` | wan2_7 | 8 s | audio APPROVED |
 | 4 | Maguire ducks into Nan's | `e58e6f0c-ee0b-4fe8-82d1-22b7cc829e08` | kling3_0 | 5 s | silent + foley |
 | 5 | Nan's three lines | `c3b66385-d3d9-4044-94e7-6b747bae271f` | seedance | 14 s | APPROVED |
 | 6 | "He is, I'm afraid, taking the piss. … Not you, Doreen." | `ec23fe2c-5d45-4744-8bd4-84310ee10927` | seedance | 8 s | |
 | 7 | Madeleine with tweezers | `e8da70ec-8e32-4c3e-8024-7999cd6f047c` | kling3_0 | 5 s | silent + foley |
-| 8a | Haaland "Black coffee. Big." | `1b136168-a436-4a6b-8cae-75eeef31871f` | wan2_7 | 10 s | leopard pyjamas, supersedes `73d8b289…` |
-| 8b | Cherki "Matchas only, mate!" | `5005275e-7f30-4adf-b945-12a2fe4cc048` | wan2_7 | 8 s | supersedes `ab711503…` |
-| 9 | Haaland leaves, "…C'est de l'art." | `e30a9619-2e74-42b5-bed4-a93731b37f89` | wan2_7 | 8 s | leopard pyjamas, supersedes `553cf64f…` |
+| 8a | Haaland "Black coffee. Big." | `c7f58665-b888-415f-93b0-b12c14359347` | wan2_7 | 8 s | Haaland v3 puppet, British take A |
+| 8b | Cherki "Matchas only mate!" | `159f26cd-877e-48e2-a942-aeb0d5fefce9` | wan2_7 | 8 s | take B, comma removed |
+| 9 | Haaland leaves, "…C'est de l'art." | `076c3932-084a-4094-bb79-331a2bde8f1f` | wan2_7 | 8 s | Cherki-forward reframe so his lips move |
 | 10 | Rashford lifts the phone | `9ddded3a-da55-4b43-ab00-190e2b96d3d7` | kling3_0 | 5 s | silent + foley |
-| 11a | Grealish "It's two in the afternoon, Rash." | `5f6a53cd-0b8e-4a0a-b70c-2d14a35531a2` | wan2_7 | 8 s | |
+| 11a | Grealish "It's two in the afternoon, Rash." | `f994aa26-27a7-48e3-af39-297cbeb043b3` | wan2_7 | 8 s | full line, yawn trimmed |
 | 11a′ | Rashford "I know." | `877c48e5-50e1-4c6d-8009-0ef9e8b28a6a` | wan2_7 | 6 s | |
 | 11b | Kane "Is this about the oat milk again?" | `a28a118c-3ab4-4eef-81da-e101a282acd0` | wan2_7 | 8 s | |
-| 11c | Rooney grunt | `005ad477-4701-4a7d-b7f5-7c81c0c67c38` | kling3_0 | 5 s | black tipped polo, supersedes `b11503a1…` |
+| 11c | Rooney grunt | `1d1c5888-8ef2-44bc-bde9-07d47db775d6` | kling3_0 | 5 s | black twin-tipped polo |
 | 12a | Rashford "Lads. There's a Frenchman…" | `edce9885-22e8-495d-a5a4-cf40c42f9b4c` | seedance | 12 s | |
 | 12b | Maguire "Bring a what?" | `2f5b19fb-ab9b-4f8a-92d5-a49e59e840b3` | wan2_7 | 6 s | |
 | 13 | Cherki flips the sign | `30c958ac-c5b8-47bd-aaf7-473d42120cc1` | kling3_0 | 5 s | silent + foley |
