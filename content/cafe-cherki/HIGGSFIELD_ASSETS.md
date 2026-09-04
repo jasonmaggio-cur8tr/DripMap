@@ -222,7 +222,7 @@ fall back to one clip per line and cut them together.
 | Shot | Line | Voice | Job ID |
 |---|---|---|---|
 | 1 | Cherki hook | Andre | `8b097cfa-c3d4-44b6-b6fd-fd0e82451cb4` |
-| 2 | Cherki "No sugar. No music. No cow. Silence is… aesthetic." | Andre | `3131c3e8-dc94-473d-a9d0-0b862d6f6e95` |
+| 2 | Cherki "No couches. Card only. No cow's milk. No music. Silence is… aesthetic." (owner rewrite; old take `3131c3e8…` superseded) | Andre | see "Shot 2 rewrite" below |
 | 3 | Cherki "We 'ave ceremonial grade." | Andre | `098b0979-2211-403b-b02c-1389038e9733` |
 | 3 | Maguire "Ey up. You got a brew, pal?" | Callum/11L | `e44c2a1a-d460-405a-8401-c388e7febb55` |
 | 3 | Maguire "…So no, then." (short, padded retake 614) | Callum/11L | `645676ca-643b-43a6-8f42-ace8ae7cb33f` |
@@ -306,3 +306,11 @@ Spend so far ≈ 1,050 credits.
 
 The earlier hook clip `35844486…` uses the old wording and is superseded once one of these
 is approved and re-rendered.
+
+## Shot 2 rewrite (owner, 2026-09-04)
+
+"No couches. Card only. No cow's milk. No music. Silence is… aesthetic."
+
+| Asset | Job ID |
+|---|---|
+| Audio, Andre | `35617d04-5077-404b-9974-9994d6f20fee` |
