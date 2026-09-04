@@ -294,3 +294,15 @@ Still pending on voice picks: shot 8 (Haaland), 11a (Grealish), 11b (Kane). 11c 
 is a grunt only and can be rendered on Kling with foley.
 
 Spend so far ≈ 1,050 credits.
+
+## Hook line, corrected wording (owner, 2026-09-04)
+
+"I am going to make Ps… selling matchas with cold foams, to all the Gen Z in Manchester."
+
+| Take | TTS spelling of "Ps" | Job ID |
+|---|---|---|
+| A | "Pees" | `e691a4f4-a235-4d49-840f-ec8b14e1a55e` |
+| B | "peas" | `c120ec1e-c58f-45b8-a4ef-33fb095f6ca6` |
+
+The earlier hook clip `35844486…` uses the old wording and is superseded once one of these
+is approved and re-rendered.

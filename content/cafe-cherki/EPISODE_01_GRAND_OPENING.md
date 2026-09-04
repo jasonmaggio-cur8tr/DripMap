@@ -16,7 +16,8 @@ turns. Cherki, cream flame-print knit, orange shades, one eyebrow up, slowly str
 bamboo whisk like a cat. He raises his pinky to the corner of his mouth.
 
 > **CHERKI (thick French accent, villain-calm):** I am going to make Ps… selling
-> matchas, wiz sugary cloud foams, to all ze Gen Z of Manchester.
+> matchas with cold foams, to all the Gen Z in Manchester.
+> *("Ps" is pronounced "Pees". Spell it "Pees" in the TTS prompt.)*
 
 Thunder. The neon flickers on.
 
@@ -237,7 +238,7 @@ collar, grey straight-leg jeans, black Adidas Samba trainers, holding a Yorkshir
 
 | Shot | Still prompt (after style block + character lock) | Video motion / audio prompt for kling3_0 |
 |---|---|---|
-| 1 | Cherki in a high-backed swivel chair in front of the rain-streaked window, one eyebrow raised, stroking a bamboo whisk like a cat, pinky raised to the corner of his mouth, green neon glow | Chair swivels to camera, slow whisk-stroking, pinky to lip on the last line, thunder, neon flickers on. Villain-calm heavy French voice: "I am going to make Ps… selling matchas, wiz sugary cloud foams, to all ze Gen Z of Manchester." |
+| 1 | Cherki in a high-backed swivel chair in front of the rain-streaked window, one eyebrow raised, stroking a bamboo whisk like a cat, pinky raised to the corner of his mouth, green neon glow | Chair swivels to camera, slow whisk-stroking, pinky to lip on the last line, thunder, neon flickers on. Villain-calm heavy French voice: "I am going to make Ps (Pees)… selling matchas with cold foams, to all the Gen Z in Manchester." |
 | 2 | Wide interior of a minimalist matcha bar: white-washed brick, blonde wood counter, three pastries in a glass case, green neon sign glowing, Cherki behind the counter arms open | Cherki gestures at the empty room. Voice: "No sugar. No music. No cow. Silence is… aesthetic." Whisk foley |
 | 3 | Medium two-shot across the counter, Maguire's huge head under the pendant light squinting at a tiny two-item menu, Cherki serene | Maguire: "Ey up. You got a brew, pal?" Cherki: "We have ceremonial grade." Maguire: "…So no, then." Eyebrows shoot up at the price card |
 | 4 | Exterior of a red-brick terraced house converted into a tea room, net curtains, hanging basket, hand-painted NAN'S sign, rain, Maguire ducking through the door head first | Rain, Maguire ducks in, door bell jingles |

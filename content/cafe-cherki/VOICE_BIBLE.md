@@ -74,7 +74,7 @@ Format: **direction** → performance tag → tuning → eye-dialect rules → t
 - **LOCKED VOICE:** seed_audio preset **Andre**, `f1e8226e-2248-4d5f-b43c-0a79e9949dbf` (owner pick, 2026-09-04).
 - **Tuning:** pitch 0, speed −5.
 - **Eye-dialect:** 'undred, 'ere, 'as, ze, zis, zem, wiz, "I will sell" not "I'll sell", French filler "euh" and "you know" at the end of statements.
-- **Test line:** "I am going to make Ps… selling matchas, wiz sugary cloud foams, to all ze Gen Z of Manchester."
+- **Test line:** "I am going to make Ps… selling matchas with cold foams, to all the Gen Z in Manchester." (TTS spelling: "Pees", "wiz", "ze".)
 
 ### Marcus Rashford (antagonist)
 - **Direction:** the twist. Real Rashford is the most Manc voice in football; ours is the
