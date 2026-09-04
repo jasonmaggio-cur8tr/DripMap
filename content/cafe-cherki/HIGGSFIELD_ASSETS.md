@@ -277,3 +277,20 @@ Production notes learned this pass:
 - Any reference audio under ~3 s is rejected (422 on Seedance, failed job on Wan). Pad ElevenLabs lines with `<break time="1.5s" />` before and after; pad Seed Audio lines with "..." and the "long pause" instruction.
 - Audio longer than the requested clip duration fails in-flight. Duration ≥ audio + 2 s.
 - Padded ElevenLabs takes: "So no, then." `8d1a1ce1…`, "Bring a what?" `3ee2e502…`, "Ey up…" `77cd78a6…`.
+
+## Episode 1 clips, final additions
+
+| Shot | Model | Duration | Job ID | URL |
+|---|---|---|---|---|
+| 3a · Maguire "Ey up. You got a brew, pal?" | wan2_7 | 6 s | `e4ebf5c1-1bca-4594-8b25-cb7b8d870114` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_050304_e4ebf5c1-1bca-4594-8b25-cb7b8d870114.mp4 |
+| 12a · Rashford "Lads. There's a Frenchman…" | seedance_2_5 | 12 s | `edce9885-22e8-495d-a5a4-cf40c42f9b4c` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_045731_edce9885-22e8-495d-a5a4-cf40c42f9b4c.mp4 |
+| 12b · Maguire "Bring a what?" | wan2_7 | 6 s | `2f5b19fb-ab9b-4f8a-92d5-a49e59e840b3` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_050249_2f5b19fb-ab9b-4f8a-92d5-a49e59e840b3.mp4 |
+
+Two Maguire lines ("Ey up…" and "Bring a what?") would not render from the ElevenLabs
+engine at any padding, so those two use the Callum preset on Seed Audio with a British
+Yorkshire tag (`cbc731db…`, `09e7a937…`). If the accent drifts on them, that is why.
+
+Still pending on voice picks: shot 8 (Haaland), 11a (Grealish), 11b (Kane). 11c (Rooney)
+is a grunt only and can be rendered on Kling with foley.
+
+Spend so far ≈ 1,050 credits.
