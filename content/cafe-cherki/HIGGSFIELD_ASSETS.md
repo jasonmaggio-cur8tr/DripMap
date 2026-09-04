@@ -496,3 +496,51 @@ dropping the final word "Rash"; shot 9 had no lip movement on Cherki.
   the background will not move their mouth — reframe so the speaker is the subject.
 - An audio_references job ID from an old failed or very short take will fail the video job.
   Regenerate the line rather than reusing it.
+
+## Series bumper / sonic logo LOCKED (owner pick, 2026-09-04)
+
+Owner picked option 2 of four candidates: downtempo French house, filtered four-on-the-floor
+kick, Rhodes chord stabs, slow filter sweep, vibraphone accent. Generated on sonilo_music,
+so it is ours outright and publishes as original audio on Reels.
+
+| Asset | Job / media ID | Note |
+|---|---|---|
+| Bumper, full 10 s bed | `cf8fb934-674f-42c6-ada2-2806d90b6cbc` | LOCKED. Source recording |
+| Sting, 3 s ident cut, -14 LUFS, 0.3 s fade out | `4bf959ee-5a82-406a-9a88-ea4b19f887bc` | media_id, use on the ident |
+
+Candidates not chosen: jazzy lo-fi boom bap `07712773-551f-481b-94c8-1a94af9b092b`,
+UK broken beat `e1d19585-7dec-4353-828f-6f8064f0fd31`, bossa lounge
+`5aef9160-1c4a-4eca-8575-d666ebcfaae1`.
+
+A Bensound track ("Midnight Attraction", breakdown at 1:08) was the owner's starting
+reference. Not used: a library track attributes to the track rather than the account and
+forfeits the original-audio reuse loop on Reels. If it is ever revisited, confirm which
+Bensound licence tier covers branded, monetised social use first.
+
+## Shot 9 timing fix
+
+Owner: Haaland started walking after the line had already finished. Prompt-level timing
+directions are advisory and Wan ignored them, so the fix went into the audio: leading
+silence stripped from the take and the whisper re-seated to start at 3.4 s, clip extended
+to 12 s. Haaland now clears the door before Cherki speaks.
+
+| Asset | Job / media ID | Note |
+|---|---|---|
+| Audio, whisper delayed to 3.4 s | `76a81eac-42c3-4f45-9b8d-ec8370caa55c` | superseded |
+| Clip 9, re-timed, wan2_7 12 s | `347256e8-af81-4bad-b740-a492a69b06c5` | superseded, exit timing correct but lips out of sync |
+| Audio, hushed but voiced, line at 2.2 s, 5.1 s total | `db26154b-e7ff-4f30-9ac2-92e401f6191b` | CURRENT |
+| Clip 9, voiced read, wan2_7 6 s | `aab8e31c-15c8-4451-a48f-7230107ad799` | CURRENT |
+
+Second pass on shot 9: exit timing was right but the lips were not synced and Cherki
+mouthed a phantom line at the end. Three causes, all fixed together:
+
+- A true whisper is largely unvoiced and gives the lip-sync driver almost no signal.
+  Direct "hushed and awed but still clearly voiced out loud, not a breathy whisper".
+- Long silent stretches invite Wan to invent mouth movement. Keep the clip only slightly
+  longer than the audio (6 s clip for a 5.1 s take) rather than padding it out.
+- Say explicitly in the prompt that the mouth stays closed and still whenever there is no
+  speech, and that the character must never mouth words absent from the reference audio.
+
+Also new: a Seed Audio take can leak words from its own performance tag into the speech
+(take `7b161c53-81e0-4507-8aca-cd75fe6a8b85` began "Leon Andreath, you can find…" before
+the line). Always transcribe a take before using it rather than trusting the duration.

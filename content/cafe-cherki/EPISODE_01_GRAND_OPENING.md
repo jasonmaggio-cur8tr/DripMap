@@ -273,7 +273,7 @@ Overlay `overlay/dripmap-overlay-1080x1920.png` on the top track for the full du
 | # | Shot | Clip job | Model | Length | Notes |
 |---|---|---|---|---|---|
 | 1 | Hook, Cherki "make peas…" (take C) | `f20d3a40-701c-4d1e-a9b0-bb9e280d7378` | wan2_7 | 12 s | APPROVED. Use first ~6 s |
-| — | Ident | `8f7e3a75-ef12-441e-b2ae-93cd74243417` | kling3_0 | 3 s | Trim to 2 s |
+| — | Ident + bumper sting `4bf959ee-5a82-406a-9a88-ea4b19f887bc` | `8f7e3a75-ef12-441e-b2ae-93cd74243417` | kling3_0 | 3 s | Trim to 2 s; sting runs over it, filter sweep opens on the cut out |
 | 2 | "No couches, card only…" | `2f622ee4-2e88-49ba-b35c-74a0aea95b2e` | wan2_7 | 8 s | |
 | 3a | Maguire "Oi, can I get a cuppa, mate?" | `59b1dc80-d1b4-41ab-877a-e73dde7ec038` | wan2_7 | 8 s | Callum native, normal pace, padded in ffmpeg |
 | 3b | Cherki "We 'ave ceremonial grade, single source matcha." | `ef6d6d6f-96e7-41b2-9dff-88097d0657d4` | wan2_7 | 6 s | dry interior |
@@ -284,7 +284,7 @@ Overlay `overlay/dripmap-overlay-1080x1920.png` on the top track for the full du
 | 7 | Madeleine with tweezers | `e8da70ec-8e32-4c3e-8024-7999cd6f047c` | kling3_0 | 5 s | silent + foley |
 | 8a | Haaland "Black coffee. Big." | `c7f58665-b888-415f-93b0-b12c14359347` | wan2_7 | 8 s | Haaland v3 puppet, British take A |
 | 8b | Cherki "Matchas only mate!" | `159f26cd-877e-48e2-a942-aeb0d5fefce9` | wan2_7 | 8 s | take B, comma removed |
-| 9 | Haaland leaves, "…C'est de l'art." | `076c3932-084a-4094-bb79-331a2bde8f1f` | wan2_7 | 8 s | Cherki-forward reframe so his lips move |
+| 9 | Haaland leaves, "…C'est de l'art." | `aab8e31c-15c8-4451-a48f-7230107ad799` | wan2_7 | 6 s | Cherki-forward reframe, voiced read, line at 2.2 s |
 | 10 | Rashford lifts the phone | `9ddded3a-da55-4b43-ab00-190e2b96d3d7` | kling3_0 | 5 s | silent + foley |
 | 11a | Grealish "It's two in the afternoon, Rash." | `f994aa26-27a7-48e3-af39-297cbeb043b3` | wan2_7 | 8 s | full line, yawn trimmed |
 | 11a′ | Rashford "I know." | `877c48e5-50e1-4c6d-8009-0ef9e8b28a6a` | wan2_7 | 6 s | |

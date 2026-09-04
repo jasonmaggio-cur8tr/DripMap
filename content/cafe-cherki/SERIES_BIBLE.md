@@ -38,8 +38,31 @@ a tea room that looks like your nan's front room, decides something has to be do
 3. **Story (0:08–0:57).** Back into the scene where the cold open left off.
 4. **Cliffhanger card (0:57–1:00).** "Next time at Café Cherki".
 
-The ident clip is generated once and reused on every episode; the sting is the audio
-signature of the series. Ident assets are listed in HIGGSFIELD_ASSETS.md.
+The ident clip is generated once and reused on every episode. Ident assets are listed in
+HIGGSFIELD_ASSETS.md.
+
+## Bumper and sonic logo
+
+The recurring music cue that runs under the ident is the series **bumper**; the musical
+hit itself is the **sting**, and because it is identical in every episode it functions as
+the show's **sonic logo**. Palmer's Packet uses a UK rap loop in the same slot. Ours is a
+coffee-bar record: downtempo French house, filtered four-on-the-floor kick, Rhodes chord
+stabs, a slow filter sweep that opens up into the story, one vibraphone accent.
+
+Rules:
+
+- Same cue, same place, every episode. Never re-score it, never swap it out for a trend
+  sound. Recognition is the entire point.
+- The 3-second sting sits on the ident at 0:06–0:08. Its filter sweep is timed to open as
+  the cut lands on the first story shot, so the music carries the transition.
+- The 10-second bed is the same recording at a lower level. Use it under a montage or a
+  wordless run of shots. Duck it under dialogue; it never competes with a line.
+- It is generated for us and unencumbered, so it publishes as **original audio** on Reels.
+  Viewers can reuse it, and every reuse links back to the account. That is why we made our
+  own rather than dropping in a library track, which would attribute to the track and put
+  us under every other account using it.
+- Master levels: sting at -14 LUFS to sit up on the ident, bed at -20 LUFS to sit under
+  dialogue.
 
 ## DripMap overlay
 
