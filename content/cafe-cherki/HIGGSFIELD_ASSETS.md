@@ -252,3 +252,28 @@ pauses; set duration ≥ audio length + 1 s.
 | 321 | Kane "Is this about the oat milk again?" | Julian | elevenlabs | `d6b9524d-3dc4-4a28-86e5-4051822fffda` |
 | 322 | Kane | Caspian | elevenlabs | `70a38873-b22b-4d16-a700-005b1904bb52` |
 | 323 | Kane | Gideon | elevenlabs | `3a0d23ef-7aaa-4cfe-b8f8-81554c1c69b0` |
+
+## Episode 1 clips (voice-first, locked voices)
+
+| Shot | Model | Duration | Job ID | URL |
+|---|---|---|---|---|
+| 1 · Dr. Evil hook | seedance_2_5 | 12 s | `35844486-43cb-4be2-b7e9-b6c11bb69604` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_045540_35844486-43cb-4be2-b7e9-b6c11bb69604.mp4 |
+| 2 · "Silence is… aesthetic." | seedance_2_5 | 6 s | `4c709569-a311-43e6-96ed-79e6729e4b16` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_045201_4c709569-a311-43e6-96ed-79e6729e4b16.mp4 |
+| 3b · Cherki "We 'ave ceremonial grade." | wan2_7 | 5 s | `0995a12b-1b5b-4b08-b7b9-f563e9ce63b9` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_045922_0995a12b-1b5b-4b08-b7b9-f563e9ce63b9.mp4 |
+| 3c · Maguire "…So no, then." | wan2_7 | 5 s | `23b127c5-ad47-4892-b651-3dc3730d0ca5` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_045922_23b127c5-ad47-4892-b651-3dc3730d0ca5.mp4 |
+| 4 · Maguire ducks into Nan's (silent) | kling3_0 | 5 s | `e58e6f0c-ee0b-4fe8-82d1-22b7cc829e08` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_045207_e58e6f0c-ee0b-4fe8-82d1-22b7cc829e08.mp4 |
+| 5 · Nan's three lines | seedance_2_5 | 14 s | `c3b66385-d3d9-4044-94e7-6b747bae271f` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_044103_c3b66385-d3d9-4044-94e7-6b747bae271f.mp4 |
+| 6 · "Not you, Doreen." | seedance_2_5 | 8 s | `ec23fe2c-5d45-4744-8bd4-84310ee10927` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_045201_ec23fe2c-5d45-4744-8bd4-84310ee10927.mp4 |
+| 7 · Madeleine with tweezers (silent) | kling3_0 | 5 s | `e8da70ec-8e32-4c3e-8024-7999cd6f047c` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_045207_e8da70ec-8e32-4c3e-8024-7999cd6f047c.mp4 |
+| 9 · Haaland leaves, "…C'est de l'art." | seedance_2_5 | 8 s | `553cf64f-25d5-41a3-83c5-e5ca4a0aaa82` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_045540_553cf64f-25d5-41a3-83c5-e5ca4a0aaa82.mp4 |
+| 10 · Rashford lifts the phone (silent) | kling3_0 | 5 s | `9ddded3a-da55-4b43-ab00-190e2b96d3d7` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_045303_9ddded3a-da55-4b43-ab00-190e2b96d3d7.mp4 |
+| 13 · Cherki flips the sign (silent) | kling3_0 | 5 s | `30c958ac-c5b8-47bd-aaf7-473d42120cc1` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_045303_30c958ac-c5b8-47bd-aaf7-473d42120cc1.mp4 |
+| 14 · Car, "Let's give him aesthetic." | seedance_2_5 | 8 s | `c65f69cd-7960-473b-8bee-186c44d5e269` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_045258_c65f69cd-7960-473b-8bee-186c44d5e269.mp4 |
+
+Pending: 3a (Maguire "Ey up"), 12a (Rashford phone line), 12b (Maguire "Bring a what?"), 8 (Haaland, voice pick needed), 11a/11b (Grealish/Kane, voice picks needed), 11c (Rooney grunt).
+
+Production notes learned this pass:
+- Seedance omni_reference: 12 s ≈ 78 credits; Wan 2.7: 12 s ≈ 18 credits, 5 s ≈ 8. Wan takes at most ONE audio reference per clip; Seedance takes several.
+- Any reference audio under ~3 s is rejected (422 on Seedance, failed job on Wan). Pad ElevenLabs lines with `<break time="1.5s" />` before and after; pad Seed Audio lines with "..." and the "long pause" instruction.
+- Audio longer than the requested clip duration fails in-flight. Duration ≥ audio + 2 s.
+- Padded ElevenLabs takes: "So no, then." `8d1a1ce1…`, "Bring a what?" `3ee2e502…`, "Ey up…" `77cd78a6…`.
