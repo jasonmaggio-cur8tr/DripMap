@@ -682,3 +682,21 @@ Clip IDs and trims per shot are in `EPISODE_02_TEASER.md`.
   "the Lambretta". Enumerate them every time.
 - A drawtext subline with an accented character has to come in via `textfile=`; inline `é`
   broke the filter escaping.
+
+## Cast sheets round 4 and contact sheet (2026-09-04)
+
+Five characters who only existed inside Ep 1 stills, plus the three new to Ep 2, now have
+proper four-view sheets built with the Cherki sheet as the style reference. Awaiting owner
+approval.
+
+| Character | Job ID |
+|---|---|
+| Jack Grealish (alice band, cream polo, low socks) | `9b4bf768-9c9c-41de-bac6-868aa1db1ee9` |
+| Harry Kane (navy gilet, chinos, boat shoes) | `1f845942-2f4e-4584-9a10-16a058ca9611` |
+| Wayne Rooney (bald, black twin-tipped polo, grey trackies) | `dda15a25-2e65-4da9-a977-2d3e771ae0ee` |
+| Thierry Henry / TT (camel coat, thin scarf) | `f74ef1ee-52f2-4977-adf6-372b281e96c3` |
+| David Beckham / Becks (leather jacket, curtains) | `441fdfa1-a261-4c40-a915-a6c1c08beb99` |
+| Bukayo Saka (colour-block puffer, cargos) | `a11f118a-0d85-4dd5-84fd-876f50cf9e44` |
+| **Cast contact sheet**, 12 puppets, head crop + full body | media `f12a77f2-552e-4374-a573-500f45fb4d89` |
+
+Full locked-sheet list (all 12) is the table in `contact-sheet/make.py`.
