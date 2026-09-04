@@ -124,3 +124,12 @@ The Cherki sheet at `1e406226…` (overcoat look) is superseded.
 |---|---|---|
 | Rashford: "I am back from Barcelona, Harry. And I am ready to sell some tea." | Alistair | `b9bf2197-361b-4ae8-aaa6-35338b404459` |
 | Maguire: "Rash. Cherki's only gone an' opened a trendy matcha shop." | Harrison | `5b119ac9-5d3b-4336-9355-c77c756cba3d` |
+
+## Lip-sync pipeline test (voice-first)
+
+| Clip | Inputs | Model | Job ID | URL |
+|---|---|---|---|---|
+| Shot 5, Rashford "back from Barcelona", 6 s | start_image `4c790c5b…` + audio_references `b9bf2197…` | seedance_2_5 omni_reference 720p | `d0767587-8297-48af-8f8c-0820c37df71b` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_035813_d0767587-8297-48af-8f8c-0820c37df71b.mp4 |
+
+Seedance also returns a preset recommendation on dialogue prompts; pass `declined_preset_id`
+to force a literal generation. Cost ≈ 40 credits per 6 s clip at 720p. Spend so far ≈ 135 credits.
