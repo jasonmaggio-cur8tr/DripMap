@@ -43,7 +43,8 @@ tweaked so takes are comparable.
 | Player | How they actually talk |
 |---|---|
 | Rayan Cherki | Lyon-born. English went from charmingly broken (the TNT interview where he answered everything with "you know, the championship is so long") to fluent and chatty within a season. Big hand gestures, unbothered, smiles through mistakes. |
-| Marcus Rashford | Wythenshawe. Routinely called "the most Mancunian accent in the world". Flat vowels, "eh?" tags, quiet and measured, sincere. Recently picked up a Spanish lilt in Barcelona interviews. |
+| Marcus Rashford | Wythenshawe. Routinely called "the most Mancunian accent in the world". Flat vowels, "eh?" tags, quiet and measured, sincere. Picked up a Spanish lilt during his Barcelona spell. |
+| Harry Maguire | Mosborough, Sheffield. Broad South Yorkshire, slow and even, unflappable in interviews no matter what the internet says about his head. |
 | Erling Haaland | Norwegian, English learned in Bryne and at Leeds as a kid. Deadpan one-liners: "I just think about my chicken", "I just run fast", "Yeah, not bad". Answers in as few words as possible with a completely neutral face. |
 | Phil Foden | Stockport. Soft, mumbly Manc, very quiet in interviews, short answers, "yeah, no, obviously". |
 | Jack Grealish | Solihull. Brummie, cheeky, fast, laughs at his own jokes, calls everyone "mate". |
@@ -58,28 +59,40 @@ tweaked so takes are comparable.
 Format: **direction** → performance tag → tuning → eye-dialect rules → test line.
 
 ### Rayan Cherki (lead)
-- **Direction:** his real English, exaggerated. Thick French accent, calm, faintly amused
-  by everything, treats every sentence like it's art. Drops the "h", "th" becomes "z",
-  "the" becomes "ze". Never raises his voice. Signature: "…c'est de l'art."
-- **Tag:** `[Young French man speaking English with a thick, exaggerated French accent, calm, deadpan, slightly amused]`
-- **Tuning:** pitch 0, speed 0.
-- **Eye-dialect:** 'undred, ze, zis, wiz, "I open" not "I opened", "you know" at the end of statements.
-- **Test line:** "Manchester. It rains… three 'undred days a year. So, I open a matcha bar. You know, ze championship is so long."
+- **Direction:** his real English, exaggerated hard, then given a Dr. Evil register: a
+  villain who is completely calm because the plan is already working. Thick Lyon accent,
+  drops every "h", "th" becomes "z", "with" becomes "wiz", French rhythm (stress on the
+  last syllable), a little rolled "r". Never raises his voice. Signature: "…c'est de
+  l'art." and the pinky.
+- **Tag:** `[Young French man from Lyon speaking English as a second language with a very thick, heavy, exaggerated French accent, rolled r, drops every h, th becomes z, French sentence rhythm, calm, deadpan, quietly villainous, like a cartoon supervillain explaining his plan]`
+- **Tuning:** pitch 0, speed −5.
+- **Eye-dialect:** 'undred, 'ere, 'as, ze, zis, zem, wiz, "I will sell" not "I'll sell", French filler "euh" and "you know" at the end of statements.
+- **Test line:** "Manchester. It rains three 'undred days a year. Nobody 'ere 'as ever seen ze sun… or a matcha. So I will sell zem matcha. Wiz sugary cloud foam. To every Gen Z in ze city. And I will make… so many Ps."
 
 ### Marcus Rashford (antagonist)
 - **Direction:** the twist. Real Rashford is the most Manc voice in football; ours is the
-  most *proper* voice in football. 1950s BBC Received Pronunciation, slow, precise,
-  quietly offended at all times, never swears above a murmur. The joke is that nobody in
-  the show ever comments on it.
-- **Tag:** `[Extremely proper, plummy, upper-class British Received Pronunciation, like a BBC announcer from 1950, slow and precise, quietly offended]`
+  most *proper* voice in football. 1950s BBC Received Pronunciation, slow, precise, every
+  word finished, quietly offended at all times, never swears above a murmur. Just back from
+  Barcelona, so he occasionally pronounces "Barcelona" with a full Castilian lisp. The joke
+  is that nobody in the show ever comments on any of it.
+- **Tag:** `[Extremely proper, plummy, upper-class British Received Pronunciation, like a BBC announcer from 1950, slow and precise, every consonant finished, quietly offended]`
 - **Tuning:** pitch −1, speed −10.
-- **Eye-dialect:** none. Full words, full stops. "Pounds" not "quid". "I'm afraid" before every insult.
-- **Test line:** "Two sugars. No nonsense. … A what? Eleven pounds. For a green brew. In Manchester. He is, I'm afraid, taking the piss. Not you, Doreen."
+- **Eye-dialect:** none. Full words, full stops. "I am" never "I'm". "Pounds" not "quid". "I'm afraid" before every insult. "Harry" as a full sentence.
+- **Test line:** "I am back from Barcelona, Harry. And I am ready to sell some tea. … A what? … Harry. There is only one type of tea in Manchester. He is, I'm afraid, taking the piss."
 
-### Phil Foden (roadman)
+### Harry Maguire (Rashford's right-hand man)
+- **Direction:** broad, warm South Yorkshire (Sheffield), slow, friendly, slightly
+  bewildered, says everything like it's the first time he's heard it. Big man, big head,
+  gentle voice. "Ey up", "pal", "reyt", "nowt", "summat", "only gone an'". Always chewing.
+- **Tag:** `[Big friendly man from Sheffield, broad South Yorkshire accent, slow, warm, slightly bewildered, mouth half full]`
+- **Tuning:** pitch −2, speed −5.
+- **Eye-dialect:** ey up, pal, reyt, nowt, summat, "only gone an'", "int it", t' for "the".
+- **Test line:** "Ey up. Rash. Cherki's only gone an' opened a trendy matcha shop. … Matcha. It's green, int it. He whisks it. Eleven quid, pal."
+
+### Phil Foden (roadman, from Ep 2)
 - **Direction:** real Foden is quiet Stockport. Ours is a full London roadman who has
   somehow never left Manchester. Fast, cocky, everything is "innit", "bruv", "allow it".
-  He's Rashford's hype man, so he's always slightly too loud for the tea room.
+  Always slightly too loud for the tea room.
 - **Tag:** `[Young London roadman, heavy multicultural London English, fast, cocky, swallowing consonants, every sentence ends up like a question]`
 - **Tuning:** pitch +1, speed +15.
 - **Eye-dialect:** innit, bruv, fam, ting, "man's" for "he's", "bag" for pound, "allow it".

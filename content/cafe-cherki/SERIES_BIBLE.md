@@ -23,7 +23,7 @@ a tea room that looks like your nan's front room, decides something has to be do
 |---|---|
 | Length | 60 s max per episode (Reels sweet spot 45–60 s) |
 | Aspect | 9:16, 1080×1920, exported for Reels |
-| Look | Handmade plasticine claymation, visible thumbprints, slight stop-motion jitter (12 fps feel), miniature set with tilt-shift depth, warm practical lighting |
+| Look | Hyperreal claymation, as Palmer's Packet: realistic proportions, detailed sculpted faces that read as the player at a glance, real-fabric costumes, slight stop-motion jitter (12 fps feel), miniature set with tilt-shift depth, warm practical lighting |
 | Audio | Character dialogue (accented, deadpan), foley heavy: milk steaming, ceramic clinks, kettle whistle. No music under dialogue; one needle-drop sting at the cliffhanger |
 | Text | Burned-in captions, bottom third, chunky rounded sans, cream on coffee-dark |
 | Overlay | DripMap badge on every video, every frame (see § DripMap overlay) |
@@ -31,11 +31,11 @@ a tea room that looks like your nan's front room, decides something has to be do
 
 ## Episode structure (every episode, same as Palmer's Packet)
 
-1. **Cold open (0:00–0:03).** Straight into a scene. The first line or visual gag lands
+1. **Cold open (0:00–0:06).** Straight into a scene. The first line or visual gag lands
    before anyone knows what they're watching. No logo first.
-2. **Logo ident (0:03–0:05).** Hard cut to the Café Cherki ident: clay letters, matcha
+2. **Logo ident (0:06–0:08).** Hard cut to the Café Cherki ident: clay letters, matcha
    bowl, whisk spin, kettle-click sting. Two seconds, never longer.
-3. **Story (0:05–0:57).** Back into the scene where the cold open left off.
+3. **Story (0:08–0:57).** Back into the scene where the cold open left off.
 4. **Cliffhanger card (0:57–1:00).** "Next time at Café Cherki".
 
 The ident clip is generated once and reused on every episode; the sting is the audio
@@ -62,9 +62,9 @@ captions and IG chrome never collide.
 
 - **No kits, ever.** Every character wears fashion-forward streetwear that tells you
   who they are before they speak. Clubs are referenced by colour accents only.
-- **Character silhouettes are the identity.** Since likenesses are stylised clay
-  caricatures, each character needs 2–3 unmistakable signature cues (hair, gesture,
-  accessory, way of talking).
+- **Faces are hyperreal, cues still matter.** The sculpted faces carry the recognition,
+  but each character still needs 2–3 unmistakable signature cues (hair, gesture,
+  accessory, way of talking) so they read in a two-second cut.
 - **Shops are characters too.** Each footballer's venue is an extension of their personality.
 - Comedy comes from status, pettiness and tiny stakes. Nobody plays football on screen.
 
@@ -73,21 +73,23 @@ captions and IG chrome never collide.
 These are real, living people. Caricature parody is common on IG, but commercial use
 of a footballer's name and likeness is a personality-rights risk (and Higgsfield's
 own policy asks for stylised original characters rather than exact likenesses).
-Generation prompts in this folder describe **stylised caricatures by traits**, not
-photoreal faces. Decision on naming real players on-screen is the owner's call.
+Generation prompts in this folder describe faces **by traits** (hair, brow, jaw, beard,
+earring), pushed as close as the hyperreal style allows, without uploading the players'
+photos as references. Decision on naming real players on-screen is the owner's call.
 
 ## Core cast (Season 1)
 
 | # | Character | Venue | Streetwear identity | Signature cue |
 |---|---|---|---|---|
 | 1 | **Rayan Cherki** (lead) | *Café Cherki* — minimalist matcha bar, Ancoats | French fashion-house streetwear: oversized cream wool overcoat, boxy tee, wide tailored trousers, chunky loafers, tiny leather crossbody, rings | Whisks matcha like he's dribbling. Says "c'est de l'art" about everything |
-| 2 | **Marcus Rashford** (antagonist S1) | *Nan's* — cosy English tea room, Withington | Very British: Stone Island-style knit, Barbour wax jacket, straight-leg jeans, Clarks Wallabees, flat cap on the hook | Serves everything with a biscuit. "Two sugars, no nonsense" |
+| 2 | **Marcus Rashford** (antagonist S1) | *Nan's* — cosy English tea room, Withington | Very British: beige check hooded jacket, white tee, straight-leg jeans, Clarks Wallabees, cornrows sharp | Serves everything with a biscuit. Just back from Barcelona. "There is only one type of tea in Manchester" |
 | 3 | **Erling Haaland** | *The Deadlift* — protein-coffee bar | Nordic loungewear, oversized hoodie, silky pyjama trousers, slides with socks | Drinks 2 litres of black coffee from a bucket. Says very little |
 | 4 | **Kevin De Bruyne** | *Assist* — quiet Belgian filter bar | Understated: navy quarter-zip, chinos, New Balance | Never orders for himself; always "passes" the cup to someone |
 | 5 | **Pep Guardiola** | Roaming consultant / matcha sommelier | Cashmere turtleneck, tailored coat, Catalan scarf | Rearranges everyone's shop layout uninvited |
 | 6 | **Cole Palmer** | *Cold's* — iced coffee only | Ice-blue puffer, baggy jorts, shades indoors | Shivers dramatically at everything hot |
 | 7 | **Jack Grealish** | *Calves* — espresso martini bar | Alice band, low-cut socks, fitted polo | Only opens after 9pm |
-| 8 | **Phil Foden** | Loyal Nan's regular | Manc casual: Stone Island badge, tracksuit, bucket hat | Rashford's hype man, always eating |
+| 8 | **Harry Maguire** | Nan's regular, Rashford's right-hand man | Navy tipped polo, grey jeans, Sambas, Yorkshire Tea mug | Enormous head, broad Yorkshire, always eating. "Ey up" |
+| 8b | **Phil Foden** | Nan's regular | Manc casual: Stone Island badge, tracksuit, bucket hat | Quiet, appears in the car in Ep 2 |
 | 9 | **Lamine Yamal** | *17* — bubble tea kiosk | Gen-Z Barça street: baggy denim, Y2K sunnies, chain | Everything is "lowkey fire" |
 | 10 | **Lionel Messi** | *La Casa* — yerba mate courtyard | Quiet luxury: linen shirt, loafers, no logos | Speaks softly; everyone stops talking |
 | 11 | **Cristiano Ronaldo** | *SIUU Espresso* — mirrored, gold, chrome | Full monochrome white, gold chain, diamond studs | Counts his own reviews out loud |

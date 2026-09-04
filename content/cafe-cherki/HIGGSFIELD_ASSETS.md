@@ -72,3 +72,35 @@ Pick one voice ID per character; the winner gets locked in VOICE_BIBLE.md.
 
 Samples 11 and 12 test whether the ElevenLabs engine holds an accent from the eye-dialect
 alone; the Seed Audio takes get the bracketed performance tag as well.
+
+## Voice samples — round 2 (Dr. Evil hook, new Nan's lines, Maguire)
+
+| # | Character / direction | Preset voice | Voice ID | Job ID |
+|---|---|---|---|---|
+| 21 | Cherki, heavy French, villain monologue | Andre | `f1e8226e-2248-4d5f-b43c-0a79e9949dbf` | `f1605efd-55b1-4f11-b8df-5eb25b70fd83` |
+| 22 | Cherki, heavy French, villain monologue | Xavier | `43173c95-3ec8-446a-a162-6504332c578b` | `5532b4f8-877b-427a-a2a4-bf4e44047500` |
+| 23 | Cherki, MiniMax engine, eye-dialect only | Andre | `f1e8226e-2248-4d5f-b43c-0a79e9949dbf` | `af24b847-8d2c-4c0a-ae31-3d6603e59857` |
+| 24 | Rashford RP, "back from Barcelona" lines | Alistair | `d9d5c263-f84e-4752-97b5-3750fcc6fd2f` | `110df803-f827-41ef-9bf6-992e87ad84c0` |
+| 25 | Rashford RP, "back from Barcelona" lines | Sterling | `dc382508-c8bd-443c-8cb2-46e57b8d2e6f` | `29d7e2c0-817e-426b-9139-225c993f7640` |
+| 26 | Maguire, broad Yorkshire | Harrison | `573e5163-59b3-4926-aab1-951ef2985f81` | `199fc901-42bb-422b-8b3b-68d3e7e121f0` |
+| 27 | Maguire, broad Yorkshire | Callum | `858499d9-fef5-40e1-bc29-b4dc661dc283` | `c26064b8-ec5b-4958-bb2e-33910001d715` |
+| 28 | Maguire, broad Yorkshire | Fraser | `6705e465-7b52-5915-a1d8-b1222885e01d` | `1ec157b5-5b32-481b-9c90-49d17ae1a0df` |
+
+## Round 5 — character sheets, superseded Aardman style (kept for reference)
+
+| Asset | Job ID |
+|---|---|
+| Rashford v2, cornrows + check jacket, Aardman style | `223e3861-27c5-419b-aacc-01cc62ab9bb3` |
+| Maguire v1, Aardman style | `b9842d5c-6264-44bd-a729-5e639c556f4f` |
+
+## Round 6 — hyperreal claymation character sheets (current style lock)
+
+| Asset | Job ID |
+|---|---|
+| Rashford, hyperreal | `f2b4ec2f-488a-4a8e-99c9-ee1048a51080` |
+| Maguire, hyperreal | `c4fb2c9a-b4e7-4445-b4e8-ec1a0b098b42` |
+| Cherki, hyperreal | `1e406226-d36b-4e1b-b9be-246dfb7e0718` |
+| Haaland, hyperreal | `03e08ae6-2b19-4fbe-b0a2-f6a501a1de34` |
+
+Round 1 sheets and Round 2 scene stills are in the old Aardman style and need regenerating
+against the Round 6 sheets before any more clips are made.
