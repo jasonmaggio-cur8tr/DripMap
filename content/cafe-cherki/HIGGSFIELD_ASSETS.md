@@ -341,3 +341,15 @@ Earlier shot 3 clips (`e4ebf5c1…`, `0995a12b…`, `23b127c5…`) are supersede
 
 Two-word lines need `speech_rate` around −30 and four or more "..." on each side to clear
 the ~3 s minimum on Seed Audio; the standard "..." padding was not enough for "Bin man."
+
+## Hook locked: take C `065b8127-277b-473f-b020-d6f5d2fb433d` (owner pick). Clip see below.
+
+## Shot 14 rewrite (owner, 2026-09-04)
+
+Rashford: "The mandem wants aesthetic? Say less." Earlier clip `c65f69cd…` superseded.
+
+| Asset | Job ID |
+|---|---|
+| Hook clip, take C, wan2_7 12 s | `f20d3a40-701c-4d1e-a9b0-bb9e280d7378` |
+| Shot 14 audio, Alistair, "The mandem wants aesthetic? Say less." | `495810d3-79ce-4bfd-84ba-5a2cc87b58ff` |
+| Shot 14 clip, wan2_7 8 s | `745ef389-ffc7-4762-aa03-45c393ad0ead` |

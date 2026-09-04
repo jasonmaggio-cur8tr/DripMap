@@ -147,8 +147,8 @@ Rain. Neon reflects in the puddles.
 Through a rain-streaked car windscreen: three silhouettes, one head twice the size of
 the others. A custard cream is passed between them.
 
-> **RASHFORD (O.S.):** He wants aesthetic?
-> *(beat)* …Let's give him aesthetic.
+> **RASHFORD (O.S.):** The mandem wants aesthetic?
+> *(beat)* Say less.
 
 Wipers. Cut to black.
 
@@ -253,7 +253,7 @@ collar, grey straight-leg jeans, black Adidas Samba trainers, holding a Yorkshir
 | 11c | Stocky man in a greasy spoon café holding a spatula, glaring at a phone on the counter | Grunt. Sizzle foley |
 | 12 | Medium Rashford on the phone, determined, Maguire behind mid-bite | "Lads. There's a Frenchman selling green water for eleven quid. Round mine. Tonight. Bring a plan." Maguire: "Bring a what?" |
 | 13 | Exterior of the matcha bar at night, Cherki flipping a small sign to FERMÉ, neon reflected in puddles | Cherki flips sign, exhales, admires shop. Rain |
-| 14 | Interior of a parked car at night seen from the back seat, three silhouettes, one with an enormous head, rain-streaked windscreen, the neon matcha bar glowing outside | Custard cream passed between them. Rashford: "He wants aesthetic? …Let's give him aesthetic." Wipers. Cut to black |
+| 14 | Interior of a parked car at night seen from the back seat, three silhouettes, one with an enormous head, rain-streaked windscreen, the neon matcha bar glowing outside | Custard cream passed between them. Rashford: "The mandem wants aesthetic? Say less." Wipers. Cut to black |
 
 ### Assembly
 
