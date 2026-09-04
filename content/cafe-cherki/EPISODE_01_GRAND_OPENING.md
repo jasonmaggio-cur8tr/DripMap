@@ -1,6 +1,7 @@
-# Cherki's Cappuccinos — Episode 1: "Grand Opening"
+# Café Cherki — Episode 1: "Grand Opening"
 
-**Runtime:** 60 s · **Aspect:** 9:16 · **Look:** plasticine claymation (see SERIES_BIBLE.md)
+**Runtime:** 60 s · **Aspect:** 9:16, 1080×1920 · **Look:** plasticine claymation (see SERIES_BIBLE.md)
+**Structure:** cold open → logo ident → story → cliffhanger card. DripMap overlay on every frame.
 **Cast:** Rayan Cherki, Marcus Rashford, Phil Foden, Erling Haaland, Jack Grealish (phone), Harry Kane (phone), Wayne Rooney (phone), Doreen the cat.
 
 Dialogue budget is ~130 words. Every line is short so the clay mouths can carry it.
@@ -16,13 +17,22 @@ Rain hammers a window behind. Rings on every finger.
 > **CHERKI (V.O., French accent, calm):** Manchester. Rains three hundred days a year.
 > *(beat)* So I opened a matcha bar.
 
-**CAPTION:** `CHERKI'S · ANCOATS · GRAND OPENING`
+---
+
+## Logo ident (0:03–0:05)
+
+**IDENT · Café Cherki**
+Hard cut. Chunky cream clay letters *CAFÉ CHERKI* on the blonde wood counter, matcha bowl
+beneath. The whisk does one fast spin, steam puffs, the green neon flickers on.
+**Sting:** kettle click → single deep bass hit. Two seconds. Same clip every episode.
+
+**CAPTION (on cut back):** `ANCOATS · GRAND OPENING`
 
 ---
 
-## Scene 1 — Cherki's (0:03–0:12)
+## Scene 1 — Café Cherki (0:05–0:13)
 
-**SHOT 2 · WIDE · Cherki's interior**
+**SHOT 2 · WIDE · Café Cherki interior**
 White-washed brick, blonde wood, three pastries in a glass case, one green neon sign:
 *c'est de l'art*. Total silence except the whisk. Cherki stands behind the counter in an
 oversized cream wool overcoat, boxy white tee, wide black trousers, chunky loafers,
@@ -42,7 +52,7 @@ Foden picks up the price card. ECU: `£11`. His eyebrows leave the frame.
 
 ---
 
-## Scene 2 — Nan's (0:12–0:28)
+## Scene 2 — Nan's (0:13–0:28)
 
 **SHOT 4 · EXT · Nan's tea room, Withington**
 Terraced house front. Net curtains, hanging basket, a hand-painted sign: *NAN'S*.
@@ -74,7 +84,7 @@ A grey cat on the armchair meows.
 
 ---
 
-## Scene 3 — Cherki's, later (0:28–0:38)
+## Scene 3 — Café Cherki, later (0:28–0:38)
 
 **SHOT 7 · MED · Cherki plating**
 Cherki places a single madeleine on a slate with tweezers. Adjusts it 2 mm. Nods.
@@ -124,7 +134,7 @@ He hangs up. Foden, mouth full:
 
 ## Scene 5 — Cliffhanger (0:50–0:57)
 
-**SHOT 13 · WIDE · Cherki's exterior, night**
+**SHOT 13 · WIDE · Café Cherki exterior, night**
 Cherki flips the sign to *FERMÉ*, looks at his shop, exhales like an artist.
 Rain. Neon reflects in the puddles.
 
@@ -150,15 +160,17 @@ single deep bass hit). Cream text on coffee-dark, tiny clay matcha whisk icon.
 
 | Time | Text |
 |---|---|
-| 0:01 | CHERKI'S · ANCOATS · GRAND OPENING |
-| 0:03–0:57 | Burned-in dialogue captions, one line at a time |
+| 0:00–1:00 | DripMap overlay, every frame (overlay/dripmap-overlay-1080x1920.png) |
+| 0:03–0:05 | Café Cherki logo ident |
+| 0:05 | ANCOATS · GRAND OPENING |
+| 0:05–0:57 | Burned-in dialogue captions, one line at a time |
 | 0:57 | NEXT TIME ON CHERKI'S CAPPUCCINOS |
 
 ## Instagram copy
 
 **Caption:** Ep 1: Cherki opens a matcha bar in Manchester. Rashford is not having it. ☕🍵
 Who's side are you on, ceremonial grade or two sugars no nonsense? 👇
-`#CherkisCappuccinos #claymation #ManCity #matcha #footballmemes`
+`#CafeCherki #claymation #ManCity #matcha #footballmemes`
 
 **Comment pin:** "Doreen is not Rashford's cat. Doreen is nobody's cat."
 
@@ -224,4 +236,6 @@ Wallabee shoes, a flat cap hanging on the hook behind him.
 
 1. Stills → approve look per shot → kling3_0 image-to-video 5 s (dialogue in prompt for lip-sync audio).
 2. Trim each clip to the timing above in the video-editing workflow (higgsedit) and burn captions.
-3. End card is a static still with the sting layered.
+3. Insert the reusable ident clip at 0:03, then cut back into shot 2.
+4. End card is a static still with the sting layered.
+5. Top track: `overlay/dripmap-overlay-1080x1920.png` for the full duration, 100% opacity.

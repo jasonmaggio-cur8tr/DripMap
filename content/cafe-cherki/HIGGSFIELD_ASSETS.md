@@ -1,4 +1,4 @@
-# Higgsfield assets — Cherki's Cappuccinos
+# Higgsfield assets — Café Cherki
 
 Generated 2026-09-04 on nano_banana_pro (served as nano_banana_2), 2k. Job IDs are reusable as
 `medias[].value` with role `image_references` (stills) or `start_image` (video) in future
@@ -12,7 +12,7 @@ Higgsfield calls, so the character look carries forward without re-describing it
 | Rashford character sheet | `32fdeaf1-6e57-49f4-92c0-12589c8ed1a6` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_024334_32fdeaf1-6e57-49f4-92c0-12589c8ed1a6.png |
 | Foden character sheet | `c2961338-f19a-428c-a83d-77afec9d02c5` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_024334_c2961338-f19a-428c-a83d-77afec9d02c5.png |
 | Haaland character sheet | `83197a15-2466-4eee-ac54-b2e4f30239cd` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_024334_83197a15-2466-4eee-ac54-b2e4f30239cd.png |
-| Cherki's matcha bar (empty set) | `950cebfb-8524-4ee1-86c0-9ee12fc6586a` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_024334_950cebfb-8524-4ee1-86c0-9ee12fc6586a.png |
+| Café Cherki matcha bar (empty set) | `950cebfb-8524-4ee1-86c0-9ee12fc6586a` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_024334_950cebfb-8524-4ee1-86c0-9ee12fc6586a.png |
 | Nan's tea room (empty set) | `175a033a-e1f4-45db-8e86-dd7187695718` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_024334_175a033a-e1f4-45db-8e86-dd7187695718.png |
 
 ## Round 2 — Episode 1 scene stills (9:16), referenced to the sheets above
@@ -40,3 +40,10 @@ Kling may return a preset recommendation instead of a job on dialogue-heavy prom
 with `declined_preset_id` set to the recommended preset to force a plain generation.
 
 Spend so far: 15 stills × 2 credits + 2 clips × 12.5 credits = 55 credits.
+
+## Round 4 — Café Cherki logo ident (9:16)
+
+| Asset | Job ID | URL |
+|---|---|---|
+| Ident still, take A (used for the clip) | `b5b0d3fa-b18c-429d-b324-86eafba621c2` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_025620_b5b0d3fa-b18c-429d-b324-86eafba621c2.png |
+| Ident still, take B | `34eeaafd-fac8-4f58-8d2e-877b9cc4f9c7` | https://d8j0ntlcm91z4.cloudfront.net/user_3FSXPAJdalUVHd474lHfC9z9BsM/hf_20260904_025620_34eeaafd-fac8-4f58-8d2e-877b9cc4f9c7.png |

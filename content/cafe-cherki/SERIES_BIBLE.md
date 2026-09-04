@@ -1,4 +1,4 @@
-# Cherki's Cappuccinos — Series Bible
+# Café Cherki — Series Bible
 
 AI claymation Instagram Reels series. Football's biggest personalities living in a
 coffee / matcha / tea world. Reference vibe: **Palmer's Packet** (@palmerspacketofficial)
@@ -22,12 +22,41 @@ a tea room that looks like your nan's front room, decides something has to be do
 | Item | Spec |
 |---|---|
 | Length | 60 s max per episode (Reels sweet spot 45–60 s) |
-| Aspect | 9:16, 1080×1920 |
+| Aspect | 9:16, 1080×1920, exported for Reels |
 | Look | Handmade plasticine claymation, visible thumbprints, slight stop-motion jitter (12 fps feel), miniature set with tilt-shift depth, warm practical lighting |
 | Audio | Character dialogue (accented, deadpan), foley heavy: milk steaming, ceramic clinks, kettle whistle. No music under dialogue; one needle-drop sting at the cliffhanger |
 | Text | Burned-in captions, bottom third, chunky rounded sans, cream on coffee-dark |
-| Hook | First 2 seconds must land a visual joke or a line. No logo intro |
-| Cliffhanger | Every episode ends on an unresolved beat + "Next time on Cherki's Cappuccinos" card |
+| Overlay | DripMap badge on every video, every frame (see § DripMap overlay) |
+| Cliffhanger | Every episode ends on an unresolved beat + "Next time at Café Cherki" card |
+
+## Episode structure (every episode, same as Palmer's Packet)
+
+1. **Cold open (0:00–0:03).** Straight into a scene. The first line or visual gag lands
+   before anyone knows what they're watching. No logo first.
+2. **Logo ident (0:03–0:05).** Hard cut to the Café Cherki ident: clay letters, matcha
+   bowl, whisk spin, kettle-click sting. Two seconds, never longer.
+3. **Story (0:05–0:57).** Back into the scene where the cold open left off.
+4. **Cliffhanger card (0:57–1:00).** "Next time at Café Cherki".
+
+The ident clip is generated once and reused on every episode; the sting is the audio
+signature of the series. Ident assets are listed in HIGGSFIELD_ASSETS.md.
+
+## DripMap overlay
+
+Every video carries the DripMap badge for its full duration, including the ident and
+the end card. Assets in `overlay/`:
+
+- `dripmap-overlay-1080x1920.png`: transparent full-frame layer, drop it on the top
+  track of the edit at 100% and it sits correctly. Built from the official
+  `public/logo-volt.jpg` (Brand Guidelines: volt variation for marketing assets), not
+  redrawn.
+- `overlay-preview.jpg`: the same layer over a coffee-dark ground with the Reels UI
+  safe zones shaded and the caption box outlined.
+
+Placement: badge 300 px wide at x=48, y=270, which clears the Instagram header
+(top 250 px), the action rail (right 130 px) and the caption/UI area (bottom 420 px).
+Captions live inside the outlined box above the bottom safe zone so the overlay,
+captions and IG chrome never collide.
 
 ## Style rules (locked)
 
@@ -51,7 +80,7 @@ photoreal faces. Decision on naming real players on-screen is the owner's call.
 
 | # | Character | Venue | Streetwear identity | Signature cue |
 |---|---|---|---|---|
-| 1 | **Rayan Cherki** (lead) | *Cherki's* — minimalist matcha bar, Ancoats | French fashion-house streetwear: oversized cream wool overcoat, boxy tee, wide tailored trousers, chunky loafers, tiny leather crossbody, rings | Whisks matcha like he's dribbling. Says "c'est de l'art" about everything |
+| 1 | **Rayan Cherki** (lead) | *Café Cherki* — minimalist matcha bar, Ancoats | French fashion-house streetwear: oversized cream wool overcoat, boxy tee, wide tailored trousers, chunky loafers, tiny leather crossbody, rings | Whisks matcha like he's dribbling. Says "c'est de l'art" about everything |
 | 2 | **Marcus Rashford** (antagonist S1) | *Nan's* — cosy English tea room, Withington | Very British: Stone Island-style knit, Barbour wax jacket, straight-leg jeans, Clarks Wallabees, flat cap on the hook | Serves everything with a biscuit. "Two sugars, no nonsense" |
 | 3 | **Erling Haaland** | *The Deadlift* — protein-coffee bar | Nordic loungewear, oversized hoodie, silky pyjama trousers, slides with socks | Drinks 2 litres of black coffee from a bucket. Says very little |
 | 4 | **Kevin De Bruyne** | *Assist* — quiet Belgian filter bar | Understated: navy quarter-zip, chinos, New Balance | Never orders for himself; always "passes" the cup to someone |
@@ -80,7 +109,7 @@ photoreal faces. Decision on naming real players on-screen is the owner's call.
 
 ## Recurring locations
 
-- **Cherki's** (Ancoats): white-washed brick, blonde wood, one green neon "c'est de l'art",
+- **Café Cherki** (Ancoats): white-washed brick, blonde wood, one green neon "c'est de l'art",
   matcha whisked to order, pastry case with three items. Silence is aesthetic.
 - **Nan's** (Withington): floral wallpaper, doilies, mismatched teacups, a gas fire, a cat
   that isn't Rashford's, a framed photo of the Queen. Custard creams are mandatory.
