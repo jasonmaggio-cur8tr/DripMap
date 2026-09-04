@@ -49,9 +49,9 @@ loafers, the tan tote parked on the counter like a pet.
 Maguire, enormous head under the low pendant light, navy tipped polo, squints at a menu
 with two items on it.
 
-> **MAGUIRE (broad Yorkshire):** Ey up. You got a brew, pal?
-> **CHERKI:** We have ceremonial grade.
-> **MAGUIRE:** …So no, then.
+> **MAGUIRE (broad Yorkshire):** Oi, can I get a cuppa, mate?
+> **CHERKI:** We 'ave ceremonial grade, single source matcha.
+> **MAGUIRE:** Bin man.
 
 Maguire picks up the price card. ECU: `£11`. His eyebrows leave the frame.
 
@@ -240,7 +240,7 @@ collar, grey straight-leg jeans, black Adidas Samba trainers, holding a Yorkshir
 |---|---|---|
 | 1 | Cherki in a high-backed swivel chair in front of the rain-streaked window, one eyebrow raised, stroking a bamboo whisk like a cat, pinky raised to the corner of his mouth, green neon glow | Chair swivels to camera, slow whisk-stroking, pinky to lip on the last line, thunder, neon flickers on. Villain-calm heavy French voice: "I am going to make Ps (Pees)… selling matchas with cold foams, to all the Gen Z in Manchester." |
 | 2 | Wide interior of a minimalist matcha bar: white-washed brick, blonde wood counter, three pastries in a glass case, green neon sign glowing, Cherki behind the counter arms open | Cherki gestures at the empty room. Voice: "No couches. Card only. No cow's milk. No music. Silence is… aesthetic." Whisk foley |
-| 3 | Medium two-shot across the counter, Maguire's huge head under the pendant light squinting at a tiny two-item menu, Cherki serene | Maguire: "Ey up. You got a brew, pal?" Cherki: "We have ceremonial grade." Maguire: "…So no, then." Eyebrows shoot up at the price card |
+| 3 | Medium two-shot across the counter, Maguire's huge head under the pendant light squinting at a tiny two-item menu, Cherki serene | Maguire: "Oi, can I get a cuppa, mate?" Cherki: "We 'ave ceremonial grade, single source matcha." Maguire: "Bin man." |
 | 4 | Exterior of a red-brick terraced house converted into a tea room, net curtains, hanging basket, hand-painted NAN'S sign, rain, Maguire ducking through the door head first | Rain, Maguire ducks in, door bell jingles |
 | 5 | Interior cosy English tea room, floral wallpaper, doilies, gas fire, mismatched teacups, framed photo on the mantel, Rashford in the check hooded jacket pouring from a teapot in a knitted cosy, suitcase with a Barcelona tag by the armchair, custard cream on saucer | Rashford pours: "I'm back from Barcelona, and ready to sell some tea." Maguire: "Rash, Cherki's opened a trendy matcha shop." Rashford freezes, tea overflows |
 | 6 | Close-up Rashford, teapot held mid-air, disbelief, grey cat on floral armchair behind | "There's only one type of tea in Manchester. He is, I'm afraid, taking the piss." Cat meows. "Not you, Doreen." |

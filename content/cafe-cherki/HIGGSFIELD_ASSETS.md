@@ -326,3 +326,14 @@ Ellipsis after "peas" removed; the engine stretches a word before "...". Tag als
 |---|---|---|
 | C | "I am going to make peas, selling matchas wiz cold foams, to all ze Gen Z in Manchester." | `065b8127-277b-473f-b020-d6f5d2fb433d` |
 | D | "I am going to make peas. Selling matchas wiz cold foams to all ze Gen Z in Manchester." | `ea56554c-a400-4060-9bb2-f01a3436602e` |
+
+## Shot 3 rewrite (owner, 2026-09-04)
+
+Maguire: "Oi, can I get a cuppa, mate?" / Cherki: "We 'ave ceremonial grade, single source matcha." / Maguire: "Bin man."
+Earlier shot 3 clips (`e4ebf5c1…`, `0995a12b…`, `23b127c5…`) are superseded.
+
+| Line | Voice | Audio job | Clip job (wan2_7, 6 s) |
+|---|---|---|---|
+| Maguire "Oi, can I get a cuppa, mate?" | Callum on Seed Audio, Yorkshire tag (short-line fallback) | `455d28d5-0970-4778-90e0-3142d32639a9` | `40371e70-d0bf-4f62-b03e-5d3fbb5089e2` |
+| Cherki "We 'ave ceremonial grade, single source matcha." | Andre | `2df6bc8e-9d0c-48fa-b2b7-655b0a620d63` | `fc13c798-f65a-4b07-bb8d-6d4422255ba6` |
+| Maguire "Bin man." | Callum on Seed Audio, Yorkshire tag | `e1df0bcd-69ca-4138-93e5-164779351595` | `2b9e963a-e5b4-4ff3-a1f7-8ba4b271c25f` |
