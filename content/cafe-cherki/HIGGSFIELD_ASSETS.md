@@ -136,7 +136,8 @@ to force a literal generation. Cost ≈ 40 credits per 6 s clip at 720p. Spend s
 
 ## Voice takes — exact script lines (owner wording restored)
 
-Cherki voice LOCKED: Andre `f1e8226e-2248-4d5f-b43c-0a79e9949dbf`.
+Cherki voice LOCKED: Andre `f1e8226e-2248-4d5f-b43c-0a79e9949dbf` (seed_audio + French tag).
+Maguire voice LOCKED: Callum `858499d9-fef5-40e1-bc29-b4dc661dc283` on the ElevenLabs engine, no tag. Approved take: `0e2ef828-0823-419d-a1ea-927d5bc0c2cc`.
 
 | # | Line | Voice | Engine | Job ID |
 |---|---|---|---|---|

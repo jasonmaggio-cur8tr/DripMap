@@ -91,9 +91,9 @@ Format: **direction** → performance tag → tuning → eye-dialect rules → t
 - **Direction:** broad, warm South Yorkshire (Sheffield), slow, friendly, slightly
   bewildered, says everything like it's the first time he's heard it. Big man, big head,
   gentle voice. "Ey up", "pal", "reyt", "nowt", "summat", "only gone an'". Always chewing.
-- **Tag:** `[Big friendly man from Sheffield, broad South Yorkshire accent, slow, warm, slightly bewildered, mouth half full]`
-- **Tuning:** pitch −2, speed −5.
-- **Eye-dialect:** ey up, pal, reyt, nowt, summat, "only gone an'", "int it", t' for "the".
+- **LOCKED VOICE:** ElevenLabs engine (`text2speech_v2`, `variant: elevenlabs`), preset **Callum**, `858499d9-fef5-40e1-bc29-b4dc661dc283`, no performance tag (owner pick, 2026-09-04). The accent is the voice's own; do not add a seed_audio tag on top.
+- **Tuning:** none on ElevenLabs. Slow him down in the edit if needed.
+- **Eye-dialect:** none. Script lines verbatim.
 - **Test line:** "Rash, Cherki's opened a trendy matcha shop."
 
 ### Phil Foden (roadman, from Ep 2)
