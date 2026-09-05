@@ -719,3 +719,37 @@ Approved: Grealish v2 `a487b62b…`, Beckham v2 `55f47e1a…`, Kane `1f845942…
 via the v2 sheet as reference: **Saka v3 `ee565d1e-3838-4d2e-a64e-5022837bf7bc`** (pending
 owner OK). Contact sheet v2 rebuilt with the locks: media
 `14d155d3-736b-45c3-b971-eb25248ed0ea`.
+
+## Episode 2 "The Link" — stills round 1 and voice candidates (2026-09-05)
+
+Stills, 9:16, nano_banana_pro, character sheets and set plates as image_references. Awaiting
+owner approval.
+
+| Scene | Still | Job ID |
+|---|---|---|
+| 1a | Foden under the railway arch, mask down, phone, bag on the seat | `8341dde0-2022-402a-9a00-c74c733c9bf5` |
+| 1b | Rashford flipping the sign to CLOSED, biscuit in mouth | `9eab8145-0361-450b-b886-3ceef8dd864c` |
+| 2 | TT under the striped awning, black cab behind | `520ce330-439a-476c-b997-749c8985ad9c` |
+| 3a | Foden on the e-moto across Tower Bridge | `7bfff63a-bc3b-40db-9f8c-ed25385cd685` |
+| 3b | Nan's London + SAKA MATCHA queue | `f094f6be-906c-4cf9-91e7-4e1f856deccf` |
+| 4 | Inside Nan's London, TT talking, Foden silent, bag on the table | `174849a0-49a7-49fe-807a-e041d18cfd81` |
+| 5 | Becks's penthouse, Big Ben through the glass | `7a145e6a-d4b1-46e4-9f1b-d05587a54af9` |
+| 6 | Cherki after hours, empty tin, phone lighting up | `f269230b-60ea-49f3-92b1-a460ae93caf6` |
+
+Voice candidates, all transcribed and confirmed to say the line (faster-whisper small):
+
+| Character | Take | Voice | Engine | Note |
+|---|---|---|---|---|
+| Foden | `16bccfa7…` | Archie | ElevenLabs | says "TT" cleanly |
+| Foden | `0cbb5541…` | Dylan | ElevenLabs | "TT" heard as "CT" |
+| Foden | `9751254f…` | Callan | ElevenLabs | "TT" heard as "Titi" |
+| TT | `d225e68e…` | Barrett | seed_audio, French pundit tag | 1.2 s lead, cleanest |
+| TT | `11ce2c3e…` | Desmond | seed_audio | 4.9 s lead silence, trim |
+| TT | `2bc7c557…` | Gideon | seed_audio | 6.1 s lead silence, trim |
+| Becks | `124fcfad…` | Harrison | ElevenLabs | |
+| Becks | `3fe630ab…` | Miles | ElevenLabs | louder, exclamatory |
+| Becks | `e804ea16…` | Evan | ElevenLabs | |
+
+Lesson: four stills failed on first submit with "Media input not found" because two set-plate
+IDs had been expanded from 8-character prefixes in notes. Never reconstruct an ID; grep the
+manifest for the full UUID.

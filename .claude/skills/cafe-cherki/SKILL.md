@@ -16,6 +16,9 @@ are the source of truth for IDs; this file is the method.
 - **No voice cloning of real people.** Preset voices only, locked per character.
 - **DripMap overlay on every frame**, built from `public/logo-dark.jpg`, never redrawn.
 - **Every episode:** cold open → 2 s ident with the bumper sting → story → end card.
+- **Never reconstruct an ID.** Notes abbreviate IDs to 8 characters; a job submitted with a
+  guessed remainder fails with "Media input not found". Grep `HIGGSFIELD_ASSETS.md` for the
+  full UUID every time.
 - **Report only real URLs.** A clip that has not rendered has no link. Never invent a CDN
   URL. Read the `result_url` back from `jobs_wait` and paste that.
 - **One correct path.** No fallback chains inside a prompt. If a model fails a shot twice
