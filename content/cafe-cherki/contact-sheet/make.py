@@ -16,13 +16,13 @@ SHEETS = [
     ("maguire",  "Harry Maguire",   "ef2914e6-c1fa-4115-8e22-649587317f70"),
     ("foden",    "Phil Foden",      "026f8456-c840-492f-9dae-a294b445e5ab"),
     ("haaland",  "Erling Haaland",  "1919e40c-45b5-45b2-b57c-196aa0fa90d1"),
-    ("grealish", "Jack Grealish",   "9b4bf768-9c9c-41de-bac6-868aa1db1ee9"),
+    ("grealish", "Jack Grealish",   "a487b62b-91a8-496a-bbc7-327316662275"),
     ("kane",     "Harry Kane",      "1f845942-2f4e-4584-9a10-16a058ca9611"),
     ("rooney",   "Wayne Rooney",    "dda15a25-2e65-4da9-a977-2d3e771ae0ee"),
     ("liam",     "Liam",            "7928e3bf-88b4-46e1-a9a9-d93cdf5fa045"),
     ("henry",    "Thierry Henry",   "f74ef1ee-52f2-4977-adf6-372b281e96c3"),
-    ("beckham",  "David Beckham",   "441fdfa1-a261-4c40-a915-a6c1c08beb99"),
-    ("saka",     "Bukayo Saka",     "a11f118a-0d85-4dd5-84fd-876f50cf9e44"),
+    ("beckham",  "David Beckham",   "55f47e1a-684a-4ef4-84a5-721a543764b4"),
+    ("saka",     "Bukayo Saka",     "553e3e51-1d3f-4077-b9cb-c92a2753be07"),
 ]
 FONT = "/usr/share/fonts/truetype/higgsfield/Montserrat-ExtraBold.ttf"
 COLS, CELL_W, HEAD_H, BODY_H, LABEL_H, PAD = 4, 520, 380, 720, 70, 24

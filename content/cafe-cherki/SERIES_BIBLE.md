@@ -113,7 +113,7 @@ photos as references. Decision on naming real players on-screen is the owner's c
 | 4 | **Kevin De Bruyne** | *Assist* — quiet Belgian filter bar | Understated: navy quarter-zip, chinos, New Balance | Never orders for himself; always "passes" the cup to someone |
 | 5 | **Pep Guardiola** | Roaming consultant / matcha sommelier | Cashmere turtleneck, tailored coat, Catalan scarf | Rearranges everyone's shop layout uninvited |
 | 6 | **Cole Palmer** | *Cold's* — iced coffee only | Ice-blue puffer, baggy jorts, shades indoors | Shivers dramatically at everything hot |
-| 7 | **Jack Grealish** | *Calves* — espresso martini bar | Alice band, low-cut socks, fitted polo | Only opens after 9pm |
+| 7 | **Jack Grealish** | *Calves* — espresso martini bar | Blonde-brown quiff, oversized monogram puffer gilet over a cream sweatshirt, white joggers, white trainers, iced coffee always in hand | Only opens after 9pm |
 | 8 | **Harry Maguire** | Nan's regular, Rashford's right-hand man | Navy tipped polo, grey jeans, Sambas, Yorkshire Tea mug | Enormous head, broad Yorkshire, always eating. "Ey up" |
 | 8b | **Phil Foden** | Nan's regular | Manc casual: Stone Island badge, tracksuit, bucket hat | Quiet, appears in the car in Ep 2 |
 | 9 | **Lamine Yamal** | *17* — bubble tea kiosk | Gen-Z Barça street: baggy denim, Y2K sunnies, chain | Everything is "lowkey fire" |
@@ -122,12 +122,12 @@ photos as references. Decision on naming real players on-screen is the owner's c
 | 12 | **Ronaldinho** | *Samba Cold Brew* — beach shack | Bucket hat, open shirt, beads, crocs | Never stops smiling; DJs his own shop |
 | 13 | **Thierry Henry** | *Va-Va-Voom* — Parisian café, critic-in-residence | Camel coat, tailored, cigarette-thin scarf | Judges everyone's crema with a raised eyebrow |
 | 14 | **Luka Modrić** | *Ten* — Croatian kava with a chessboard in the corner | Clean casual: knit polo, pleated trousers | Calm, plays chess against himself |
-| 15 | **David Beckham** | *Studio 7* — coffee + honey (his bees) | 90s revival: leather jacket, Beckham-era curtains, slim jeans | Obsessively straightens cups |
+| 15 | **David Beckham** | *Studio 7* — coffee + honey (his bees) | Swept-back quiff greying at the temples, salt-and-pepper beard, tan Prince-of-Wales check blazer, white shirt, navy-and-gold tie, pocket square | Obsessively straightens cups |
 | 16 | **Zlatan Ibrahimović** | *Zlatan Roasters* — the beans "chose him" | All black, samurai bun, long coat | Third person only |
 | 17 | **Mo Salah** | *Egyptian King Karkadé* — hibiscus tea house | Relaxed: silk shirt, tailored shorts, sliders | Winks at the camera |
 | 18 | **Kylian Mbappé** | *Turtle Drip* — drive-through | Slick: Hennessy-black leather, sneaker collab | Arrives everywhere too fast |
 | 19 | **Jude Bellingham** | *Hey Jude* — Birmingham-meets-Madrid brunch spot | Tailored bomber, wide trousers, Prada-style loafers | Arms-out celebration when a latte art lands |
-| 20 | **Bukayo Saka** | *Starboy* — pastry counter | Colourful North London street: puffer, cargo, fresh trainers | Gives everyone a free pastry, gets bullied for being too nice |
+| 20 | **Bukayo Saka** | *Starboy* — pastry counter | Olive hooded parka over a black retro collared jersey, black nylon shorts, cream socks with green stripes, tan-and-green retro runners | Gives everyone a free pastry, gets bullied for being too nice |
 | 21 | **Neymar Jr** | *Rolling Beans* — always "closed for injury" | Drip-heavy: designer everything, grillz | Falls over dramatically at minor inconvenience |
 | 22 | **Vinícius Jr** | *Baila* — Brazilian pastel & coffee | Loud prints, chunky sneakers, cap backwards | Dances behind the counter |
 | 23 | **Harry Kane** | *The Penalty Spot* — German-precision bakery | Dad-core: gilet, polo, boat shoes | Counts everything; loves a rule |

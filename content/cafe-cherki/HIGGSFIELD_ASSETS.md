@@ -700,3 +700,14 @@ approval.
 | **Cast contact sheet**, 12 puppets, head crop + full body | media `f12a77f2-552e-4374-a573-500f45fb4d89` |
 
 Full locked-sheet list (all 12) is the table in `contact-sheet/make.py`.
+
+### Round 4b — owner references (2026-09-05)
+
+Owner supplied wardrobe references for three of the new sheets; described by traits and
+garments only, no photo uploaded. Pending approval; these supersede the round 4 versions.
+
+| Character | Job ID | Look |
+|---|---|---|
+| Bukayo Saka v2 | `553e3e51-1d3f-4077-b9cb-c92a2753be07` | olive parka, black retro collared jersey, nylon shorts, green-stripe socks, tan/green runners |
+| David Beckham v2 | `55f47e1a-684a-4ef4-84a5-721a543764b4` | swept quiff greying at temples, salt-and-pepper beard, tan check blazer, navy-gold tie |
+| Jack Grealish v2 | `a487b62b-91a8-496a-bbc7-327316662275` | blonde-brown quiff, monogram puffer gilet, cream sweatshirt, white joggers, iced coffee |
