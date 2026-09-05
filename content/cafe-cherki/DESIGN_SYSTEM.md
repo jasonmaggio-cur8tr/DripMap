@@ -62,7 +62,7 @@ interior lit flat and bright; every other shop is warm and low.
 
 ### Contact sheet
 
-Media `f12a77f2-552e-4374-a573-500f45fb4d89` — every locked puppet, head crop over full
+Media `14d155d3-736b-45c3-b971-eb25248ed0ea` (v2; v1 `f12a77f2…`) — every locked puppet, head crop over full
 body, name underneath (2080 × 3630). Regenerate it in the sandbox with
 `contact-sheet/make.py` whenever a sheet is locked or superseded; the script's table is the
 list of source sheet IDs. The image lives on Higgsfield, not in the repo.

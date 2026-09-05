@@ -711,3 +711,11 @@ garments only, no photo uploaded. Pending approval; these supersede the round 4 
 | Bukayo Saka v2 | `553e3e51-1d3f-4077-b9cb-c92a2753be07` | olive parka, black retro collared jersey, nylon shorts, green-stripe socks, tan/green runners |
 | David Beckham v2 | `55f47e1a-684a-4ef4-84a5-721a543764b4` | swept quiff greying at temples, salt-and-pepper beard, tan check blazer, navy-gold tie |
 | Jack Grealish v2 | `a487b62b-91a8-496a-bbc7-327316662275` | blonde-brown quiff, monogram puffer gilet, cream sweatshirt, white joggers, iced coffee |
+
+### Locks after owner review (2026-09-05)
+
+Approved: Grealish v2 `a487b62b…`, Beckham v2 `55f47e1a…`, Kane `1f845942…`, Rooney
+`dda15a25…`, Henry `f74ef1ee…`. Saka re-run with a deeper skin tone, everything else held
+via the v2 sheet as reference: **Saka v3 `ee565d1e-3838-4d2e-a64e-5022837bf7bc`** (pending
+owner OK). Contact sheet v2 rebuilt with the locks: media
+`14d155d3-736b-45c3-b971-eb25248ed0ea`.
