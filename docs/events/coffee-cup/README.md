@@ -1,13 +1,13 @@
 # The Coffee Cup — Sacramento 2026
 
-> A 3v3 futsal tournament between Sacramento's coffee shops.
+> A 3v3 street soccer tournament between Sacramento's coffee & tea shops.
 > One Sunday. One trophy. It sits on the winner's bar for a year.
 
 | | |
 |---|---|
 | **Date** | Sunday, November 15, 2026 (confirmed Sunday) |
 | **Venue** | Futsi, Sacramento |
-| **Format** | 3v3 futsal, 12 shops, group stage into knockouts |
+| **Format** | 3v3 street soccer, 12 shops, group stage into knockouts |
 | **Fee** | $100 per shop, includes 3 commemorative tees |
 | **Spectators** | Free, public, RSVP on DripMap |
 | **Owner** | Jason Maggio |
@@ -146,7 +146,7 @@ Three included per shop. **Sell extras at $30** — pre-order at registration an
 
 **Read this honestly:** registration alone does not fund this event. It funds a lean version where Futsi comps the court, refs work for coffee, and you shoot it on a phone. That version is fine — it's a first year.
 
-But **one title sponsor at $1,000–1,500 changes the whole thing**: it pays for the entire shirt run, a real photographer, and paid refs, and it turns the shirt into a proper piece of merch. Go get one. A local roaster who supplies half the field, a credit union, a brewery, an outdoor/sport brand, a dairy or oat-milk supplier — all of them want twelve coffee shops posting about them for three weeks. Put their mark on the back of the tee under the shop list and on the bracket board. Ask for $1,500, settle at $1,000.
+But **one title sponsor at $1,000–1,500 changes the whole thing**: it pays for the entire shirt run, a real photographer, and paid refs, and it turns the shirt into a proper piece of merch. Go get one. A local roaster who supplies half the field, a credit union, a brewery, an outdoor/sport brand, a dairy or oat-milk supplier — all of them want twelve coffee & tea shops posting about them for three weeks. Put their mark on the back of the tee under the shop list and on the bracket board. Ask for $1,500, settle at $1,000.
 
 ---
 
@@ -174,8 +174,27 @@ And then it goes to other cities. The Coffee Cup in Portland, Seattle, Oakland, 
 
 ---
 
+## Sponsor tiers
+
+Defined in the partner deck; repeated here so the numbers stay in one place.
+
+| Tier | Price | Availability | What it carries |
+|---|---:|---|---|
+| **Presenting Partner** | $1,500 | 1, category exclusive | Name in the event title, top billing on the back of every shirt, the banner and the bracket board, MC mentions, a table on site, a line in all 12 shops' posts |
+| **Court Sponsor** | $750 | 2 | A court carries their name all day and is announced on every game called there. Banner, shirt placement, recap inclusion. |
+| **Cup Sponsor** | $250 | Open | Bracket board, table tents, recap post mention |
+
+**Reach model for the sponsor conversation** — roughly 80,000–150,000 year-one impressions: ~27,000 from the 12 shops' own social (12 × ~5,000 followers × 3 posts at ~15% organic reach), ~50,000 from the commemorative tee over two years, ~250 high-dwell on-site impressions across four hours, plus DripMap's channels, a livestream of the final and 1–2 local press placements. At $1,500 that is about a $15 CPM.
+
+Lead with the endorsement, not the CPM. A $15 CPM reads expensive next to a Meta ad and cheap next to local experiential, so quoting it first invites the wrong comparison — bring it out when they ask, because it proves the arithmetic was done. The real pitch is twelve trusted local businesses putting a sponsor's name in front of their own customers, plus first refusal on every year after this one.
+
+**Confirm before quoting:** the shops' actual average follower counts and DripMap's own reach. Both are estimates in the model today.
+
+---
+
 ## Files
 
 - [`pitch-futsi.md`](./pitch-futsi.md) — the venue partner pitch. Send this first.
 - [`pitch-coffee-shops.md`](./pitch-coffee-shops.md) — email, in-person script, DM, and FAQ.
-- [`timeline-and-runbook.md`](./timeline-and-runbook.md) — week-by-week to-do list and the day-of run of show.
+- [`timeline-and-runbook.md`](./timeline-and-runbook.md) — week-by-week to-do list, the Oct 9 decision gate, and the day-of run of show.
+- **Partner deck** — a single 11-slide deck covering all three audiences, with one dedicated slide each for Futsi, sponsors and shops. Kept as a Claude Artifact, not in this repo.

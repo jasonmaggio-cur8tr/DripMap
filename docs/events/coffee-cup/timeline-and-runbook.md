@@ -1,12 +1,26 @@
 # Timeline, To-Do List & Run of Show
 
-**Today: Friday, Sept 25, 2026. Game day: Sunday, Nov 15, 2026. That's 7 weeks.**
+**Target game day: Sunday, Nov 15, 2026 — or a spring 2027 edition. The date is decided on Friday, Oct 9.**
 
-Seven weeks is enough. It is not enough if the venue slips. Three things sit on the critical path and everything else bends around them:
+## The Oct 9 decision gate
+
+Nov 15 is seven weeks out, which is enough only if the venue locks in week one. Rather than guess now, work the Nov 15 plan for two weeks and decide on **Friday, Oct 9** with real information instead of a feeling:
+
+| On Oct 9 | Decision |
+|---|---|
+| **8+ shops committed and Futsi confirmed** | Order the trophy. Run Nov 15 lean and self-funded. |
+| **Under 8 shops, or Futsi's Sunday is booked** | Slide to early March 2027 with warm shops already in hand, a sponsor deck written, and nothing spent. |
+
+**Everything you do before Oct 9 transfers to either date** — pitching shops, the Futsi conversation, the sponsor deck, the shirt design, registration on DripMap. The first irreversible spend is the trophy, so there is no cost to trying for November and real value in the information.
+
+If it slides, pick the spring date deliberately: avoid Super Bowl Sunday, the March Madness opening weekend and spring break. An early-to-mid March Sunday sets up an annual November rhythm from year two on.
+
+## Hard deadlines (if Nov 15 is confirmed)
 
 | Hard deadline | What | Why it can't move |
 |---|---|---|
 | **Fri, Oct 2** | Futsi confirms the date and court count | Nothing can be pitched to a single shop before this |
+| **Fri, Oct 9** | 🔴 **Go / no-go on the date** | Everything downstream is priced off this answer |
 | **Fri, Oct 16** | Trophy ordered | Engravers run ~3 weeks. Miss it and you hand out a gift card. |
 | **Wed, Oct 28** | Shirts to the printer | 2-week lead. The shop names are printed on them, so the field closes Oct 26. |
 
@@ -38,6 +52,7 @@ Nothing else matters this week.
 - [ ] Start sponsor conversations — title sponsor target $1,000–1,500.
 - [ ] Start the **player pool** sign-up for people who want a team.
 - [ ] 🎯 **Target: 6 shops committed by Oct 9.**
+- [ ] 🔴 **Fri Oct 9 — DECIDE THE DATE.** 8+ committed and Futsi confirmed → Nov 15. Otherwise → early March 2027, and the weeks below shift with it.
 
 ---
 

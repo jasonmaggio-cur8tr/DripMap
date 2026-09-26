@@ -8,7 +8,7 @@ Three formats — email, in-person, DM — plus the FAQ and the objection handli
 
 ## The 30-second version (in person)
 
-> "I'm putting on The Coffee Cup — twelve Sacramento coffee shops, 3v3 soccer, one Sunday afternoon at Futsi, November 15th. There's a trophy. The shop that wins keeps it on their bar for a year until somebody takes it from them.
+> "I'm putting on The Coffee Cup — twelve Sacramento coffee & tea shops, 3v3 street soccer, one Sunday afternoon at Futsi, November 15th. There's a trophy. The shop that wins keeps it on their bar for a year until somebody takes it from them.
 >
 > It's a hundred bucks, that includes three shirts with every shop's name on the back. Your baristas play, your owners play, and if you need a couple more you can pull from your regulars. Three games guaranteed. Public can come watch for free.
 >
@@ -29,7 +29,7 @@ Then stop talking. The trophy line and the rival shop line do the work.
 
 Hi [Name],
 
-I'm putting on the first **Coffee Cup** — a 3v3 soccer tournament between twelve Sacramento coffee shops — and I want [Shop Name] in it.
+I'm putting on the first **Coffee Cup** — a 3v3 street soccer tournament between twelve Sacramento coffee & tea shops — and I want [Shop Name] in it.
 
 **Sunday, November 15 · 2:00–6:00pm · Futsi, Sacramento**
 
@@ -62,7 +62,7 @@ DripMap
 
 ## The DM (Instagram — for shops you don't know yet)
 
-> Hey! I'm putting together The Coffee Cup — 12 Sacramento coffee shops playing 3v3 soccer for a trophy, Sunday Nov 15 at Futsi. Winner keeps the cup on their bar for a year 😤
+> Hey! I'm putting together The Coffee Cup — 12 Sacramento coffee & tea shops playing 3v3 street soccer for a trophy, Sunday Nov 15 at Futsi. Winner keeps the cup on their bar for a year 😤
 >
 > $100 for the shop, includes 3 tees with all the shop names on the back. Your baristas play, 3 games guaranteed, public comes and watches.
 >

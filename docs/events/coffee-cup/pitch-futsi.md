@@ -8,7 +8,7 @@ You're friends with the owner, so the written version below is a backup to the c
 
 ## The ask, in one breath
 
-> "I want to fill your Sunday on November 15th with twelve Sacramento coffee shops playing 3v3 for a trophy, and a couple hundred people watching. I run everything — registration, brackets, refs, promo, cleanup. You keep every dollar behind the bar. I need two courts from 1 to 6:30, and your name on the whole thing."
+> "I want to fill your Sunday on November 15th with twelve Sacramento coffee & tea shops playing 3v3 street soccer for a trophy, and a couple hundred people watching. I run everything — registration, brackets, refs, promo, cleanup. You keep every dollar behind the bar. I need two courts from 1 to 6:30, and your name on the whole thing."
 
 ---
 
@@ -24,7 +24,7 @@ A packed room for five hours on a Sunday with a bar open is the immediate return
 Set up a sign-up table with a Coffee Cup discount code. These are exactly Futsi's customer: 25–40, urban, social, competitive, already sorted into ready-made teams with a rivalry. Convert three teams into a league season and that's real recurring revenue — far more than a Sunday's court rental. I'll push it from the mic and in the follow-up email to every player.
 
 **4. Marketing reach Futsi can't buy.**
-Twelve coffee shops each post to their own audience for three weeks straight — team announcements, the bracket draw, game day, the trophy. Every one of those posts says Futsi. Coffee shop audiences are the exact demographic for an indoor soccer facility, and they're being reached by the shops themselves, not by an ad.
+Twelve coffee & tea shops each post to their own audience for three weeks straight — team announcements, the bracket draw, game day, the trophy. Every one of those posts says Futsi. Coffee and tea shop audiences are the exact demographic for an indoor soccer facility, and they're being reached by the shops themselves, not by an ad.
 
 **5. Name on everything, permanently.**
 "The Coffee Cup at Futsi." On the back of every shirt, on the bracket board, on the banner, in every photo, on the DripMap event page. Year after year.
@@ -84,7 +84,7 @@ The Coffee Cup is year one of two things.
 >
 > Great to see you [day]. Putting the Nov 15 thing in writing so you've got it in one place.
 >
-> **What it is:** The Coffee Cup — twelve Sacramento coffee shops, 3v3 futsal, one Sunday afternoon, one perpetual trophy that lives on the winner's bar for a year. Public and free to watch. Presented by DripMap, at Futsi.
+> **What it is:** The Coffee Cup — twelve Sacramento coffee & tea shops, 3v3 street soccer, one Sunday afternoon, one perpetual trophy that lives on the winner's bar for a year. Public and free to watch. Presented by DripMap, at Futsi.
 >
 > **What I need:** Two courts, Sunday Nov 15, 1:00–6:30pm. A point person on the day. Room for a check-in table and a merch table. Bar open.
 >
