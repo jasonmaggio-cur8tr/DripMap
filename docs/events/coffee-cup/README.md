@@ -194,6 +194,7 @@ Lead with the endorsement, not the CPM. A $15 CPM reads expensive next to a Meta
 
 ## Files
 
+- [`HANDOFF.md`](./HANDOFF.md) — where everything lives, current state, and the open decisions. Start here.
 - [`pitch-futsi.md`](./pitch-futsi.md) — the venue partner pitch. Send this first.
 - [`pitch-coffee-shops.md`](./pitch-coffee-shops.md) — email, in-person script, DM, and FAQ.
 - [`timeline-and-runbook.md`](./timeline-and-runbook.md) — week-by-week to-do list, the Oct 9 decision gate, and the day-of run of show.
