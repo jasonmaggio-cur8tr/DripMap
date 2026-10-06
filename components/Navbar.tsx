@@ -39,6 +39,7 @@ const Navbar: React.FC = () => {
     location.pathname.startsWith("/add") ||
     location.pathname.startsWith("/dripclub") ||
     location.pathname.startsWith("/scout-bounty") ||
+    location.pathname.startsWith("/coffee-cup") ||
     location.pathname.startsWith("/auth") ||
     location.pathname.startsWith("/reset-password") ||
     location.pathname.startsWith("/claim/") ||
