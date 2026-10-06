@@ -1,0 +1,304 @@
+import React, { useState, useEffect } from 'react';
+import { CalendarEvent, Shop } from '../types';
+import { Link, useNavigate } from 'react-router-dom';
+import AddToCalendar from './AddToCalendar';
+import LazyImage from './LazyImage';
+import { useApp } from '../context/AppContext';
+import { joinEvent, leaveEvent } from '../services/dbService';
+import { useToast } from '../context/ToastContext';
+import EventAttendeesModal from './EventAttendeesModal';
+import { sizedImageUrl } from '../lib/imageUrl';
+
+interface EventCardProps {
+  event: CalendarEvent;
+  shop?: Shop;
+  compact?: boolean;
+}
+
+const EventCard: React.FC<EventCardProps> = ({ event, shop, compact = false }) => {
+  const { user } = useApp();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [isJoining, setIsJoining] = useState(false);
+  const [hasJoined, setHasJoined] = useState(false);
+  const [attendeeCount, setAttendeeCount] = useState(event.attendeeCount || 0);
+  const [recentAttendees, setRecentAttendees] = useState(event.attendees || []);
+  const [showAttendeesModal, setShowAttendeesModal] = useState(false);
+  const [showCoverLightbox, setShowCoverLightbox] = useState(false);
+
+  // Event covers are usually flyers whose dates and lineups sit near the edges, but the
+  // card crops them square. Esc closes the full-size view.
+  useEffect(() => {
+    if (!showCoverLightbox) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowCoverLightbox(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showCoverLightbox]);
+
+
+  useEffect(() => {
+    if (user && event.attendees) {
+      setHasJoined(event.attendees.some(a => a.userId === user.id));
+    }
+    setAttendeeCount(event.attendeeCount || 0);
+    setRecentAttendees(event.attendees || []);
+  }, [user, event]);
+
+  const handleJoinToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error("Create a free account to RSVP");
+      navigate('/auth', { state: { from: '/events' } });
+      return;
+    }
+
+    setIsJoining(true);
+    try {
+      if (hasJoined) {
+        const result = await leaveEvent(event.id, user.id);
+        if (result.success) {
+          setHasJoined(false);
+          setAttendeeCount(prev => Math.max(0, prev - 1));
+          setRecentAttendees(prev => prev.filter(a => a.userId !== user.id));
+          toast.success("You are no longer going");
+        } else {
+          console.error('Leave event failed:', result.error);
+          toast.error(`Failed to leave: ${result.error?.message || result.error?.details || 'Unknown error'}`);
+        }
+      } else {
+        const result = await joinEvent(event.id, user.id);
+        if (result.success) {
+          setHasJoined(true);
+          setAttendeeCount(prev => prev + 1);
+          setRecentAttendees(prev => [
+            { userId: user.id, avatarUrl: user.avatarUrl, username: user.username },
+            ...prev
+          ]);
+          toast.success("You are going!");
+        } else {
+          // Self-Healing: If we get a duplicate key error, it means we are already joined!
+          // Update UI to reflect reality.
+          const errorMsg = result.error?.message || result.error?.details || '';
+          if (errorMsg.includes('unique constraint') || errorMsg.includes('duplicate key')) {
+            console.log('Detected existing attendance, syncing state...');
+            setHasJoined(true);
+            // Only increment count if we suspect it wasn't counted (optional, better to stay safe)
+            toast.success("You were already on the list!");
+          } else {
+            console.error('Join event failed:', result.error);
+            toast.error(`Failed to join: ${errorMsg}`);
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error("Error toggling join:", error);
+      toast.error(`Error: ${error.message || 'Something went wrong'}`);
+    } finally {
+      setIsJoining(false);
+    }
+  };
+  // Parse datetime without timezone conversion
+  // datetime-local gives "YYYY-MM-DDTHH:MM" format - parse as local time
+  const parseLocalDateTime = (dateTimeStr: string) => {
+    const [datePart, timePart] = dateTimeStr.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hours, minutes] = (timePart || '00:00').split(':').map(Number);
+    return new Date(year, month - 1, day, hours, minutes);
+  };
+
+  const startDate = parseLocalDateTime(event.startDateTime);
+
+  // Format Date: "Mon, Oct 14"
+  const dateStr = startDate.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric'
+  });
+
+  // Format Time: "10:00 AM"
+  const timeStr = startDate.toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit'
+  });
+
+  const typeColors: Record<string, string> = {
+    'Tasting': 'bg-orange-100 text-orange-800',
+    'Music': 'bg-purple-100 text-purple-800',
+    'Workshop': 'bg-blue-100 text-blue-800',
+    'Pop-up': 'bg-volt-400 text-coffee-900',
+    'Community': 'bg-green-100 text-green-800',
+    'Active': 'bg-rose-100 text-rose-800',
+    'Other': 'bg-gray-100 text-gray-800',
+  };
+
+  return (
+    <div
+      className={`rounded-2xl border border-white/[0.06] overflow-hidden transition-shadow group flex flex-col h-full ${compact ? 'text-sm' : ''}`}
+      style={{ background: '#2b221b' }}
+    >
+
+      {/* Image Header (if exists) */}
+      {event.coverImage && (
+        <div className="relative w-full aspect-square overflow-hidden" style={{ background: '#2f251d' }}>
+          <button
+            type="button"
+            onClick={() => setShowCoverLightbox(true)}
+            aria-label={`View full flyer for ${event.title}`}
+            className="block w-full h-full cursor-zoom-in"
+          >
+            <LazyImage src={sizedImageUrl(event.coverImage.url, { width: 1080 }) || event.coverImage.url} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          </button>
+          <div className="absolute top-2 right-2">
+            <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full shadow-sm ${typeColors[event.eventType] || typeColors['Other']}`}>
+              {event.eventType}
+            </span>
+          </div>
+        </div>
+      )}
+
+      <div className="p-4 flex-1 flex flex-col">
+        {/* Date Badge (if no image, show prominent date) */}
+        {!event.coverImage && (
+          <div className="flex justify-between items-start mb-2">
+            <div className="flex items-center gap-2">
+              <div className="text-center border border-white/[0.09] rounded-lg p-1.5 min-w-[50px]" style={{ background: '#2f251d' }}>
+                <span className="block text-[10px] uppercase font-bold" style={{ color: '#a3e635' }}>{startDate.toLocaleDateString(undefined, { month: 'short' })}</span>
+                <span className="block text-lg font-black leading-none" style={{ color: '#f3efe0' }}>{startDate.getDate()}</span>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase" style={{ color: 'rgba(243,239,224,0.5)' }}>{startDate.toLocaleDateString(undefined, { weekday: 'long' })}</p>
+                <p className="text-sm font-bold" style={{ color: '#f3efe0' }}>{timeStr}</p>
+              </div>
+            </div>
+            <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full ${typeColors[event.eventType] || typeColors['Other']}`}>
+              {event.eventType}
+            </span>
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="mb-3">
+          {event.coverImage && (
+            <p className="text-xs font-bold mb-1 uppercase tracking-wide" style={{ color: '#a3e635' }}>
+              {dateStr} &bull; {timeStr}
+            </p>
+          )}
+          <h3 className="font-serif font-black text-lg leading-tight mb-1" style={{ color: '#f3efe0' }}>
+            {event.title}
+          </h3>
+          {shop && (
+            <Link to={`/shop/${shop.id}`} className="text-xs font-medium text-[#f3efe0]/55 hover:text-volt-400 hover:underline flex items-center gap-1">
+              <i className="fas fa-map-marker-alt"></i> {shop.name}
+            </Link>
+          )}
+          {event.locationName && !shop && (
+            <p className="text-xs" style={{ color: 'rgba(243,239,224,0.55)' }}><i className="fas fa-map-pin"></i> {event.locationName}</p>
+          )}
+        </div>
+
+        <p className="text-sm line-clamp-2 mb-4 flex-1" style={{ color: '#e4ddce' }}>
+          {event.description}
+        </p>
+
+        {/* Actions */}
+        <div className="mt-auto space-y-2">
+          {event.ticketUrl && (
+            <a
+              href={event.ticketUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="block w-full text-center border border-white/[0.09] text-xs font-bold py-2 rounded-lg hover:border-volt-400 transition-colors focus:outline-none focus:ring-2 focus:ring-volt-400"
+              style={{ background: '#2f251d', color: '#f3efe0' }}
+            >
+              Get Tickets
+            </a>
+          )}
+
+          <div className="flex gap-2">
+            <button
+              onClick={handleJoinToggle}
+              disabled={isJoining}
+              className={`flex-1 py-3 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center gap-0.5 focus:outline-none focus:ring-2 focus:ring-volt-400 ${hasJoined
+                ? 'bg-volt-400 text-coffee-900 shadow-sm hover:shadow-md'
+                : 'bg-[#2f251d] text-volt-400 border border-white/[0.09] hover:border-volt-400'
+                }`}
+            >
+              {isJoining ? (
+                <i className="fas fa-spinner fa-spin text-lg"></i>
+              ) : (
+                <>
+                  <i className={`fas ${hasJoined ? 'fa-check' : 'fa-plus'} text-sm`}></i>
+                  <span className="uppercase tracking-wide text-[10px]">Going</span>
+                </>
+              )}
+            </button>
+            <AddToCalendar event={event} shop={shop} />
+          </div>
+
+          {/* Attendees Stack */}
+          <div
+            className={`flex items-center gap-2 pt-1 min-h-[24px] ${recentAttendees.length > 0 ? 'cursor-pointer group/attendees' : ''}`}
+            onClick={() => recentAttendees.length > 0 && setShowAttendeesModal(true)}
+          >
+            {recentAttendees.length > 0 ? (
+              <>
+                <div className="flex -space-x-2">
+                  {recentAttendees.slice(0, 3).map((attendee, i) => (
+                    <img
+                      key={attendee.userId || i}
+                      src={sizedImageUrl(attendee.avatarUrl, { width: 120 }) || `https://ui-avatars.com/api/?name=User&background=random`}
+                      alt="Attendee"
+                      className="w-6 h-6 rounded-full border-2 border-[#2b221b] object-cover"
+                    />
+                  ))}
+                </div>
+                <p className="text-[10px] items-center font-bold text-[#f3efe0]/55 group-hover/attendees:text-volt-400 transition-colors">
+                  {hasJoined && recentAttendees.length === 1 ? 'You are going' :
+                    hasJoined ? `You and ${attendeeCount - 1} others` :
+                      `${attendeeCount} going`}
+                </p>
+              </>
+            ) : (
+              <p className="text-[10px] italic" style={{ color: 'rgba(243,239,224,0.45)' }}>Be the first to join!</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {showAttendeesModal && (
+        <EventAttendeesModal
+          attendees={recentAttendees}
+          onClose={() => setShowAttendeesModal(false)}
+        />
+      )}
+
+      {showCoverLightbox && event.coverImage && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+          onClick={() => setShowCoverLightbox(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Full flyer for ${event.title}`}
+        >
+          <img
+            src={event.coverImage.url}
+            alt={event.title}
+            className="max-w-full max-h-full object-contain rounded-lg"
+            onClick={e => e.stopPropagation()}
+          />
+          <button
+            type="button"
+            onClick={() => setShowCoverLightbox(false)}
+            aria-label="Close"
+            className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-xl bg-black/60 hover:bg-black/80"
+            style={{ color: '#f3efe0' }}
+          >
+            <i className="fas fa-times"></i>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default EventCard;

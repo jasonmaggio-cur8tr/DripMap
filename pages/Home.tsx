@@ -1,156 +1,317 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { useToast } from '../context/ToastContext';
 import Map from '../components/Map';
-import TagChip from '../components/TagChip';
-import LoadingSpinner from '../components/LoadingSpinner';
+import DiscoverCard from '../components/darkroast/DiscoverCard';
+import MenuDrawer from '../components/darkroast/MenuDrawer';
+import BottomTabBar from '../components/darkroast/BottomTabBar';
+import NotificationBell from '../components/NotificationBell';
 import { ALL_VIBES } from '../constants';
+import { Vibe } from '../types';
+import { fetchSaversForShops } from '../services/dbService';
+
+// Dark Roast Discover feed (design_handoff_dark_roast/README.md → Screens 1–3).
+// "Just Added" big-card feed + vibe filter + hamburger drawer + bottom tab bar.
+
+// Calculate distance between two points in miles (Haversine formula)
+const getDistanceMiles = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+  const R = 3959;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
 
 const Home: React.FC = () => {
-  const { shops, searchQuery, setSearchQuery, selectedVibes, toggleVibe, loading } = useApp();
+  const { shops, shopsLoading, searchQuery, setSearchQuery, selectedVibes, toggleVibe, user, toggleSaveShop } = useApp();
+  const { toast } = useToast();
   const navigate = useNavigate();
-  const [viewMode, setViewMode] = useState<'map' | 'list'>('list'); // Mobile view toggle
 
-  const handleShopClick = (id: string) => {
-    navigate(`/shop/${id}`);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'feed' | 'map'>('feed');
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Silent geolocation for distances + map centering
+  useEffect(() => {
+    if (navigator.geolocation && !userLocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => setUserLocation({ lat: position.coords.latitude, lng: position.coords.longitude }),
+        (error) => console.warn('Silent geolocation fetch failed:', error),
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Single-vibe filter on top of the context's multi-select
+  const activeVibe: Vibe | null = selectedVibes[0] ?? null;
+  const selectVibe = (vibe: Vibe) => {
+    if (activeVibe === vibe) {
+      toggleVibe(vibe); // clear
+      return;
+    }
+    selectedVibes.forEach(v => toggleVibe(v));
+    toggleVibe(vibe);
+  };
+  const clearVibe = () => {
+    selectedVibes.forEach(v => toggleVibe(v));
   };
 
-  if (loading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-coffee-50">
-        <div className="text-center">
-          <div className="w-20 h-20 bg-coffee-900 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg animate-pulse">
-            <i className="fas fa-droplet text-volt-400 text-4xl"></i>
-          </div>
-          <LoadingSpinner size="lg" />
-          <p className="text-coffee-600 mt-4 font-medium">Loading spots...</p>
-        </div>
-      </div>
+  // Context `shops` is already filtered by searchQuery + selectedVibes and
+  // ordered created_at DESC — exactly the "Just Added" feed order.
+  const feedShops = shops;
+
+  // Infinite scroll: only mount a page of big cards at a time (each card is
+  // 548px with backdrop-filter layers — rendering the full catalog at once
+  // wrecks scroll performance). Spec: "feed is paginated/infinite-scroll".
+  const PAGE_SIZE = 8;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [activeVibe, searchQuery]);
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount(c => Math.min(c + PAGE_SIZE, feedShops.length));
+        }
+      },
+      { rootMargin: '600px' }
     );
-  }
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [feedShops.length, viewMode]);
+  const visibleShops = feedShops.slice(0, visibleCount);
+
+  // "Who likes this shop" — batched per page of cards, cached across pages.
+  const [saversByShop, setSaversByShop] = useState<Record<string, { id: string; username: string; avatarUrl?: string }[]>>({});
+  useEffect(() => {
+    const missing = visibleShops.map(s => s.id).filter(id => !(id in saversByShop));
+    if (missing.length === 0) return;
+    let cancelled = false;
+    fetchSaversForShops(missing).then(fetched => {
+      if (cancelled) return;
+      setSaversByShop(prev => {
+        const next = { ...prev };
+        missing.forEach(id => { next[id] = fetched[id] ?? []; });
+        return next;
+      });
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleCount, feedShops]);
+
+  const distanceFor = (lat?: number, lng?: number): number | null => {
+    if (!userLocation || lat == null || lng == null) return null;
+    return getDistanceMiles(userLocation.lat, userLocation.lng, lat, lng);
+  };
+
+  const handleToggleSave = (shopId: string, shopName: string) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    const wasSaved = user.savedShops.includes(shopId);
+    toggleSaveShop(shopId);
+    toast.success(wasSaved ? `Removed ${shopName} from saved` : 'Saved for later');
+  };
+
+  const isFiltered = activeVibe !== null;
 
   return (
-    <div className="h-[calc(100vh-4rem)] mt-16 flex flex-col md:flex-row overflow-hidden">
-      {/* Filters & List Section */}
-      <div className={`
-        flex-col bg-coffee-50 w-full md:w-[450px] flex-shrink-0 border-r border-coffee-200 h-full
-        ${viewMode === 'map' ? 'hidden md:flex' : 'flex'}
-      `}>
-        {/* Search & Filter Header */}
-        <div className="p-4 border-b border-coffee-200 space-y-4 bg-white z-10 shadow-sm">
-          <div className="relative">
-            <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-coffee-800/50"></i>
-            <input
-              type="text"
-              placeholder="Search city (e.g. London), shop, or matcha..."
-              className="w-full pl-10 pr-4 py-3 bg-coffee-50 border-none rounded-xl focus:ring-2 focus:ring-volt-400 text-coffee-900 placeholder-coffee-800/50"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-             {ALL_VIBES.map(vibe => (
-                <TagChip 
-                    key={vibe} 
-                    label={vibe} 
-                    isSelected={selectedVibes.includes(vibe)}
-                    onClick={() => toggleVibe(vibe)}
-                />
-             ))}
-          </div>
-        </div>
-
-        {/* Shop List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-           {shops.length === 0 ? (
-               <div className="text-center py-10 text-coffee-800/60">
-                   <i className="fas fa-globe-americas text-4xl mb-4"></i>
-                   <p>No spots found in this area.</p>
-                   <button onClick={() => setSearchQuery('')} className="mt-2 text-volt-500 font-bold text-sm hover:underline">Clear Search</button>
-               </div>
-           ) : (
-               shops.map(shop => (
-                   <Link 
-                     key={shop.id} 
-                     to={`/shop/${shop.id}`}
-                     className="block group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-coffee-100 hover:border-volt-400/50"
-                   >
-                      <div className="relative h-40 overflow-hidden">
-                          <img 
-                            src={shop.gallery[0]?.url} 
-                            alt={shop.name} 
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                          {shop.isClaimed && (
-                              <div className="absolute top-3 right-3 bg-volt-400 text-coffee-900 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                                  <i className="fas fa-check-circle"></i> CLAIMED
-                              </div>
-                          )}
-                          <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center">
-                              <i className="fas fa-star text-volt-400 mr-1"></i> {shop.rating.toFixed(1)}
-                          </div>
-                      </div>
-                      <div className="p-4">
-                          <div className="flex justify-between items-start">
-                            <h3 className="text-lg font-bold font-serif text-coffee-900 mb-1 group-hover:text-coffee-800">{shop.name}</h3>
-                            <span className="text-[10px] font-bold bg-coffee-100 text-coffee-600 px-2 py-1 rounded uppercase tracking-wider">{shop.location.city}</span>
-                          </div>
-                          <p className="text-xs text-coffee-800/70 mb-3 flex items-center">
-                             <i className="fas fa-map-marker-alt mr-1.5"></i> {shop.location.address}
-                          </p>
-                          <div className="flex flex-wrap gap-1.5">
-                              {shop.vibes.slice(0, 3).map(v => (
-                                  <span key={v} className="text-[10px] bg-coffee-50 text-coffee-800 px-2 py-0.5 rounded-md border border-coffee-200">
-                                      {v}
-                                  </span>
-                              ))}
-                          </div>
-                      </div>
-                   </Link>
-               ))
-           )}
-        </div>
-      </div>
-
-      {/* Map Section */}
-      <div className={`
-        flex-1 relative bg-coffee-100
-        ${viewMode === 'list' ? 'hidden md:block' : 'block'}
-      `}>
-         {/* Floating Search Bar (Mobile Only) */}
-         <div className="absolute top-4 left-4 right-16 z-[500] md:hidden pointer-events-auto">
-            <div className="relative shadow-lg rounded-xl">
-                <i className="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-coffee-800/50"></i>
-                <input
-                  type="text"
-                  placeholder="Search map..."
-                  className="w-full pl-11 pr-4 py-3 bg-white/95 backdrop-blur-sm border border-coffee-100 rounded-xl focus:ring-2 focus:ring-volt-400 outline-none text-coffee-900 text-sm font-bold"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+    <div className="min-h-dvh" style={{ background: '#1e1712' }}>
+      {/* ── Sticky glass header ─────────────────────────────────────────── */}
+      <header
+        className="fixed inset-x-0 top-0 z-30 border-b border-white/[0.07]"
+        style={{ background: 'rgba(23,18,14,0.82)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)' }}
+      >
+        <div className="mx-auto max-w-md px-5 pb-3 pt-2 md:max-w-3xl lg:max-w-6xl">
+          {/* Row 1 */}
+          <div className="flex items-center justify-between py-1.5">
+            <div className="flex items-center gap-3">
+              {isFiltered ? (
+                <button
+                  onClick={clearVibe}
+                  aria-label="Back to full feed"
+                  className="flex h-8 w-8 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-volt-400"
+                  style={{ background: '#2b221b' }}
+                >
+                  <i className="fas fa-arrow-left text-sm" style={{ color: '#f3efe0' }}></i>
+                </button>
+              ) : (
+                <button
+                  onClick={() => setDrawerOpen(true)}
+                  aria-label="Open menu"
+                  className="flex h-9 w-9 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-volt-400"
+                  style={{ background: '#2b221b' }}
+                >
+                  <i className="fas fa-bars" style={{ color: '#f3efe0' }}></i>
+                </button>
+              )}
+              {isFiltered ? (
+                <p className="font-serif text-[19px] font-black" style={{ color: '#f3efe0', letterSpacing: '-0.02em' }}>
+                  {activeVibe}
+                  <span className="ml-1.5 font-sans text-[13px] font-medium" style={{ color: 'rgba(243,239,224,0.5)' }}>
+                    · {feedShops.length} spot{feedShops.length !== 1 ? 's' : ''}
+                  </span>
+                </p>
+              ) : (
+                <img src="/logo-dark.jpg" alt="DripMap" className="h-[22px] w-auto rounded" />
+              )}
             </div>
-         </div>
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => setSearchOpen(o => !o)}
+                aria-label="Search"
+                className="flex h-9 w-9 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-volt-400"
+                style={{ background: '#2b221b' }}
+              >
+                <i className="fas fa-search text-sm" style={{ color: '#f3efe0' }}></i>
+              </button>
+              {user && <NotificationBell />}
+              {user ? (
+                <Link
+                  to={`/profile/${user.id}`}
+                  className="block h-9 w-9 overflow-hidden rounded-full focus:outline-none focus:ring-2 focus:ring-volt-400"
+                  style={{ border: '2px solid #a3e635' }}
+                >
+                  <img src={user.avatarUrl} alt={user.username} className="h-full w-full object-cover" />
+                </Link>
+              ) : (
+                <Link
+                  to="/auth"
+                  className="rounded-full px-3.5 py-2 text-[11px] font-extrabold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-volt-400"
+                  style={{ background: '#a3e635', color: '#231b15' }}
+                >
+                  Sign in
+                </Link>
+              )}
+            </div>
+          </div>
 
-         <Map shops={shops} onShopClick={handleShopClick} />
-      </div>
+          {/* Search input (toggled) */}
+          {searchOpen && (
+            <div className="relative py-1.5">
+              <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-sm" style={{ color: 'rgba(243,239,224,0.45)' }}></i>
+              <input
+                autoFocus
+                type="text"
+                placeholder="Search shop, city, or matcha…"
+                className="w-full rounded-xl border-none py-2.5 pl-10 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-volt-400"
+                style={{ background: '#2b221b', color: '#f3efe0' }}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          )}
 
-      {/* Mobile View Toggle */}
-      <div className="md:hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-coffee-900 text-volt-400 rounded-full shadow-xl z-[1000] p-1 flex">
-         <button 
-            onClick={() => setViewMode('list')}
-            className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${viewMode === 'list' ? 'bg-volt-400 text-coffee-900' : 'text-volt-400'}`}
-         >
-            List
-         </button>
-         <button 
-            onClick={() => setViewMode('map')}
-            className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${viewMode === 'map' ? 'bg-volt-400 text-coffee-900' : 'text-volt-400'}`}
-         >
-            Map
-         </button>
-      </div>
+          {/* Row 2: vibe filter chips */}
+          <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 pt-1.5">
+            <button
+              onClick={() => setViewMode(m => (m === 'map' ? 'feed' : 'map'))}
+              className="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-volt-400"
+              style={
+                viewMode === 'map'
+                  ? { background: '#a3e635', color: '#231b15' }
+                  : { background: '#2b221b', color: '#e4ddce', border: '1px solid rgba(255,255,255,0.09)' }
+              }
+            >
+              <i className="fas fa-map"></i>
+              Map
+            </button>
+            <button
+              onClick={() => { if (isFiltered) clearVibe(); setViewMode('feed'); }}
+              className="shrink-0 rounded-full px-3.5 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-volt-400"
+              style={
+                !isFiltered && viewMode === 'feed'
+                  ? { background: '#a3e635', color: '#231b15' }
+                  : { background: '#2b221b', color: '#e4ddce', border: '1px solid rgba(255,255,255,0.09)' }
+              }
+            >
+              Just Added
+            </button>
+            {ALL_VIBES.map(vibe => (
+              <button
+                key={vibe}
+                onClick={() => { selectVibe(vibe); setViewMode('feed'); }}
+                className="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-volt-400"
+                style={
+                  activeVibe === vibe
+                    ? { background: '#a3e635', color: '#231b15' }
+                    : { background: '#2b221b', color: '#e4ddce', border: '1px solid rgba(255,255,255,0.09)' }
+                }
+              >
+                {vibe}
+                {activeVibe === vibe && <i className="fas fa-xmark"></i>}
+              </button>
+            ))}
+          </div>
+        </div>
+      </header>
+
+      {/* ── Map view (preserved from the previous Home) ─────────────────── */}
+      {viewMode === 'map' ? (
+        <div className="fixed inset-x-0 bottom-[82px] top-[118px] lg:bottom-0">
+          <Map shops={feedShops} onShopClick={(id) => navigate(`/shop/${id}`)} userLocation={userLocation} />
+        </div>
+      ) : (
+        /* ── "Just Added" big-card feed ─────────────────────────────────── */
+        <main className="mx-auto max-w-md px-4 pb-[100px] pt-[130px] md:max-w-3xl lg:max-w-6xl">
+          {shopsLoading ? (
+            <div className="space-y-4 md:grid md:grid-cols-2 md:gap-5 md:space-y-0 xl:grid-cols-3">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-[548px] animate-pulse rounded-3xl" style={{ background: '#2b221b' }}></div>
+              ))}
+            </div>
+          ) : feedShops.length === 0 ? (
+            <div className="flex flex-col items-center gap-4 py-24 text-center">
+              <i className="fas fa-mug-hot text-4xl" style={{ color: 'rgba(243,239,224,0.25)' }}></i>
+              <p className="text-[15px] font-medium" style={{ color: '#e4ddce' }}>
+                No spots here yet. Be the first to map one.
+              </p>
+              <Link
+                to="/add"
+                className="rounded-full px-5 py-3 text-sm font-extrabold focus:outline-none focus:ring-2 focus:ring-volt-400"
+                style={{ background: '#2b221b', color: '#a3e635', border: '1px solid rgba(255,255,255,0.09)' }}
+              >
+                <i className="fas fa-plus mr-2"></i>
+                Add a Shop
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4 md:grid md:grid-cols-2 md:gap-5 md:space-y-0 xl:grid-cols-3">
+              {visibleShops.map((shop, i) => (
+                <DiscoverCard
+                  key={shop.id}
+                  shop={shop}
+                  isSaved={!!user?.savedShops.includes(shop.id)}
+                  onToggleSave={() => handleToggleSave(shop.id, shop.name)}
+                  distanceMi={distanceFor(shop.location?.lat, shop.location?.lng)}
+                  categoryBadge={isFiltered ? String(activeVibe) : null}
+                  eager={i < 2}
+                  savers={saversByShop[shop.id]}
+                />
+              ))}
+              {visibleCount < feedShops.length && (
+                <div ref={sentinelRef} className="flex justify-center py-6">
+                  <i className="fas fa-spinner fa-spin text-xl" style={{ color: 'rgba(243,239,224,0.45)' }}></i>
+                </div>
+              )}
+            </div>
+          )}
+        </main>
+      )}
+
+      <MenuDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <BottomTabBar />
     </div>
   );
 };
